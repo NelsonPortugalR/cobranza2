@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capacitación Ejecutiva - Caso de Cobranza</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #072146;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .presentation-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .slide {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .slide.prev {
+            transform: translateX(-100%);
+        }
+        
+        /* Header corporativo */
+        .corporate-header {
+            background: linear-gradient(90deg, #072146, #004481);
+            color: white;
+            padding: 20px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 80px;
+        }
+        
+        .bbva-logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #43B5F5;
+        }
+        
+        .training-badge {
+            background: rgba(67, 181, 245, 0.2);
+            border: 1px solid #43B5F5;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+        
+        /* Slide headers */
+        .slide-header {
+            background: #F8F9FA;
+            padding: 40px 60px;
+            border-bottom: 3px solid #43B5F5;
+        }
+        
+        .slide-title {
+            font-size: 2.4em;
+            color: #072146;
+            font-weight: 400;
+            margin-bottom: 10px;
+        }
+        
+        .slide-subtitle {
+            font-size: 1.2em;
+            color: #666;
+            font-weight: 300;
+        }
+        
+        .slide-content {
+            flex: 1;
+            padding: 60px;
+            overflow-y: auto;
+        }
+        
+        /* Slide 1: Portada de Capacitación */
+        .training-cover {
+            background: linear-gradient(135deg, #072146, #004481);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .cover-content h1 {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            color: #43B5F5;
+        }
+        
+        .cover-content h2 {
+            font-size: 2em;
+            margin-bottom: 30px;
+        }
+        
+        .learning-objectives {
+            background: rgba(67, 181, 245, 0.1);
+            border: 2px solid #43B5F5;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px auto;
+            max-width: 600px;
+            text-align: left;
+        }
+        
+        .learning-objectives h3 {
+            color: #43B5F5;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .objectives-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .objectives-list li {
+            margin: 12px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .objectives-list li::before {
+            content: '🎯';
+            position: absolute;
+            left: 0;
+        }
+        
+        /* Slide 2: Presentación del Caso */
+        .case-intro {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            height: 100%;
+            align-items: center;
+        }
+        
+        .scenario-box {
+            background: #F8F9FA;
+            border-left: 5px solid #43B5F5;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .scenario-box h3 {
+            color: #072146;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .client-card {
+            background: linear-gradient(135deg, #43B5F5, #072146);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+        }
+        
+        .loan-amount {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .thinking-emoji {
+            font-size: 4em;
+            margin: 20px 0;
+        }
+        
+        /* Quiz Styles */
+        .quiz-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .question-box {
+            background: #F8F9FA;
+            border: 2px solid #43B5F5;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .question-title {
+            font-size: 1.4em;
+            color: #072146;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .quiz-options {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .quiz-option {
+            background: white;
+            border: 2px solid #E9ECEF;
+            border-radius: 10px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .quiz-option:hover {
+            border-color: #43B5F5;
+            transform: translateY(-2px);
+        }
+        
+        .quiz-option.selected {
+            border-color: #43B5F5;
+            background: rgba(67, 181, 245, 0.1);
+        }
+        
+        .quiz-option.correct {
+            border-color: #28A745;
+            background: rgba(40, 167, 69, 0.1);
+        }
+        
+        .quiz-option.incorrect {
+            border-color: #DC3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+        
+        .option-letter {
+            display: inline-block;
+            background: #43B5F5;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 25px;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        
+        .quiz-feedback {
+            background: #E7F3FF;
+            border: 1px solid #43B5F5;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .feedback-correct {
+            background: #D4F3D0;
+            border-color: #28A745;
+        }
+        
+        .feedback-incorrect {
+            background: #F8D7DA;
+            border-color: #DC3545;
+        }
+        
+        .submit-quiz {
+            background: #43B5F5;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-quiz:hover {
+            background: #072146;
+        }
+        
+        .submit-quiz:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+        
+        /* Comparison Styles */
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            height: 100%;
+        }
+        
+        .what-happened {
+            background: #FFF3CD;
+            border: 2px solid #FFC107;
+            border-radius: 15px;
+            padding: 30px;
+        }
+        
+        .what-should {
+            background: #D4F3D0;
+            border: 2px solid #28A745;
+            border-radius: 15px;
+            padding: 30px;
+        }
+        
+        .comparison-title {
+            font-size: 1.5em;
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        
+        .what-happened .comparison-title {
+            color: #856404;
+        }
+        
+        .what-should .comparison-title {
+            color: #155724;
+        }
+        
+        .comparison-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .comparison-list li {
+            margin: 15px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            position: relative;
+            padding-left: 35px;
+        }
+        
+        .what-happened li::before {
+            content: '❌';
+            position: absolute;
+            left: 10px;
+        }
+        
+        .what-should li::before {
+            content: '✅';
+            position: absolute;
+            left: 10px;
+        }
+        
+        /* Impact visualization */
+        .impact-visual {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .impact-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            border-top: 5px solid;
+        }
+        
+        .impact-card.financial { border-top-color: #DC3545; }
+        .impact-card.legal { border-top-color: #6F42C1; }
+        .impact-card.reputational { border-top-color: #FD7E14; }
+        
+        .impact-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+        
+        .impact-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .impact-card.financial .impact-value { color: #DC3545; }
+        .impact-card.legal .impact-value { color: #6F42C1; }
+        .impact-card.reputational .impact-value { color: #FD7E14; }
+        
+        /* Final Quiz Styles */
+        .final-quiz {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .quiz-progress {
+            background: #E9ECEF;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .quiz-progress-bar {
+            background: #43B5F5;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .quiz-question {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .quiz-question.active {
+            display: block;
+        }
+        
+        .question-number {
+            background: #43B5F5;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+        
+        .quiz-nav-btn {
+            background: #43B5F5;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .quiz-nav-btn:hover {
+            background: #072146;
+        }
+        
+        .quiz-nav-btn:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+        
+        .quiz-results {
+            background: linear-gradient(135deg, #43B5F5, #072146);
+            color: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            display: none;
+        }
+        
+        .score-display {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .score-interpretation {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+        
+        /* Summary styles */
+        .key-takeaways {
+            background: #F8F9FA;
+            border-radius: 15px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .takeaway-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .takeaway-card {
+            background: white;
+            border-left: 4px solid #43B5F5;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .takeaway-title {
+            color: #072146;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        /* Navigation */
+        .training-navigation {
+            position: fixed;
+            bottom: 25px;
+            right: 40px;
+            display: flex;
+            gap: 15px;
+            z-index: 1000;
+        }
+        
+        .nav-btn-training {
+            background: #072146;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn-training:hover {
+            background: #43B5F5;
+        }
+        
+        .nav-btn-training:disabled {
+            background: #CCC;
+            cursor: not-allowed;
+        }
+        
+        .slide-counter-training {
+            background: white;
+            color: #072146;
+            padding: 12px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            border: 1px solid #E9ECEF;
+        }
+        
+        .slide-indicators-training {
+            position: fixed;
+            bottom: 25px;
+            left: 40px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+        
+        .indicator-training {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #CCC;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .indicator-training.active {
+            background: #43B5F5;
+            transform: scale(1.2);
+        }
+        
+        @media (max-width: 1200px) {
+            .slide-content {
+                padding: 40px;
+            }
+            
+            .case-intro,
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .impact-visual {
+                grid-template-columns: 1fr;
+            }
+            
+            .takeaway-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        
+        <!-- Slide 1: Portada de Capacitación -->
+        <div class="slide training-cover active" data-slide="0">
+            <div class="corporate-header">
+                <div class="bbva-logo">BBVA</div>
+                <div class="training-badge">PROGRAMA DE CAPACITACIÓN</div>
+            </div>
+            <div class="cover-content">
+                <h1>📚 Capacitación Ejecutiva</h1>
+                <h2>Análisis de Caso: Los Alpes S.A.C.</h2>
+                <div class="learning-objectives">
+                    <h3>Objetivos de Aprendizaje</h3>
+                    <ul class="objectives-list">
+                        <li>Identificar fallas críticas en evaluación crediticia</li>
+                        <li>Reconocer señales de alerta temprana</li>
+                        <li>Aplicar mejores prácticas en gestión de garantías</li>
+                        <li>Implementar controles de monitoreo efectivos</li>
+                        <li>Tomar decisiones basadas en análisis de riesgo</li>
+                    </ul>
+                </div>
+                <p style="font-size: 1.1em; opacity: 0.9; margin-top: 20px;">
+                    Audiencia: Ejecutivos Comerciales y Analistas de Crédito
+                </p>
+            </div>
+        </div>
+        
+        <!-- Slide 2: Presentación del Caso -->
+        <div class="slide" data-slide="1">
+            <div class="slide-header">
+                <h1 class="slide-title">📋 El Caso: Los Alpes S.A.C.</h1>
+                <p class="slide-subtitle">Conoce la situación inicial antes de tomar decisiones</p>
+            </div>
+            <div class="slide-content">
+                <div class="case-intro">
+                    <div>
+                        <div class="scenario-box">
+                            <h3>🏢 El Cliente</h3>
+                            <p><strong>Constructora Los Alpes S.A.C.</strong><br>
+                            Empresa de construcción residencial con 5 años en el mercado. Solicita financiamiento para proyecto habitacional en las afueras de Lima.</p>
+                        </div>
+                        
+                        <div class="scenario-box">
+                            <h3>📄 La Solicitud</h3>
+                            <p><strong>Propósito:</strong> Financiar proyecto residencial de 30 viviendas<br>
+                            <strong>Plazo solicitado:</strong> 24 meses<br>
+                            <strong>Garantía propuesta:</strong> Hipoteca sobre terrenos del proyecto</p>
+                        </div>
+                        
+                        <div class="scenario-box">
+                            <h3>📊 Documentación Presentada</h3>
+                            <p>• Estados financieros (no auditados)<br>
+                            • Proyecciones de ventas optimistas<br>
+                            • 2 referencias comerciales recientes<br>
+                            • Valorización de terrenos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="client-card">
+                        <h3>Monto Solicitado</h3>
+                        <div class="loan-amount">$180,000</div>
+                        <p>USD para capital de trabajo y construcción</p>
+                        <div class="thinking-emoji">🤔</div>
+                        <p style="font-size: 1.2em; margin-top: 20px;">
+                            <strong>¿Qué decisión tomarías como ejecutivo comercial?</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 3: Quiz Interactivo - ¿Qué Harías? -->
+        <div class="slide" data-slide="2">
+            <div class="slide-header">
+                <h1 class="slide-title">🤔 ¿Qué Harías Tú?</h1>
+                <p class="slide-subtitle">Pon a prueba tu criterio como ejecutivo comercial</p>
+            </div>
+            <div class="slide-content">
+                <div class="quiz-container">
+                    <div class="question-box">
+                        <div class="question-title">
+                            Pregunta 1: Al revisar las proyecciones de ventas del cliente, notas que son muy optimistas comparadas con el mercado. ¿Cuál sería tu primera acción?
+                        </div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">A</span>
+                                Confiar en las proyecciones del cliente, son ellos quienes conocen su negocio
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">B</span>
+                                Reducir el monto del préstamo en un 10% para ser más conservador
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, true)">
+                                <span class="option-letter">C</span>
+                                Solicitar un estudio de mercado independiente y validar las proyecciones
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">D</span>
+                                Aceptar las proyecciones pero aumentar la tasa de interés
+                            </div>
+                        </div>
+                        <div class="quiz-feedback" id="feedback1">
+                            <strong>Correcto!</strong> Siempre se debe validar la información financiera con fuentes independientes. Las proyecciones optimistas sin sustento son una señal de alerta.
+                        </div>
+                        <button class="submit-quiz" onclick="showFeedback('feedback1', true)">Ver Respuesta</button>
+                    </div>
+                    
+                    <div class="question-box">
+                        <div class="question-title">
+                            Pregunta 2: El cliente solo presenta 2 referencias comerciales de relaciones menores a 6 meses. ¿Qué harías?
+                        </div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">A</span>
+                                Es suficiente, 2 referencias son el mínimo requerido
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, true)">
+                                <span class="option-letter">B</span>
+                                Solicitar referencias adicionales de al menos 2 años de antigüedad
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">C</span>
+                                Contactar solo las referencias más recientes
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">D</span>
+                                Aceptar las referencias pero solicitar un aval adicional
+                            </div>
+                        </div>
+                        <div class="quiz-feedback" id="feedback2">
+                            <strong>Correcto!</strong> Las referencias deben tener antigüedad suficiente para evaluar el comportamiento crediticio a largo plazo. Relaciones menores a 6 meses no son representativas.
+                        </div>
+                        <button class="submit-quiz" onclick="showFeedback('feedback2', true)">Ver Respuesta</button>
+                    </div>
+                    
+                    <div class="question-box">
+                        <div class="question-title">
+                            Pregunta 3: ¿Qué tipo de garantías exigirías para este préstamo?
+                        </div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">A</span>
+                                Solo la hipoteca sobre los terrenos del proyecto
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, true)">
+                                <span class="option-letter">B</span>
+                                Hipoteca + aval personal de socios + seguro de crédito
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">C</span>
+                                Hipoteca y una póliza de seguro sobre el proyecto
+                            </div>
+                            <div class="quiz-option" onclick="selectOption(this, false)">
+                                <span class="option-letter">D</span>
+                                Solo avales personales de los socios principales
+                            </div>
+                        </div>
+                        <div class="quiz-feedback" id="feedback3">
+                            <strong>Correcto!</strong> La diversificación de garantías es fundamental. Combinar diferentes tipos de garantías reduce el riesgo de concentración.
+                        </div>
+                        <button class="submit-quiz" onclick="showFeedback('feedback3', true)">Ver Respuesta</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 4: Lo que Realmente Pasó vs. Lo Correcto -->
+        <div class="slide" data-slide="3">
+            <div class="slide-header">
+                <h1 class="slide-title">⚖️ Realidad vs. Mejores Prácticas</h1>
+                <p class="slide-subtitle">Comparación entre las decisiones tomadas y las recomendadas</p>
+            </div>
+            <div class="slide-content">
+                <div class="comparison-grid">
+                    <div class="what-happened">
+                        <h3 class="comparison-title">❌ Lo Que Realmente Pasó</h3>
+                        <ul class="comparison-list">
+                            <li><strong>Evaluación superficial:</strong> Aceptó proyecciones sin validar con estudios de mercado</li>
+                            <li><strong>Referencias insuficientes:</strong> Solo contactó 2 proveedores con relaciones menores a 6 meses</li>
+                            <li><strong>Garantías concentradas:</strong> Solo aceptó hipoteca sobre terrenos del proyecto</li>
+                            <li><strong>Sin due diligence:</strong> No solicitó estados financieros auditados</li>
+                            <li><strong>Falta de covenants:</strong> No estableció ratios de cumplimiento financiero</li>
+                            <li><strong>Sin monitoreo:</strong> No implementó seguimiento trimestral del proyecto</li>
+                            <li><strong>Aprobación unipersonal:</strong> Decisión tomada sin comité de crédito</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="what-should">
+                        <h3 class="comparison-title">✅ Lo Que Debió Haberse Hecho</h3>
+                        <ul class="comparison-list">
+                            <li><strong>Validación independiente:</strong> Estudio de mercado para contrastar proyecciones</li>
+                            <li><strong>Referencias extensas:</strong> Mínimo 4 referencias con antigüedad mayor a 2 años</li>
+                            <li><strong>Garantías diversificadas:</strong> Hipoteca + avales + seguro de crédito</li>
+                            <li><strong>Estados auditados:</strong> Exigir información financiera certificada</li>
+                            <li><strong>Covenants estrictos:</strong> Ratios de liquidez y endeudamiento obligatorios</li>
+                            <li><strong>Monitoreo continuo:</strong> Visitas trimestrales y reportes de avance</li>
+                            <li><strong>Comité de aprobación:</strong> Decisión colegiada para montos significativos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 5: Impacto y Consecuencias -->
+        <div class="slide" data-slide="4">
+            <div class="slide-header">
+                <h1 class="slide-title">💥 Impacto y Consecuencias</h1>
+                <p class="slide-subtitle">El costo real de las malas decisiones crediticias</p>
+            </div>
+            <div class="slide-content">
+                <div class="impact-visual">
+                    <div class="impact-card financial">
+                        <div class="impact-icon">💰</div>
+                        <div class="impact-value">$125,500</div>
+                        <div>Pérdida Total<br><small>Capital + Intereses + Legales</small></div>
+                    </div>
+                    <div class="impact-card legal">
+                        <div class="impact-icon">⚖️</div>
+                        <div class="impact-value">24 meses</div>
+                        <div>Proceso Legal<br><small>Tiempo estimado recuperación</small></div>
+                    </div>
+                    <div class="impact-card reputational">
+                        <div class="impact-icon">📉</div>
+                        <div class="impact-value">65%</div>
+                        <div>Pérdida Probable<br><small>Solo 35% recuperación</small></div>
+                    </div>
+                </div>
+                
+                <div class="key-takeaways">
+                    <h3 style="color: #072146; text-align: center; margin-bottom: 30px; font-size: 1.8em;">📝 Lecciones Clave del Caso</h3>
+                    <div class="takeaway-grid">
+                        <div class="takeaway-card">
+                            <div class="takeaway-title">💡 Due Diligence es Crítico</div>
+                            <p>Una validación deficiente al inicio puede costar hasta 10 veces más que el tiempo invertido en hacer una evaluación correcta.</p>
+                        </div>
+                        <div class="takeaway-card">
+                            <div class="takeaway-title">🛡️ Diversificación de Garantías</div>
+                            <p>Concentrar garantías en un solo tipo de activo multiplica exponencialmente el riesgo de pérdida total.</p>
+                        </div>
+                        <div class="takeaway-card">
+                            <div class="takeaway-title">⏰ Monitoreo Continuo</div>
+                            <p>Los problemas detectados a los 8 meses pudieron evitarse con controles trimestrales estructurados.</p>
+                        </div>
+                        <div class="takeaway-card">
+                            <div class="takeaway-title">👥 Decisiones Colegiadas</div>
+                            <p>Los comités de crédito reducen en un 70% la probabilidad de errores de evaluación por sesgos individuales.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 6: Quiz Final de Conocimientos -->
+        <div class="slide" data-slide="5">
+            <div class="slide-header">
+                <h1 class="slide-title">🎯 Evaluación Final</h1>
+                <p class="slide-subtitle">Demuestra lo que has aprendido del caso</p>
+            </div>
+            <div class="slide-content">
+                <div class="final-quiz">
+                    <div class="quiz-progress">
+                        <div class="quiz-progress-bar" id="progressBar"></div>
+                    </div>
+                    
+                    <div class="quiz-question active" data-question="0">
+                        <div class="question-number">1</div>
+                        <div class="question-title">¿Cuál es el principal factor que llevó a esta situación de cobranza?</div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">A</span>La crisis económica del sector construcción
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">B</span>La falta de experiencia del cliente
+                            </div>
+                            <div class="quiz-option" data-answer="true">
+                                <span class="option-letter">C</span>Fallas múltiples en el proceso de evaluación crediticia
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">D</span>El monto excesivo del préstamo otorgado
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-question" data-question="1">
+                        <div class="question-number">2</div>
+                        <div class="question-title">¿Qué porcentaje máximo de la cartera debe estar expuesto a un solo sector según las lecciones aprendidas?</div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">A</span>15%
+                            </div>
+                            <div class="quiz-option" data-answer="true">
+                                <span class="option-letter">B</span>8%
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">C</span>12%
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">D</span>5%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-question" data-question="2">
+                        <div class="question-number">3</div>
+                        <div class="question-title">¿Con qué frecuencia se debe monitorear un crédito de alto riesgo?</div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">A</span>Mensualmente
+                            </div>
+                            <div class="quiz-option" data-answer="true">
+                                <span class="option-letter">B</span>Trimestralmente
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">C</span>Semestralmente
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">D</span>Anualmente
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-question" data-question="3">
+                        <div class="question-number">4</div>
+                        <div class="question-title">¿Cuál debería ser el monto mínimo para requerir aprobación de comité de crédito?</div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">A</span>$100,000
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">B</span>$200,000
+                            </div>
+                            <div class="quiz-option" data-answer="true">
+                                <span class="option-letter">C</span>$150,000
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">D</span>$250,000
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-question" data-question="4">
+                        <div class="question-number">5</div>
+                        <div class="question-title">¿Cuál es la principal mejora implementada para prevenir casos similares?</div>
+                        <div class="quiz-options">
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">A</span>Aumentar las tasas de interés
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">B</span>Reducir los montos máximos de préstamo
+                            </div>
+                            <div class="quiz-option" data-answer="true">
+                                <span class="option-letter">C</span>Implementar un sistema de scoring más robusto
+                            </div>
+                            <div class="quiz-option" data-answer="false">
+                                <span class="option-letter">D</span>Evitar préstamos al sector construcción
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-navigation">
+                        <button class="quiz-nav-btn" id="prevQuizBtn" onclick="previousQuestion()" disabled>← Anterior</button>
+                        <span id="questionCounter">Pregunta 1 de 5</span>
+                        <button class="quiz-nav-btn" id="nextQuizBtn" onclick="nextQuestion()">Siguiente →</button>
+                        <button class="quiz-nav-btn" id="finishQuizBtn" onclick="finishQuiz()" style="display:none;">Finalizar Evaluación</button>
+                    </div>
+                    
+                    <div class="quiz-results" id="quizResults">
+                        <h2>🎊 Evaluación Completada</h2>
+                        <div class="score-display" id="finalScore">0%</div>
+                        <div class="score-interpretation" id="scoreText"></div>
+                        <p>Has completado exitosamente la capacitación sobre análisis de casos de cobranza.</p>
+                        <button class="quiz-nav-btn" onclick="restartQuiz()">Reintentar Evaluación</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Slide 7: Resumen y Próximos Pasos -->
+        <div class="slide" data-slide="6">
+            <div class="slide-header">
+                <h1 class="slide-title">🎯 Resumen y Próximos Pasos</h1>
+                <p class="slide-subtitle">Plan de acción para implementar lo aprendido</p>
+            </div>
+            <div class="slide-content">
+                <div style="max-width: 1000px; margin: 0 auto;">
+                    <div class="key-takeaways">
+                        <h3 style="color: #072146; text-align: center; margin-bottom: 30px; font-size: 1.8em;">📋 Plan de Implementación</h3>
+                        <div class="takeaway-grid">
+                            <div class="takeaway-card">
+                                <div class="takeaway-title">🔍 Evaluación Inmediata</div>
+                                <p><strong>Esta semana:</strong><br>
+                                • Revisar cartera actual de créditos > $100K<br>
+                                • Identificar exposiciones sectoriales<br>
+                                • Validar estado de garantías principales</p>
+                            </div>
+                            <div class="takeaway-card">
+                                <div class="takeaway-title">📊 Implementación de Controles</div>
+                                <p><strong>Próximo mes:</strong><br>
+                                • Configurar alertas automáticas de monitoreo<br>
+                                • Establecer calendario de revisiones trimestrales<br>
+                                • Actualizar formatos de evaluación crediticia</p>
+                            </div>
+                            <div class="takeaway-card">
+                                <div class="takeaway-title">👥 Capacitación Continua</div>
+                                <p><strong>Próximos 3 meses:</strong><br>
+                                • Capacitación mensual en análisis sectorial<br>
+                                • Certificación en evaluación de garantías<br>
+                                • Simulacros de comités de crédito</p>
+                            </div>
+                            <div class="takeaway-card">
+                                <div class="takeaway-title">📈 Mejora Continua</div>
+                                <p><strong>Seguimiento:</strong><br>
+                                • Revisión trimestral de casos cerrados<br>
+                                • Actualización anual de políticas<br>
+                                • Benchmark con mejores prácticas del mercado</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #072146, #004481); color: white; padding: 40px; border-radius: 15px; text-align: center; margin-top: 40px;">
+                        <h3 style="color: #43B5F5; margin-bottom: 20px; font-size: 1.5em;">💡 Reflexión Final</h3>
+                        <p style="font-size: 1.2em; line-height: 1.6;">
+                            "El éxito en la gestión crediticia no está en evitar todos los riesgos, 
+                            sino en identificarlos, medirlos y gestionarlos de manera proactiva. 
+                            Cada caso nos enseña a ser mejores evaluadores y protectores del patrimonio institucional."
+                        </p>
+                        <div style="margin-top: 30px; padding: 20px; background: rgba(67, 181, 245, 0.1); border-radius: 10px;">
+                            <strong style="color: #43B5F5;">¿Preguntas o dudas sobre la implementación?</strong><br>
+                            Contacta al equipo de Riesgos para sesiones de seguimiento personalizadas
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navegación -->
+    <div class="training-navigation">
+        <button class="nav-btn-training" id="prevBtn" onclick="changeSlide(-1)">← Anterior</button>
+        <div class="slide-counter-training">
+            <span id="currentSlide">1</span> / <span id="totalSlides">7</span>
+        </div>
+        <button class="nav-btn-training" id="nextBtn" onclick="changeSlide(1)">Siguiente →</button>
+    </div>
+    
+    <!-- Indicadores -->
+    <div class="slide-indicators-training">
+        <div class="indicator-training active" onclick="goToSlide(0)" title="Portada"></div>
+        <div class="indicator-training" onclick="goToSlide(1)" title="Caso"></div>
+        <div class="indicator-training" onclick="goToSlide(2)" title="Quiz Decisiones"></div>
+        <div class="indicator-training" onclick="goToSlide(3)" title="Comparación"></div>
+        <div class="indicator-training" onclick="goToSlide(4)" title="Impacto"></div>
+        <div class="indicator-training" onclick="goToSlide(5)" title="Evaluación"></div>
+        <div class="indicator-training" onclick="goToSlide(6)" title="Resumen"></div>
+    </div>
+    
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 7;
+        let selectedAnswers = [];
+        
+        // Quiz variables
+        let currentQuizQuestion = 0;
+        const totalQuizQuestions = 5;
+        let quizAnswers = [];
+        
+        function updateSlideDisplay() {
+            const slides = document.querySelectorAll('.slide');
+            const indicators = document.querySelectorAll('.indicator-training');
+            
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                if (index === currentSlideIndex) {
+                    slide.classList.add('active');
+                } else if (index < currentSlideIndex) {
+                    slide.classList.add('prev');
+                }
+            });
+            
+            indicators.forEach((indicator, index) => {
+                indicator.classList.toggle('active', index === currentSlideIndex);
+            });
+            
+            document.getElementById('currentSlide').textContent = currentSlideIndex + 1;
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 0;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlides - 1;
+        }
+        
+        function changeSlide(direction) {
+            const newIndex = currentSlideIndex + direction;
+            if (newIndex >= 0 && newIndex < totalSlides) {
+                currentSlideIndex = newIndex;
+                updateSlideDisplay();
+            }
+        }
+        
+        function goToSlide(index) {
+            if (index >= 0 && index < totalSlides) {
+                currentSlideIndex = index;
+                updateSlideDisplay();
+            }
+        }
+        
+        // Quiz funciones
+        function selectOption(element, isCorrect) {
+            const parent = element.parentElement;
+            const options = parent.querySelectorAll('.quiz-option');
+            
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            // Guardar respuesta
+            const questionIndex = Array.from(element.closest('.question-box').parentElement.children).indexOf(element.closest('.question-box'));
+            selectedAnswers[questionIndex] = isCorrect;
+        }
+        
+        function showFeedback(feedbackId, isCorrect) {
+            const feedback = document.getElementById(feedbackId);
+            const button = feedback.previousElementSibling;
+            
+            feedback.style.display = 'block';
+            feedback.className = isCorrect ? 'quiz-feedback feedback-correct' : 'quiz-feedback feedback-incorrect';
+            button.disabled = true;
+            
+            // Actualizar opciones
+            const questionBox = feedback.closest('.question-box');
+            const options = questionBox.querySelectorAll('.quiz-option');
+            options.forEach(option => {
+                if (option.classList.contains('selected')) {
+                    const wasCorrect = option.onclick.toString().includes('true');
+                    option.classList.add(wasCorrect ? 'correct' : 'incorrect');
+                }
+            });
+        }
+        
+        // Quiz final funciones
+        function updateQuizProgress() {
+            const progress = ((currentQuizQuestion + 1) / totalQuizQuestions) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            document.getElementById('questionCounter').textContent = `Pregunta ${currentQuizQuestion + 1} de ${totalQuizQuestions}`;
+        }
+        
+        function selectQuizAnswer(element) {
+            const question = element.closest('.quiz-question');
+            const options = question.querySelectorAll('.quiz-option');
+            const questionIndex = parseInt(question.dataset.question);
+            
+            options.forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const isCorrect = element.dataset.answer === 'true';
+            quizAnswers[questionIndex] = isCorrect;
+            
+            // Habilitar botón siguiente
+            document.getElementById('nextQuizBtn').disabled = false;
+            if (currentQuizQuestion === totalQuizQuestions - 1) {
+                document.getElementById('finishQuizBtn').style.display = 'inline-block';
+            }
+        }
+        
+        function nextQuestion() {
+            if (currentQuizQuestion < totalQuizQuestions - 1) {
+                document.querySelectorAll('.quiz-question')[currentQuizQuestion].classList.remove('active');
+                currentQuizQuestion++;
+                document.querySelectorAll('.quiz-question')[currentQuizQuestion].classList.add('active');
+                updateQuizProgress();
+                
+                document.getElementById('prevQuizBtn').disabled = false;
+                document.getElementById('nextQuizBtn').disabled = true;
+                
+                if (currentQuizQuestion === totalQuizQuestions - 1) {
+                    document.getElementById('nextQuizBtn').style.display = 'none';
+                    document.getElementById('finishQuizBtn').style.display = 'inline-block';
+                }
+            }
+        }
+        
+        function previousQuestion() {
+            if (currentQuizQuestion > 0) {
+                document.querySelectorAll('.quiz-question')[currentQuizQuestion].classList.remove('active');
+                currentQuizQuestion--;
+                document.querySelectorAll('.quiz-question')[currentQuizQuestion].classList.add('active');
+                updateQuizProgress();
+                
+                document.getElementById('nextQuizBtn').style.display = 'inline-block';
+                document.getElementById('finishQuizBtn').style.display = 'none';
+                
+                if (currentQuizQuestion === 0) {
+                    document.getElementById('prevQuizBtn').disabled = true;
+                }
+            }
+        }
+        
+        function finishQuiz() {
+            const score = (quizAnswers.filter(answer => answer === true).length / totalQuizQuestions) * 100;
+            
+            document.querySelector('.final-quiz').style.display = 'none';
+            document.getElementById('quizResults').style.display = 'block';
+            document.getElementById('finalScore').textContent = Math.round(score) + '%';
+            
+            let scoreText = '';
+            if (score >= 80) {
+                scoreText = '¡Excelente! Has demostrado un sólido entendimiento de los principios de evaluación crediticia.';
+            } else if (score >= 60) {
+                scoreText = 'Buen trabajo. Considera repasar algunos conceptos clave antes de aplicarlos en casos reales.';
+            } else {
+                scoreText = 'Te recomendamos revisar el material y repetir la capacitación para reforzar los conceptos.';
+            }
+            
+            document.getElementById('scoreText').textContent = scoreText;
+        }
+        
+        function restartQuiz() {
+            currentQuizQuestion = 0;
+            quizAnswers = [];
+            
+            document.querySelector('.final-quiz').style.display = 'block';
+            document.getElementById('quizResults').style.display = 'none';
+            
+            document.querySelectorAll('.quiz-question').forEach((q, index) => {
+                q.classList.toggle('active', index === 0);
+                q.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+            });
+            
+            updateQuizProgress();
+            document.getElementById('prevQuizBtn').disabled = true;
+            document.getElementById('nextQuizBtn').disabled = true;
+            document.getElementById('nextQuizBtn').style.display = 'inline-block';
+            document.getElementById('finishQuizBtn').style.display = 'none';
+        }
+        
+        // Event listeners para quiz
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.quiz-question .quiz-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    selectQuizAnswer(this);
+                });
+            });
+            
+            updateQuizProgress();
+        });
+        
+        // Navegación con teclado
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+            if (e.key === 'ArrowRight') changeSlide(1);
+            if (e.key >= '1' && e.key <= '7') {
+                goToSlide(parseInt(e.key) - 1);
+            }
+        });
+        
+        // Inicializar
+        updateSlideDisplay();
+    </script>
+</body>
+</html>
