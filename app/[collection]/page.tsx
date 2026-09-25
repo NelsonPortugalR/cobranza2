@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { COLLECTIONS, collectionProducts, collectionStats, getCollection, relatedCollections } from "@/lib/seo/collections.ts";
 import { brandPath } from "@/lib/seo/brands.ts";
-import { absoluteUrl, SITE } from "@/lib/site.ts";
+import { absoluteUrl, clampDescription, fitTitle, OG_IMAGE, SITE } from "@/lib/site.ts";
 import { formatUsd } from "@/lib/format.ts";
 import { ProductCard } from "@/components/ProductCard.tsx";
 import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs.tsx";
@@ -23,16 +23,20 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const c = getCollection((await params).collection);
   if (!c) return {};
   const s = collectionStats(collectionProducts(c));
-  // ≤ ~60 caracteres con la marca del sitio, para que Google no lo corte.
-  const title = `${c.name}: ${s.count.toLocaleString("en-US")} Styles from ${s.brands.length} Brands`;
-  const description = `Shop ${s.count.toLocaleString("en-US")} ${c.phrase} from ${s.brands.slice(0, 3).join(", ")}${
-    s.brands.length > 3 ? " and more" : ""
-  }. ${formatUsd(s.min)}–${formatUsd(s.max)}, sizes in stock, fiber content and US shipping compared in one place.`;
+  const n = s.count.toLocaleString("en-US");
+  // El título más completo que Google muestre entero (~60 caracteres).
+  const title = fitTitle(`${c.name}: ${n} Styles from ${s.brands.length} Brands`, `${c.name}: ${n} Styles`, `${c.name} Compared`, c.name);
+  const description = clampDescription(
+    `Shop ${n} ${c.phrase} from ${s.brands.slice(0, 2).join(", ")}${s.brands.length > 2 ? " and more" : ""}, ${formatUsd(s.min)}–${formatUsd(
+      s.max,
+    )}. Sizes in stock, fiber content and US shipping compared.`,
+  );
   return {
     title,
     description,
     alternates: { canonical: `/${c.slug}` },
-    openGraph: { title, description, url: absoluteUrl(`/${c.slug}`), type: "website" },
+    openGraph: { title: title.absolute, description, url: absoluteUrl(`/${c.slug}`), type: "website", images: [OG_IMAGE] },
+    twitter: { card: "summary_large_image", title: title.absolute, description, images: [OG_IMAGE.url] },
   };
 }
 

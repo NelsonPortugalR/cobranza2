@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { SITE } from "@/lib/site.ts";
 import { Breadcrumbs } from "@/components/Breadcrumbs.tsx";
 
-export const metadata: Metadata = { title: "Privacy Policy", alternates: { canonical: "/privacy" } };
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description: `What ${SITE.name} collects when you browse and search Peruvian alpaca, and what happens when you click through to a store.`,
+  alternates: { canonical: "/privacy" },
+};
 
 export default function PrivacyPage() {
   return (

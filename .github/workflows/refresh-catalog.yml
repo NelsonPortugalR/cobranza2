@@ -1,0 +1,47 @@
+# Actualización diaria del catálogo: descarga los catálogos públicos de las tiendas,
+# convierte precios al tipo de cambio del día y, si hubo cambios, los publica en la rama.
+# Cada push dispara un nuevo despliegue en Netlify.
+# Nota: GitHub solo ejecuta los "schedule" desde la rama por defecto del repositorio.
+name: Refresh catalog
+
+on:
+  schedule:
+    - cron: "17 10 * * *" # 05:17 en Lima
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-catalog
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run ingest
+      - run: npm test
+      - name: Sanity check
+        # No publicar si el catálogo quedó vacío o se redujo a menos de la mitad.
+        run: |
+          node -e '
+            const now = require("./data/catalog.json").length;
+            const before = JSON.parse(require("child_process").execSync("git show HEAD:data/catalog.json")).length;
+            console.log(`items: ${before} -> ${now}`);
+            if (now < 500 || now < before * 0.5) { console.error("Catalog shrank too much; not publishing."); process.exit(1); }'
+      - name: Commit and push
+        run: |
+          git config user.name "alpaca-atlas-bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/catalog.json data/coverage.json data/fx.json
+          if git diff --cached --quiet; then echo "No changes."; exit 0; fi
+          git commit -m "Daily catalog refresh $(date -u +%F)"
+          git push

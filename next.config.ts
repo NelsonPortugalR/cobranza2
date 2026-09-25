@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Sin cabecera "X-Powered-By: Next.js".
+  poweredByHeader: false,
   // El catálogo se lee con fs en el servidor: hay que incluirlo en las funciones desplegadas.
   // URLs antiguas en español → nuevas en inglés (301).
   async redirects() {

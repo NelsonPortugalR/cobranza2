@@ -5,7 +5,7 @@ import { BRANDS, getBrand } from "@/lib/seo/brands.ts";
 import { categoryCollectionFor } from "@/lib/seo/collections.ts";
 import { applyFilters } from "@/lib/filter.ts";
 import { formatUsd } from "@/lib/format.ts";
-import { absoluteUrl } from "@/lib/site.ts";
+import { absoluteUrl, clampDescription, fitTitle, OG_IMAGE } from "@/lib/site.ts";
 import { DEFAULT_FILTERS } from "@/lib/types.ts";
 import { ProductCard } from "@/components/ProductCard.tsx";
 import { Breadcrumbs } from "@/components/Breadcrumbs.tsx";
@@ -21,17 +21,19 @@ type Params = { params: Promise<{ brand: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const b = getBrand((await params).brand);
   if (!b) return {};
-  const title = `${b.name} Alpaca — ${b.products.length.toLocaleString("en-US")} Pieces Compared`;
-  const description = `Shop ${b.name} alpaca ${b.categories
+  const n = b.products.length.toLocaleString("en-US");
+  const title = fitTitle(`${b.name} Alpaca — ${n} Pieces Compared`, `${b.name} Alpaca: ${n} Pieces`, `${b.name} Alpaca`);
+  const description = clampDescription(`Shop ${b.name} alpaca ${b.categories
     .slice(0, 3)
     .map((c) => c.label.toLowerCase())
-    .join(", ")} from ${formatUsd(b.min)}. Sizes in stock, fiber content and USD prices, compared with other Peruvian brands.`;
+    .join(", ")} from ${formatUsd(b.min)}. Sizes in stock, fiber content and USD prices, compared with other Peruvian brands.`);
   return {
     title,
     description,
     alternates: { canonical: `/brands/${b.slug}` },
     ...(b.shipsToUS ? {} : { robots: { index: false, follow: true } }),
-    openGraph: { title, description, url: absoluteUrl(`/brands/${b.slug}`) },
+    openGraph: { title: title.absolute, description, url: absoluteUrl(`/brands/${b.slug}`), images: [OG_IMAGE] },
+    twitter: { card: "summary_large_image", title: title.absolute, description, images: [OG_IMAGE.url] },
   };
 }
 

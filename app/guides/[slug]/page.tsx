@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { GUIDES, getGuide } from "@/lib/seo/guides.ts";
 import { getCollection } from "@/lib/seo/collections.ts";
-import { absoluteUrl, SITE } from "@/lib/site.ts";
+import { absoluteUrl, clampDescription, fitTitle, OG_IMAGE, SITE } from "@/lib/site.ts";
 import { Breadcrumbs } from "@/components/Breadcrumbs.tsx";
 import { JsonLd } from "@/components/JsonLd.tsx";
 import { Faq } from "@/components/Faq.tsx";
@@ -19,11 +19,14 @@ type Params = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const g = getGuide((await params).slug);
   if (!g) return {};
+  const title = fitTitle(g.title, g.title.split(":")[0]);
+  const description = clampDescription(g.description);
   return {
-    title: g.title,
-    description: g.description,
+    title,
+    description,
     alternates: { canonical: `/guides/${g.slug}` },
-    openGraph: { title: g.title, description: g.description, url: absoluteUrl(`/guides/${g.slug}`), type: "article", modifiedTime: g.updated },
+    openGraph: { title: g.title, description, url: absoluteUrl(`/guides/${g.slug}`), type: "article", modifiedTime: g.updated, images: [OG_IMAGE] },
+    twitter: { card: "summary_large_image", title: g.title, description, images: [OG_IMAGE.url] },
   };
 }
 

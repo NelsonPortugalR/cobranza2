@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import type { Metadata } from "next";
-import { FX, US_PRODUCTS, getProduct, productPath } from "@/lib/catalog.ts";
+import { FX, US_PRODUCTS, canonicalPath, getProduct, productPath } from "@/lib/catalog.ts";
 import { categoryCollectionFor, collectionsForProduct } from "@/lib/seo/collections.ts";
 import { brandPath } from "@/lib/seo/brands.ts";
-import { absoluteUrl, SITE } from "@/lib/site.ts";
+import { absoluteUrl, clampDescription, fitTitle, OG_IMAGE, SITE } from "@/lib/site.ts";
 import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs.tsx";
 import { JsonLd } from "@/components/JsonLd.tsx";
 import type { FieldEvidence, Product } from "@/lib/types.ts";
@@ -50,25 +50,25 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   if (!p) return {};
   const price = usdPrice(p);
   const grade = fiberWords(p).replace(/\b\w/g, (c) => c.toUpperCase());
-  // "Langui Sweater — Gray · Baby Alpaca by Incalpaca" (sin repetir el tipo de prenda).
-  const title = `${p.title} · ${grade} by ${p.seller.name}`;
-  const description = `${formatUsd(price.now)} · ${[compositionLabel(p), p.sizesAvailable?.length ? `sizes ${p.sizesAvailable.map(sizeLabel).join(", ")} in stock` : null]
+  // "Langui Sweater — Gray · Baby Alpaca by Incalpaca", acortado si Google lo cortaría.
+  const title = fitTitle(`${p.title} · ${grade} by ${p.seller.name}`, `${p.title} by ${p.seller.name}`, `${p.title} · ${p.seller.name}`, p.title);
+  const description = clampDescription(`${p.title} by ${p.seller.name}: ${formatUsd(price.now)} · ${[compositionLabel(p), p.sizesAvailable?.length ? `sizes ${p.sizesAvailable.map(sizeLabel).join(", ")} in stock` : null]
     .filter(Boolean)
-    .join(" · ")}. Compare this ${fiberWords(p)} ${TYPE_SINGULAR[p.productType].toLowerCase()} with similar pieces from other Peruvian brands that ship to the US.`;
+    .join(" · ")}. Compare this ${fiberWords(p)} ${TYPE_SINGULAR[p.productType].toLowerCase()} with similar pieces from other Peruvian brands that ship to the US.`);
   return {
     title,
     description,
-    alternates: { canonical: productPath(p) },
+    alternates: { canonical: canonicalPath(p) },
     // Solo se indexan las fichas de tiendas que envían a EE. UU. (público objetivo).
     ...(p.shipping?.toUS ? {} : { robots: { index: false, follow: true } }),
     openGraph: {
-      title,
+      title: title.absolute,
       description,
       url: absoluteUrl(productPath(p)),
       type: "website",
-      images: p.images[0] ? [{ url: p.images[0], alt: p.title }] : undefined,
+      images: p.images[0] ? [{ url: p.images[0], alt: p.title }] : [OG_IMAGE],
     },
-    twitter: { card: "summary_large_image", title, description, images: p.images[0] ? [p.images[0]] : undefined },
+    twitter: { card: "summary_large_image", title: title.absolute, description, images: [p.images[0] ?? OG_IMAGE.url] },
   };
 }
 

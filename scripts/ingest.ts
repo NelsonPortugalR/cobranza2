@@ -257,6 +257,10 @@ async function main() {
   await writeFile("data/fx.json", JSON.stringify(fx, null, 2));
   console.log(`Tipo de cambio: S/ ${fx.penPerUsd} por USD (${fx.source}${fx.date ? `, ${fx.date}` : ""})`);
   const catalog: Product[] = [];
+  // Catálogo anterior: si una tienda falla y no hay descarga en caché (p. ej. en GitHub
+  // Actions), se conservan sus fichas de la última actualización mientras sean recientes.
+  const previous: Product[] = JSON.parse(await readFile("data/catalog.json", "utf8").catch(() => "[]"));
+  const MAX_STALE_MS = 7 * 24 * 3600 * 1000;
 
   for (const src of SOURCES) {
     const rawPath = `data/raw/${src.key}.json`;
@@ -282,7 +286,11 @@ async function main() {
         await readCache();
         console.warn(`${src.site}: sin acceso (${reason}); uso la descarga del ${retrievedAt!.slice(0, 10)}`);
       } catch {
-        console.warn(`${src.site}: sin acceso (${reason}); se omite`);
+        const kept = previous.filter(
+          (p) => p.source.site === src.site && Date.now() - Date.parse(p.source.retrievedAt) < MAX_STALE_MS,
+        );
+        console.warn(`${src.site}: sin acceso (${reason}); ${kept.length ? `conservo ${kept.length} ítems de la actualización anterior` : "se omite"}`);
+        catalog.push(...kept);
         continue;
       }
     }

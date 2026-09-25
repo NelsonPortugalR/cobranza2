@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import { SITE } from "@/lib/site.ts";
 import { Breadcrumbs } from "@/components/Breadcrumbs.tsx";
 
-export const metadata: Metadata = { title: "Terms of Use", alternates: { canonical: "/terms" }, robots: { index: true, follow: true } };
+export const metadata: Metadata = {
+  title: "Terms of Use",
+  description: `How ${SITE.name} works: an independent comparison of Peruvian alpaca where every purchase happens on the maker's own store.`,
+  alternates: { canonical: "/terms" },
+};
 
 export default function TermsPage() {
   return (

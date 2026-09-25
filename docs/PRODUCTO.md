@@ -333,10 +333,12 @@ Tiendas que envían a EE. UU. (4.584 prendas con stock): Sol Alpaca, Kuna USA, I
    - `SITE_INDEXABLE=true`
    - `GOOGLE_SITE_VERIFICATION=<código de Search Console>`
    - `BING_SITE_VERIFICATION=<código de Bing Webmaster Tools>`
-3. Quitar la protección con contraseña del sitio.
-4. **Google Search Console:** verificar el dominio y enviar `https://alpacaatlas.com/sitemap.xml`.
-5. **Bing Webmaster Tools:** importar desde Search Console y enviar el sitemap. Bing alimenta a Copilot y es una de las fuentes de búsqueda de ChatGPT.
-6. **Actualización diaria del catálogo** (descarga y nuevo despliegue): el stock y los precios frescos son una señal de calidad, y los datos `Product` deben coincidir con lo que muestra la tienda.
+3. **Google Search Console:** propiedad de tipo *Prefijo de URL* `https://alpacaatlas.com/`, método *Etiqueta HTML*: el código va en `GOOGLE_SITE_VERIFICATION`. Después, enviar `https://alpacaatlas.com/sitemap.xml`.
+4. **Bing Webmaster Tools:** importar desde Search Console (o `BING_SITE_VERIFICATION`) y enviar el sitemap. Bing alimenta a Copilot y es una de las fuentes de búsqueda de ChatGPT.
+5. **Rama `main`:** llevar esta rama a `main` y usar `main` como rama de producción en Netlify. GitHub solo ejecuta las tareas programadas desde la rama por defecto.
+6. **Actualización diaria del catálogo:** `.github/workflows/refresh-catalog.yml` (05:17 hora de Lima, o a mano con *Run workflow*) descarga los catálogos, convierte precios al tipo de cambio del día, pasa los tests y publica si hubo cambios; Netlify redespliega solo. Si una tienda falla, se conservan sus fichas de la actualización anterior (máximo 7 días) y no se publica si el catálogo se reduce a menos de la mitad.
+
+**Auditoría SEO previa al lanzamiento** (rastreo de las ~4.250 URLs del sitemap con la configuración de producción): todas responden 200, una sola H1, canónica igual a la URL del sitemap, JSON-LD válido, imagen para compartir, textos alternativos, títulos y descripciones únicos, títulos de ≤ 60 caracteres (salvo 11 nombres de producto largos) y descripciones de ≤ 160. Las fichas repetidas de una misma tienda (mismo nombre y color) apuntan con `canonical` a la principal y no van al sitemap.
 
 ### Qué no depende del código (SEO externo)
 
