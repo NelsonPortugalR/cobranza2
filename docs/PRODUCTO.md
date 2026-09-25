@@ -329,12 +329,12 @@ Tiendas que envían a EE. UU. (4.584 prendas con stock): Sol Alpaca, Kuna USA, I
 
 1. Comprar el dominio y conectarlo en Netlify como **dominio principal** (con `www`). El HTTPS es automático y `vellon-alpaca.netlify.app` redirige solo.
 2. Variables de entorno en Netlify (Site configuration → Environment variables), y volver a desplegar:
-   - `NEXT_PUBLIC_SITE_URL=https://www.alpacaatlas.com`
+   - `NEXT_PUBLIC_SITE_URL=https://alpacaatlas.com`
    - `SITE_INDEXABLE=true`
    - `GOOGLE_SITE_VERIFICATION=<código de Search Console>`
    - `BING_SITE_VERIFICATION=<código de Bing Webmaster Tools>`
 3. Quitar la protección con contraseña del sitio.
-4. **Google Search Console:** verificar el dominio y enviar `https://www.alpacaatlas.com/sitemap.xml`.
+4. **Google Search Console:** verificar el dominio y enviar `https://alpacaatlas.com/sitemap.xml`.
 5. **Bing Webmaster Tools:** importar desde Search Console y enviar el sitemap. Bing alimenta a Copilot y es una de las fuentes de búsqueda de ChatGPT.
 6. **Actualización diaria del catálogo** (descarga y nuevo despliegue): el stock y los precios frescos son una señal de calidad, y los datos `Product` deben coincidir con lo que muestra la tienda.
 

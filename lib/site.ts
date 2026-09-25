@@ -1,6 +1,6 @@
 // Configuración pública del sitio. El dominio y el nombre se cambian con variables de entorno
 // en Netlify, sin tocar código:
-//   NEXT_PUBLIC_SITE_URL=https://www.alpacaatlas.com
+//   NEXT_PUBLIC_SITE_URL=https://alpacaatlas.com
 //   NEXT_PUBLIC_SITE_NAME="Alpaca Atlas"
 //   SITE_INDEXABLE=true         ← solo cuando el sitio sea público (antes, todo va con noindex)
 //   GOOGLE_SITE_VERIFICATION=…  BING_SITE_VERIFICATION=…
