@@ -4,7 +4,7 @@ import { parseQueryLocal } from "./parseQuery.ts";
 import { applyFilters, facetCounts } from "./filter.ts";
 import { PRODUCTS as MOCK } from "./products.ts";
 import { qualityFromMicron } from "./taxonomy.ts";
-import { toUsd, type FxRate } from "./fx.ts";
+import { bcrpDate, parseBcrp, toUsd, type FxRate } from "./fx.ts";
 import { stripNonComparable } from "./comparable.ts";
 
 // Los productos de ejemplo se marcan como demo; los tests los incluyen explícitamente.
@@ -121,4 +121,10 @@ test("facet counts match applying the filter", () => {
     const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");
     assert.deepEqual(counts[key][value], { exact: r.exact.length, total: r.exact.length + r.partial.length }, key);
   }
+});
+
+test("BCRP exchange-rate response", () => {
+  assert.equal(bcrpDate("23.Set.26"), "2026-09-23");
+  const fx = parseBcrp({ periods: [{ name: "22.Set.26", values: ["3.39"] }, { name: "23.Set.26", values: ["3.385"] }, { name: "24.Set.26", values: ["n.d."] }] });
+  assert.deepEqual(fx, { penPerUsd: 3.385, date: "2026-09-23", source: "BCRP" });
 });

@@ -22,9 +22,18 @@ export function parseBcrp(json: unknown): FxRate | null {
   const periods = (json as { periods?: { name: string; values: string[] }[] })?.periods ?? [];
   for (let i = periods.length - 1; i >= 0; i--) {
     const v = parseFloat(periods[i].values?.[0]);
-    if (Number.isFinite(v) && v > 2 && v < 6) return { penPerUsd: v, date: periods[i].name, source: "BCRP" };
+    if (Number.isFinite(v) && v > 2 && v < 6) return { penPerUsd: v, date: bcrpDate(periods[i].name), source: "BCRP" };
   }
   return null;
+}
+
+const MESES: Record<string, string> = { ene: "01", feb: "02", mar: "03", abr: "04", may: "05", jun: "06", jul: "07", ago: "08", set: "09", sep: "09", oct: "10", nov: "11", dic: "12" };
+
+/** "23.Set.26" → "2026-09-23". Si no reconoce el formato, lo devuelve tal cual. */
+export function bcrpDate(name: string): string {
+  const m = name.match(/^(\d{1,2})\.([A-Za-z]{3})\.(\d{2})$/);
+  const mes = m && MESES[m[2].toLowerCase()];
+  return m && mes ? `20${m[3]}-${mes}-${m[1].padStart(2, "0")}` : name;
 }
 
 export function parseOpenEr(json: unknown): FxRate | null {
