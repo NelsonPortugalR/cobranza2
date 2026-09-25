@@ -1,0 +1,30 @@
+# Avisa a Bing (IndexNow) de las páginas nuevas o cambiadas.
+# - Tras cada actualización diaria del catálogo: portada, colecciones, marcas y guías.
+# - A mano (Run workflow) con "all": todas las URLs del sitemap, incluidas las fichas.
+name: IndexNow
+
+on:
+  workflow_run:
+    workflows: ["Refresh catalog"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      all:
+        description: "Submit every URL in the sitemap (including products)"
+        type: boolean
+        default: true
+
+jobs:
+  submit:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Wait for the Netlify deploy
+        if: github.event_name == 'workflow_run'
+        run: sleep 240
+      - run: node --experimental-strip-types --no-warnings scripts/indexnow.ts ${{ (github.event_name == 'workflow_dispatch' && inputs.all) && '--all' || '' }}

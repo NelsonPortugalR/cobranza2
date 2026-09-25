@@ -340,6 +340,8 @@ Tiendas que envían a EE. UU. (4.584 prendas con stock): Sol Alpaca, Kuna USA, I
 5. **Rama `main`:** llevar esta rama a `main` y usar `main` como rama de producción en Netlify. GitHub solo ejecuta las tareas programadas desde la rama por defecto.
 6. **Actualización diaria del catálogo:** `.github/workflows/refresh-catalog.yml` (05:17 hora de Lima, o a mano con *Run workflow*) descarga los catálogos, convierte precios al tipo de cambio del día, pasa los tests y publica si hubo cambios; Netlify redespliega solo. Si una tienda falla, se conservan sus fichas de la actualización anterior (máximo 7 días) y no se publica si el catálogo se reduce a menos de la mitad.
 
+7. **IndexNow (Bing, Copilot, ChatGPT):** `.github/workflows/indexnow.yml` avisa a Bing tras cada actualización diaria (portada, colecciones, marcas y guías); a mano con *Run workflow* envía todas las URLs. La clave está en `public/<clave>.txt`.
+
 **Auditoría SEO previa al lanzamiento** (rastreo de las ~4.250 URLs del sitemap con la configuración de producción): todas responden 200, una sola H1, canónica igual a la URL del sitemap, JSON-LD válido, imagen para compartir, textos alternativos, títulos y descripciones únicos, títulos de ≤ 60 caracteres (salvo 11 nombres de producto largos) y descripciones de ≤ 160. Las fichas repetidas de una misma tienda (mismo nombre y color) apuntan con `canonical` a la principal y no van al sitemap.
 
 ### Qué no depende del código (SEO externo)
