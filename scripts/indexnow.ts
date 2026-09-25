@@ -3,6 +3,8 @@
 // public/<clave>.txt, que es como IndexNow comprueba que el sitio es nuestro.
 //   node --experimental-strip-types scripts/indexnow.ts          → portada, colecciones, marcas y guías
 //   node --experimental-strip-types scripts/indexnow.ts --all    → todas las URLs del sitemap
+export {};
+
 const KEY = "44b68c856ce2460b6111583d9988ba8d";
 const SITE = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://alpacaatlas.com").replace(/\/$/, "");
 const all = process.argv.includes("--all");
