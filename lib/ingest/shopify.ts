@@ -1,5 +1,7 @@
 import type { Breed, ColorFamily, FieldEvidence, Product, ProductType, Quality } from "../types.ts";
-import { COLOR_SWATCH, SIZE_ORDER, USD_PEN } from "../taxonomy.ts";
+import { COLOR_SWATCH, SIZE_ORDER } from "../taxonomy.ts";
+import { FALLBACK_FX, toUsd, type FxRate } from "../fx.ts";
+import { englishTitle, translateColor } from "./translate.ts";
 
 // Normaliza productos de tiendas Shopify (endpoint público /products.json) al modelo
 // Product. Extracción por reglas: cada valor guarda la frase literal que lo respalda.
@@ -37,6 +39,8 @@ export interface ShopifySource {
   currency: "USD" | "PEN";
   shipping?: Product["shipping"];
   retrievedAt: string;
+  /** Tipo de cambio del día de la descarga (para convertir soles a USD). */
+  fx?: FxRate;
   /** Tienda multimarca: el vendedor es la marca (campo vendor de Shopify). */
   multiBrand?: boolean;
   /** Tienda que también vende otras fibras: descarta productos sin alpaca. */
@@ -289,11 +293,11 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
   }
 
   const warnings: string[] = [];
-  if (!composition.length && !words) warnings.push("Composición no declarada");
-  if (words?.pure) warnings.push("100% deducido de la frase; la tienda no da porcentaje");
-  if (words?.blend) warnings.push("Mezcla sin porcentajes");
-  if (!q.quality && composition.length) warnings.push("La composición no indica calidad (solo 'alpaca')");
-  if (q.quality && !mainAlpaca) warnings.push("Menciona la calidad pero no el % de alpaca");
+  if (!composition.length && !words) warnings.push("The store does not list the fiber content");
+  if (words?.pure) warnings.push("100% inferred from the description; the store gives no percentage");
+  if (words?.blend) warnings.push("Blend without percentages");
+  if (!q.quality && composition.length) warnings.push("Fiber grade not stated (just \"alpaca\")");
+  if (q.quality && !mainAlpaca) warnings.push("Grade is stated but not the alpaca percentage");
 
 
   return [...byColor].map(([colorName, variants]) => {
@@ -315,7 +319,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
 
     return {
       id: `${slug(src.site)}-${p.handle}${byColor.size > 1 ? `-${slug(colorName)}` : ""}`,
-      title: byColor.size > 1 && !p.title.toLowerCase().includes(colorName.toLowerCase()) ? `${p.title} — ${titleCase(colorName)}` : p.title,
+      ...displayTitle(p.title, colorName, byColor.size > 1),
       source: {
         site: src.site,
         url: `${src.baseUrl}/products/${p.handle}?variant=${cheapest.id}`,
@@ -334,12 +338,12 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
         breed,
       },
       color: {
-        name: titleCase(colorName),
+        name: translateColor(titleCase(colorName)),
         family: color.family,
         hex: color.family && !COLOR_SWATCH[color.family].startsWith("conic") ? COLOR_SWATCH[color.family] : "#CFC3B1",
         natural: color.natural,
       },
-      origin: { region: null, detail: madeIn ? "Hecho en Perú (sin región)" : undefined },
+      origin: { region: null, detail: madeIn ? "Made in Peru" : undefined },
       construction: handmade ? "tejido_a_mano" : null,
       weightGrams: null,
       sizes,
@@ -347,7 +351,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       price: {
         amount,
         currency: src.currency,
-        amountPen: Math.round(src.currency === "USD" ? amount * USD_PEN : amount),
+        amountUsd: toUsd(amount, src.currency, src.fx ?? FALLBACK_FX),
         compareAt,
       },
       shipping: src.shipping,
@@ -372,6 +376,17 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       extraction: { ...ENGINE, confidence: Math.round(confidence * 100) / 100, warnings },
     } satisfies Product;
   });
+}
+
+/** Título para el portal (en inglés si la tienda lo publica en español) y el original como referencia. */
+function displayTitle(title: string, colorName: string, manyColors: boolean): { title: string; titleOriginal?: string } {
+  const withColor = manyColors && !title.toLowerCase().includes(colorName.toLowerCase());
+  const en = englishTitle(title);
+  if (en) {
+    const hasColor = en.includes(" — ");
+    return { title: withColor && !hasColor ? `${en} — ${translateColor(titleCase(colorName))}` : en, titleOriginal: title };
+  }
+  return { title: withColor ? `${title} — ${titleCase(colorName)}` : title };
 }
 
 /** Misma imagen servida desde el dominio de la tienda (/cdn/shop/…) en vez de cdn.shopify.com. */

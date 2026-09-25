@@ -4,7 +4,7 @@ import { useState } from "react";
 import type { Product } from "@/lib/types.ts";
 import { Swatch } from "./Swatch.tsx";
 
-/** Foto original de la tienda (enlazada, no copiada). Si no carga, muestra la muestra de color. */
+/** Foto original de la tienda (enlazada, no copiada). Si no carga, se muestra la muestra de color. */
 export function ProductImage({ product: p, className = "", sizes = "(max-width: 768px) 50vw, 33vw" }: { product: Product; className?: string; sizes?: string }) {
   const [failed, setFailed] = useState(false);
   const src = p.images[0];

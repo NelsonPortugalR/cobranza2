@@ -2,7 +2,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
-import { BREEDS, COLOR_FAMILIES, PRODUCT_TYPES, QUALITIES, QUALITY_RANGES, REGIONS, USD_PEN } from "@/lib/taxonomy.ts";
+import { BREEDS, COLOR_FAMILIES, PRODUCT_TYPES, QUALITIES, QUALITY_RANGES, REGIONS, TYPE_LABEL } from "@/lib/taxonomy.ts";
+import { FX } from "@/lib/catalog.ts";
 import type { ParsedQuery } from "@/lib/types.ts";
 
 // Convierte una consulta en lenguaje natural en filtros estructurados.
@@ -21,9 +22,8 @@ const ParsedSchema = z.object({
     sizes: z.array(z.enum(["XXS", "XS", "S", "M", "L", "XL", "XXL", "Única"])),
     priceMin: z.number().nullable(),
     priceMax: z.number().nullable(),
-    priceCurrency: z.enum(["PEN", "USD"]),
     inStockOnly: z.boolean(),
-    shipsToPeru: z.boolean(),
+    shipsToUS: z.boolean(),
   }),
   sort: z.enum(["relevancia", "micras_asc", "precio_asc", "precio_desc"]),
   chips: z.array(
@@ -35,21 +35,23 @@ const ParsedSchema = z.object({
   ),
 });
 
-const SYSTEM = `Traduces búsquedas de compradores de productos de alpaca peruana a filtros estructurados para un catálogo.
+const SYSTEM = `You turn shopping queries for Peruvian alpaca products into structured catalog filters.
+Shoppers are mostly in the United States and write in English (sometimes Spanish).
 
-Categorías de finura (NTP 231.301), de más fina a más gruesa:
-${QUALITY_RANGES.map((q) => `- ${q.id}: ${q.min === 0 ? "≤" + q.max : q.min + "–" + q.max} µm`).join("\n")}
+Product types (use these ids): ${PRODUCT_TYPES.map((t) => `${t} = ${TYPE_LABEL[t]}`).join("; ")}.
 
-Reglas:
-- "baby alpaca" significa baby o más fina: qualities = ["ultrafina","super_baby","baby"]. "royal" equivale a ultrafina.
-- "lo más fino/suave posible" → sort = "micras_asc" (no restringe calidades por sí solo).
-- Colores comerciales se mapean a familias: oatmeal/hueso/arena → beige; vicuña/fawn → camel; café/chocolate → marron; crudo/marfil → blanco.
-- "natural" referido al color significa sin teñir (dye = "natural"). "tintes naturales" significa teñido.
-- priceMin/priceMax van SIEMPRE en soles. Si el usuario da dólares ("US$", "$", "usd", "dólares"), multiplica por ${USD_PEN} y pon priceCurrency = "USD"; si no, "PEN".
-- shipsToPeru = true si pide que envíen/lleguen a Perú o a una ciudad peruana.
-- sizes: tallas pedidas ("talla M" → ["M"]). Suéter/sweater/jersey = chompa.
-- Solo filtra lo que el usuario pidió; no inventes restricciones. Lo que no encaje en ningún filtro va en "text".
-- chips: una entrada por cada filtro aplicado, con una etiqueta corta en español y el fragmento literal del usuario en "from".`;
+Fiber grades, finest first (use these ids):
+${QUALITY_RANGES.map((q) => `- ${q.id} (${q.label}): ${q.min === 0 ? "≤" + q.max : q.min + "–" + q.max} µm`).join("\n")}
+
+Rules:
+- "baby alpaca" means baby or finer: qualities = ["ultrafina","super_baby","baby"]. "royal alpaca" = ["ultrafina"].
+- "finest/softest possible" → sort = "micras_asc" (does not restrict grades by itself).
+- Map fashion color names to families: oatmeal/sand/ecru → beige; fawn/tan/cognac → camel; mocha/chocolate → marron; ivory → blanco; charcoal/heather → gris; navy/indigo → azul; burgundy/rust/orange → rojo; lilac/plum → rosa; mustard → amarillo.
+- Prices are always in USD. If the shopper gives soles ("S/", "soles", "PEN"), divide by ${FX.penPerUsd}.
+- shipsToUS is true unless the shopper explicitly says shipping does not matter.
+- sizes: requested sizes ("size M", "medium" → ["M"]; "one size" → ["Única"]). Sweater/jumper/pullover = chompa.
+- Only apply what the shopper asked for; do not invent constraints. Anything that fits no filter goes in "text".
+- chips: one entry per applied filter, with a short English label and the shopper's literal words in "from".`;
 
 export async function POST(req: Request) {
   const { query } = (await req.json().catch(() => ({}))) as { query?: string };
@@ -57,7 +59,7 @@ export async function POST(req: Request) {
     return Response.json({ error: "Consulta inválida" }, { status: 400 });
   }
 
-  const local = parseQueryLocal(query);
+  const local = parseQueryLocal(query, FX);
   if (!process.env.ANTHROPIC_API_KEY) return Response.json(local);
 
   try {

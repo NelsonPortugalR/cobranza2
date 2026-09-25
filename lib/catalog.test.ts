@@ -1,15 +1,21 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { parseQueryLocal } from "./parseQuery.ts";
-import { applyFilters } from "./filter.ts";
+import { applyFilters, facetCounts } from "./filter.ts";
 import { PRODUCTS as MOCK } from "./products.ts";
-
-// Los productos de ejemplo se marcan como demo en lib/catalog.ts.
-const PRODUCTS = MOCK.map((p) => ({ ...p, demo: true }));
-const withDemo = <T extends { filters: object }>(parsed: T) => ({ ...parsed, filters: { ...parsed.filters, includeDemo: true } });
 import { qualityFromMicron } from "./taxonomy.ts";
+import { toUsd, type FxRate } from "./fx.ts";
+import { stripNonComparable } from "./comparable.ts";
 
-test("clasifica micras según los rangos NTP", () => {
+// Los productos de ejemplo se marcan como demo; los tests los incluyen explícitamente.
+const PRODUCTS = MOCK.map((p) => ({ ...p, demo: true }));
+const FX: FxRate = { penPerUsd: 3.5, date: "2026-09-25", source: "BCRP" };
+const withDemo = <T extends { filters: object }>(parsed: T) => ({
+  ...parsed,
+  filters: { ...parsed.filters, includeDemo: true, shipsToUS: false },
+});
+
+test("micron ranges follow NTP 231.301", () => {
   assert.equal(qualityFromMicron(17.9), "ultrafina");
   assert.equal(qualityFromMicron(18), "ultrafina");
   assert.equal(qualityFromMicron(19.5), "super_baby");
@@ -17,93 +23,99 @@ test("clasifica micras según los rangos NTP", () => {
   assert.equal(qualityFromMicron(25), "fleece");
 });
 
-test("consulta insignia: chompa baby alpaca beige de Puno, lo más fino posible", () => {
-  const parsed = withDemo(parseQueryLocal("chompa baby alpaca beige de Puno, lo más fino posible"));
-  assert.deepEqual(parsed.filters.types, ["chompa"]);
-  assert.deepEqual(parsed.filters.qualities, ["ultrafina", "super_baby", "baby"]);
-  assert.deepEqual(parsed.filters.colorFamilies, ["beige"]);
-  assert.deepEqual(parsed.filters.origins, ["puno"]);
-  assert.equal(parsed.sort, "micras_asc");
-  assert.equal(parsed.filters.text, "");
-
-  const { exact, partial } = applyFilters(PRODUCTS, parsed.filters, parsed.sort);
-  assert.deepEqual(exact.map((m) => m.product.id), ["casa-misti-royal-beige", "etsy-handknit-beige"]);
-  assert.deepEqual(
-    partial.map((m) => m.product.id).sort(),
-    ["ml-chompa-mujer-beige", "sol-alpaca-cuello-alto"],
-  );
-  assert.ok(partial.every((m) => m.unknownFields.includes("origen")));
+test("target query: brown sweater, 100% baby alpaca, size M, under $180", () => {
+  const { filters, chips } = parseQueryLocal("Brown sweater, 100% baby alpaca, size M, under $180.", FX);
+  assert.deepEqual(filters.types, ["chompa"]);
+  assert.deepEqual(filters.colorFamilies, ["marron"]);
+  assert.equal(filters.composition, "100");
+  assert.deepEqual(filters.qualities, ["ultrafina", "super_baby", "baby"]);
+  assert.deepEqual(filters.sizes, ["M"]);
+  assert.equal(filters.priceMax, 180);
+  assert.equal(filters.shipsToUS, true, "US shipping is on by default");
+  assert.equal(filters.text, "");
+  assert.ok(chips.some((c) => c.label === "Under $180"));
 });
 
-test("rechaza mezclas cuando se pide 100% alpaca", () => {
-  const parsed = withDemo(parseQueryLocal("manta 100% alpaca"));
+test("English phrasing: sizes, price words and accessories", () => {
+  const a = parseQueryLocal("gray cardigan in size small between $100 and $250", FX).filters;
+  assert.deepEqual(a.types, ["cardigan"]);
+  assert.deepEqual(a.colorFamilies, ["gris"]);
+  assert.deepEqual(a.sizes, ["S"]);
+  assert.deepEqual([a.priceMin, a.priceMax], [100, 250]);
+  const b = parseQueryLocal("alpaca beanie and gloves under 60 dollars", FX).filters;
+  assert.deepEqual(b.types, ["gorro", "guantes"]);
+  assert.equal(b.priceMax, 60);
+  assert.equal(b.text, "");
+  const c = parseQueryLocal("royal alpaca wrap in camel, one size", FX).filters;
+  assert.deepEqual(c.types, ["chal"]);
+  assert.deepEqual(c.qualities, ["ultrafina"]);
+  assert.deepEqual(c.colorFamilies, ["camel"]);
+  assert.deepEqual(c.sizes, ["Única"]);
+});
+
+test("Spanish still works, and soles are converted to USD", () => {
+  const f = parseQueryLocal("chompa marrón de baby alpaca, talla M, menos de S/ 700", FX).filters;
+  assert.deepEqual(f.types, ["chompa"]);
+  assert.deepEqual(f.colorFamilies, ["marron"]);
+  assert.deepEqual(f.sizes, ["M"]);
+  assert.equal(f.priceMax, 200, "700 / 3.5");
+  assert.equal(parseQueryLocal("scarf up to 350 soles", FX).filters.priceMax, 100);
+});
+
+test("unpublished criteria are ignored with a notice", () => {
+  const parsed = parseQueryLocal("undyed suri sweater from Puno", FX);
+  const { filters, ignored } = stripNonComparable(parsed.filters);
+  assert.deepEqual([filters.origins, filters.breeds, filters.dye], [[], [], "cualquiera"]);
+  assert.equal(ignored.length, 3);
+});
+
+test("soles are converted with the day's rate", () => {
+  assert.equal(toUsd(700, "PEN", FX), 200);
+  assert.equal(toUsd(120, "USD", FX), 120);
+});
+
+test("flagship query over sample data: exact vs to-confirm", () => {
+  const parsed = withDemo(parseQueryLocal("baby alpaca sweater in beige from Puno, finest possible", FX));
+  assert.equal(parsed.sort, "micras_asc");
+  const { exact, partial } = applyFilters(PRODUCTS, parsed.filters, parsed.sort);
+  assert.deepEqual(exact.map((m) => m.product.id), ["casa-misti-royal-beige", "etsy-handknit-beige"]);
+  assert.deepEqual(partial.map((m) => m.product.id).sort(), ["ml-chompa-mujer-beige", "sol-alpaca-cuello-alto"]);
+  assert.ok(partial.every((m) => m.unknownFields.includes("origin")));
+});
+
+test("100% alpaca excludes blends", () => {
+  const parsed = withDemo(parseQueryLocal("100% alpaca throw", FX));
   const { exact, partial } = applyFilters(PRODUCTS, parsed.filters, parsed.sort);
   assert.equal(exact.length + partial.length, 0);
 });
 
-test("precio, raza y tinte", () => {
-  const parsed = withDemo(parseQueryLocal("fibra suri sin teñir hasta 200 soles"));
-  assert.deepEqual(parsed.filters.breeds, ["suri"]);
-  assert.equal(parsed.filters.dye, "natural");
-  assert.equal(parsed.filters.priceMax, 200);
-  const { exact } = applyFilters(PRODUCTS, parsed.filters, parsed.sort);
-  assert.deepEqual(exact.map((m) => m.product.id), ["etsy-suri-roving"]);
-});
-
-test("límite de micras explícito", () => {
-  const parsed = withDemo(parseQueryLocal("chompa de menos de 20 micras"));
-  assert.deepEqual(parsed.filters.qualities, ["ultrafina", "super_baby"]);
-});
-
-test("consulta del usuario: suéter marrón, 100% baby alpaca, talla M, menos de US$180", () => {
-  const parsed = parseQueryLocal("Suéter marrón, 100% baby alpaca, talla M, menos de US$180.");
-  assert.deepEqual(parsed.filters.types, ["chompa"]);
-  assert.deepEqual(parsed.filters.colorFamilies, ["marron"]);
-  assert.equal(parsed.filters.composition, "100");
-  assert.deepEqual(parsed.filters.qualities, ["ultrafina", "super_baby", "baby"]);
-  assert.deepEqual(parsed.filters.sizes, ["M"]);
-  assert.equal(parsed.filters.priceCurrency, "USD");
-  assert.equal(parsed.filters.priceMax, 675);
-  assert.equal(parsed.filters.text, "");
-});
-
-test("precio en soles y en dólares", () => {
-  assert.equal(parseQueryLocal("chal hasta S/ 300").filters.priceMax, 300);
-  assert.equal(parseQueryLocal("chal hasta 300 soles").filters.priceCurrency, "PEN");
-  assert.equal(parseQueryLocal("chal hasta 100 dolares").filters.priceMax, 375);
-  const between = parseQueryLocal("poncho entre $100 y $200").filters;
-  assert.deepEqual([between.priceMin, between.priceMax, between.priceCurrency], [375, 750, "USD"]);
-});
-
-test("los ejemplos quedan ocultos salvo que se pidan", () => {
-  const parsed = parseQueryLocal("chompa");
-  const { exact } = applyFilters(PRODUCTS, parsed.filters, parsed.sort);
+test("sample products stay hidden unless requested", () => {
+  const parsed = parseQueryLocal("sweater", FX);
+  const { exact } = applyFilters(PRODUCTS, { ...parsed.filters, shipsToUS: false }, parsed.sort);
   assert.equal(exact.length, 0);
 });
 
-test("talla exige stock en esa talla", () => {
-  const f = withDemo(parseQueryLocal("chompa talla XL")).filters;
-  const { exact, partial } = applyFilters(PRODUCTS, f, "relevancia");
-  // Las chompas de ejemplo que tienen XL no informan stock por talla: quedan "por confirmar".
-  assert.equal(exact.length, 0);
-  assert.ok(partial.length > 0 && partial.every((m) => m.unknownFields.includes("talla")));
-
+test("size requires stock in that size", () => {
   const conStock = { ...PRODUCTS[0], sizes: ["S", "M", "L"], sizesAvailable: ["S", "L"] };
-  const m = applyFilters([conStock], withDemo(parseQueryLocal("talla M")).filters, "relevancia");
-  assert.equal(m.exact.length + m.partial.length, 0, "M existe pero está agotada");
-  const l = applyFilters([conStock], withDemo(parseQueryLocal("talla L")).filters, "relevancia");
+  const m = applyFilters([conStock], withDemo(parseQueryLocal("size M", FX)).filters, "relevancia");
+  assert.equal(m.exact.length + m.partial.length, 0, "M exists but is sold out");
+  const l = applyFilters([conStock], withDemo(parseQueryLocal("size L", FX)).filters, "relevancia");
   assert.equal(l.exact.length, 1);
 });
 
-test("envío a Perú", () => {
-  const f = parseQueryLocal("chal de alpaca con envío a Lima").filters;
-  assert.equal(f.shipsToPeru, true);
-  assert.deepEqual(f.origins, [], "Lima aquí es destino de envío, no origen");
+test("US shipping filter", () => {
+  const base = withDemo(parseQueryLocal("sweater", FX)).filters;
+  const ships = { ...PRODUCTS[0], shipping: { summary: "", toUS: true } };
+  const noShip = { ...PRODUCTS[1], id: "x", shipping: { summary: "", toUS: false } };
+  const unknown = { ...PRODUCTS[2], id: "y", shipping: { summary: "", toUS: null } };
+  const r = applyFilters([ships, noShip, unknown], { ...base, shipsToUS: true }, "relevancia");
+  assert.deepEqual(r.exact.map((m) => m.product.id), [ships.id]);
+  assert.deepEqual(r.partial.map((m) => m.product.id), ["y"]);
+  assert.deepEqual(r.partial[0].unknownFields, ["US shipping"]);
 });
 
-test("conteos de facetas coinciden con aplicar el filtro", async () => {
-  const { facetCounts } = await import("./filter.ts");
-  const base = withDemo(parseQueryLocal("chompa")).filters;
+test("facet counts match applying the filter", () => {
+  const base = withDemo(parseQueryLocal("sweater", FX)).filters;
   const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [] });
   for (const [key, value] of [["qualities", "baby"], ["colorFamilies", "beige"], ["sizes", "M"]] as const) {
     const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");

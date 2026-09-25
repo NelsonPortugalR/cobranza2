@@ -1,66 +1,33 @@
 import { Catalog } from "@/components/Catalog.tsx";
-import { ALL_PRODUCTS, COVERAGE, REAL_SOURCES, SOURCES } from "@/lib/catalog.ts";
+import { ALL_PRODUCTS, FX, SOURCES, US_SOURCES } from "@/lib/catalog.ts";
 import { stripNonComparable } from "@/lib/comparable.ts";
 import { formatDate } from "@/lib/format.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
 import { search } from "@/lib/search.ts";
-import { EMPTY_FILTERS } from "@/lib/types.ts";
+import { DEFAULT_FILTERS } from "@/lib/types.ts";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;
   const query = typeof q === "string" ? q.slice(0, 500) : "";
   // Primera pintada con la interpretación local; el cliente luego la refina.
-  const parsed = query ? parseQueryLocal(query) : null;
+  const parsed = query ? parseQueryLocal(query, FX) : null;
   const initialResults = parsed
     ? search(stripNonComparable(parsed.filters).filters, parsed.sort)
-    : search(EMPTY_FILTERS, "relevancia");
+    : search(DEFAULT_FILTERS, "relevancia");
+  const usCount = ALL_PRODUCTS.filter((p) => p.shipping?.toUS).length;
   return (
     <>
       <Catalog
         initialQuery={query}
         initialResults={initialResults}
-        realCount={ALL_PRODUCTS.filter((p) => !p.demo).length}
+        realCount={usCount}
         sources={SOURCES}
-        realSources={REAL_SOURCES}
+        usStoreCount={US_SOURCES.length}
+        fx={FX}
       />
       <HowItWorks />
-      <CoverageSection />
+      <StoresSection />
     </>
-  );
-}
-
-const COMPARABLE_FIELDS = ["composition", "quality", "color", "sizes", "shipping"];
-
-function CoverageSection() {
-  if (!COVERAGE) return null;
-  return (
-    <section id="cobertura" className="mx-auto mt-24 max-w-7xl scroll-mt-6 px-4 sm:px-6">
-      <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Datos reales</p>
-          <h2 className="mt-2 font-serif text-3xl tracking-tight">Lo que comparamos entre tiendas</h2>
-          <p className="mt-4 text-sm leading-relaxed text-piedra">
-            Leímos {COVERAGE.items.toLocaleString("es-PE")} piezas ({COVERAGE.sources.map((s) => s.site).join(", ")}) el{" "}
-            {formatDate(COVERAGE.generatedAt)}. Comparamos solo lo que las tiendas publican de forma consistente: composición,
-            calidad, color, tallas con stock, precio y envío.
-          </p>
-        </div>
-        <ul className="space-y-3">
-          {COVERAGE.fields.filter((f) => COMPARABLE_FIELDS.includes(f.key)).map((f) => (
-            <li key={f.key} className="grid grid-cols-[minmax(0,11rem)_1fr_3rem] items-center gap-3 text-sm">
-              <span className="truncate text-carbon">{f.label}</span>
-              <span className="h-2 overflow-hidden rounded-full bg-arena-oscura/60">
-                <span
-                  className={`block h-full rounded-full ${f.pct >= 70 ? "bg-musgo" : f.pct >= 30 ? "bg-ocre" : "bg-tierra/60"}`}
-                  style={{ width: `${Math.max(f.pct, 1)}%` }}
-                />
-              </span>
-              <span className="text-right tabular-nums text-piedra">{f.pct}%</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
   );
 }
 
@@ -68,23 +35,23 @@ function HowItWorks() {
   const steps = [
     {
       n: "01",
-      title: "Leemos lo público",
-      body: "Feeds públicos de las tiendas (como el catálogo Shopify de Sol Alpaca), APIs oficiales de marketplaces cuando hay credenciales, siempre respetando robots.txt. Enlazamos a la tienda; no vendemos.",
+      title: "We read the makers’ own catalogs",
+      body: "Kuna, Incalpaca, Sol Alpaca, PAKA, Peruvian Connection and more. Only public product data, following each store’s rules for automated reading.",
     },
     {
       n: "02",
-      title: "Normalizamos con evidencia",
-      body: "Convertimos “70% baby alpaca and 30% silk”, “koi orange” o “XS / rainy day” en campos comparables: composición, calidad, color, tallas con stock. Cada dato guarda la frase que lo justifica.",
+      title: "We turn product pages into facts",
+      body: "“70% baby alpaca, 30% silk”, “koi orange”, “XS / rainy day” become fiber content, grade, color and sizes in stock you can filter and compare.",
     },
     {
       n: "03",
-      title: "No adivinamos",
-      body: "Comparamos solo lo que las tiendas publican. Si a una ficha le falta un dato que pediste, la mostramos aparte como “posible coincidencia” en vez de adivinar.",
+      title: "You buy from the store",
+      body: "Prices are shown in USD (soles converted at the day’s rate) and every product links to the original store, which handles payment and shipping.",
     },
   ];
   return (
     <section id="como-funciona" className="mx-auto mt-24 max-w-7xl scroll-mt-6 px-4 sm:px-6">
-      <h2 className="font-serif text-3xl tracking-tight">Cómo leemos las fichas</h2>
+      <h2 className="font-serif text-3xl tracking-tight">How it works</h2>
       <div className="mt-8 grid gap-8 sm:grid-cols-3">
         {steps.map((s) => (
           <div key={s.n} className="border-t border-carbon pt-4">
@@ -93,6 +60,40 @@ function HowItWorks() {
             <p className="mt-2 text-sm leading-relaxed text-piedra">{s.body}</p>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function StoresSection() {
+  const stores = US_SOURCES.map((site) => {
+    const items = ALL_PRODUCTS.filter((p) => p.source.site === site);
+    return { site, count: items.length, shipping: items[0]?.shipping?.summary ?? "" };
+  }).sort((a, b) => b.count - a.count);
+  return (
+    <section id="tiendas" className="mx-auto mt-24 max-w-7xl scroll-mt-6 px-4 sm:px-6">
+      <div className="grid gap-10 lg:grid-cols-[1fr_1.6fr]">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">The stores</p>
+          <h2 className="mt-2 font-serif text-3xl tracking-tight">Makers that ship to the US</h2>
+          <p className="mt-4 text-sm leading-relaxed text-piedra">
+            Catalogs refreshed on {formatDate(ALL_PRODUCTS[0]?.source.retrievedAt ?? new Date().toISOString())}. Prices
+            published in soles are converted at S/ {FX.penPerUsd} per US dollar
+            {FX.source === "BCRP" || FX.source === "open.er-api.com"
+              ? ` (${FX.source}, ${FX.date})`
+              : " (reference rate; live rate pending)"}
+            .
+          </p>
+        </div>
+        <ul className="divide-y divide-arena-oscura border-y border-arena-oscura">
+          {stores.map((s) => (
+            <li key={s.site} className="grid grid-cols-[minmax(0,10rem)_4rem_1fr] items-baseline gap-4 py-3 text-sm">
+              <span className="font-medium text-carbon">{s.site}</span>
+              <span className="tabular-nums text-piedra">{s.count.toLocaleString("en-US")}</span>
+              <span className="text-xs text-piedra">{s.shipping}</span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

@@ -1,9 +1,10 @@
-import { EMPTY_FILTERS } from "./types.ts";
+import { DEFAULT_FILTERS } from "./types.ts";
 import type { ColorFamily, Filters, InterpretationChip, ParsedQuery, ProductType, Quality, Region, SortKey } from "./types.ts";
-import { COLOR_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL, USD_PEN, qualitiesAtLeast } from "./taxonomy.ts";
+import { COLOR_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL, qualitiesAtLeast } from "./taxonomy.ts";
+import { FALLBACK_FX, type FxRate } from "./fx.ts";
 
-// Parser determinístico (sin LLM). Sirve como respuesta instantánea en el cliente
-// y como respaldo si la API de Claude no está configurada o falla.
+// Parser determinístico (sin LLM): respuesta instantánea y respaldo si Claude no está
+// configurado. Inglés primero (público de EE. UU.), también entiende español.
 
 const norm = (s: string) =>
   s
@@ -12,33 +13,33 @@ const norm = (s: string) =>
     .replace(/[̀-ͯ]/g, "");
 
 const TYPE_SYNONYMS: [ProductType, RegExp][] = [
-  ["cardigan", /\b(cardigan|cardigans|saco|sacos|chaqueta tejida)\b/],
-  ["chompa", /\b(chompas?|sueter|sueteres|sweaters?|jerseys?|pull ?overs?|jumpers?)\b/],
-  ["abrigo", /\b(abrigos?|casacas?|chaquetas?|coats?|jackets?|sacos? largos?)\b/],
-  ["chaleco", /\b(chalecos?|vests?)\b/],
-  ["medias", /\b(medias|calcetines|socks?)\b/],
-  ["chal", /\b(chal|chales|pashminas?|estolas?|shawls?|wraps?)\b/],
-  ["poncho", /\b(ponchos?|ruanas?|capas?)\b/],
-  ["gorro", /\b(gorros?|chullos?|beanies?|hats?)\b/],
-  ["bufanda", /\b(bufandas?|scarf|scarves)\b/],
-  ["guantes", /\b(guantes|mitones|gloves|mittens)\b/],
-  ["fibra", /\b(fibra|hilos?|ovillos?|madejas?|vellon|roving|yarn|tops? peinados?)\b/],
-  ["home", /\b(mantas?|frazadas?|cobijas?|throws?|blankets?|cojines?|home|mantitas?)\b/],
+  ["cardigan", /\b(cardigans?|saco|sacos|chaqueta tejida)\b/],
+  ["chompa", /\b(sweaters?|jumpers?|pull ?overs?|crew ?necks?|turtlenecks?|jerseys?|chompas?|sueter|sueteres)\b/],
+  ["abrigo", /\b(coats?|jackets?|overcoats?|abrigos?|casacas?|chaquetas?)\b/],
+  ["chaleco", /\b(vests?|gilets?|chalecos?)\b/],
+  ["medias", /\b(socks?|medias|calcetines)\b/],
+  ["chal", /\b(shawls?|wraps?|stoles?|pashminas?|chal|chales|estolas?)\b/],
+  ["poncho", /\b(ponchos?|capes?|ruanas?|capas?)\b/],
+  ["gorro", /\b(hats?|beanies?|toques?|berets?|gorros?|chullos?)\b/],
+  ["bufanda", /\b(scarf|scarves|scarfs|neck ?warmers?|snoods?|bufandas?|chalinas?)\b/],
+  ["guantes", /\b(gloves?|mittens?|mitts|guantes|mitones)\b/],
+  ["fibra", /\b(yarn|skeins?|roving|fiber|fibre|hilos?|ovillos?|madejas?)\b/],
+  ["home", /\b(throws?|blankets?|pillows?|cushions?|mantas?|frazadas?|cojines?)\b/],
 ];
 
 const COLOR_SYNONYMS: [ColorFamily, RegExp][] = [
-  ["beige", /\b(beige|arena|oatmeal|avena|hueso|crema claro|tostado claro)\b/],
-  ["camel", /\b(camel|camello|vicuna|fawn|miel|caramelo)\b/],
-  ["marron", /\b(marron|cafe|chocolate|brown|tabaco)\b/],
-  ["blanco", /\b(blanco|blanca|crudo|cruda|marfil|crema|ivory|white)\b/],
-  ["gris", /\b(gris|plomo|grey|gray|perla)\b/],
-  ["negro", /\b(negro|negra|black|carbon)\b/],
-  ["azul", /\b(azul|navy|indigo|celeste)\b/],
-  ["verde", /\b(verde|oliva|musgo|green)\b/],
-  ["rojo", /\b(rojo|roja|terracota|grana|burdeos|vino|red|naranja|anaranjado)\b/],
-  ["rosa", /\b(rosado|rosada|rosa|fucsia|lila|morado|morada|purpura|pink|purple)\b/],
-  ["amarillo", /\b(amarillo|amarilla|mostaza|dorado|yellow)\b/],
-  ["multicolor", /\b(multicolor|colores|rayas|jacquard)\b/],
+  ["beige", /\b(beige|oatmeal|oat|sand|ecru|taupe|cream|nude|arena|avena|hueso)\b/],
+  ["camel", /\b(camel|fawn|tan|caramel|cognac|vicuna|camello|caramelo)\b/],
+  ["marron", /\b(brown|chocolate|mocha|coffee|espresso|chestnut|marron|cafe)\b/],
+  ["blanco", /\b(white|ivory|off ?white|snow|blanco|blanca|crudo|marfil|crema)\b/],
+  ["gris", /\b(gr[ae]y|charcoal|heather|silver|slate|gris|plomo)\b/],
+  ["negro", /\b(black|onyx|negro|negra)\b/],
+  ["azul", /\b(blue|navy|indigo|denim|teal|turquoise|azul|celeste)\b/],
+  ["verde", /\b(green|olive|sage|forest|emerald|verde|oliva)\b/],
+  ["rojo", /\b(red|burgundy|wine|rust|terracotta|orange|coral|rojo|roja|naranja|guinda|terracota)\b/],
+  ["rosa", /\b(pink|blush|rose|purple|lilac|lavender|plum|mauve|rosado|rosada|rosa|morado|lila|fucsia)\b/],
+  ["amarillo", /\b(yellow|mustard|gold|ochre|amarillo|mostaza)\b/],
+  ["multicolor", /\b(multicolou?r|multi|striped?|stripes|colorful|rayas)\b/],
 ];
 
 const REGION_SYNONYMS: [Region, RegExp][] = [
@@ -51,9 +52,30 @@ const REGION_SYNONYMS: [Region, RegExp][] = [
   ["apurimac", /\bapurimac\b/],
 ];
 
-export function parseQueryLocal(query: string): ParsedQuery {
+const SIZE_WORDS: Record<string, string> = {
+  xxs: "XXS",
+  xs: "XS",
+  "extra small": "XS",
+  s: "S",
+  small: "S",
+  m: "M",
+  medium: "M",
+  l: "L",
+  large: "L",
+  xl: "XL",
+  "extra large": "XL",
+  xxl: "XXL",
+  "one size": "Única",
+  unica: "Única",
+};
+
+const STOPWORDS =
+  /\b(a|an|the|of|for|in|with|and|or|made|from|pure|alpaca|alpacas|wool|knit|knitted|peruvian|peru|possible|please|i|want|looking|need|some|something|de|del|la|el|los|las|en|con|y|para|un|una|que|lo|posible|color|colour|muy|quiero|busco|algo)\b/g;
+
+/** @param fx tipo de cambio para convertir montos en soles ("S/ 600") a USD. */
+export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): ParsedQuery {
   const q = norm(query);
-  const f: Filters = structuredClone(EMPTY_FILTERS);
+  const f: Filters = structuredClone(DEFAULT_FILTERS);
   const chips: InterpretationChip[] = [];
   let sort: SortKey = "relevancia";
   let rest = q;
@@ -61,6 +83,56 @@ export function parseQueryLocal(query: string): ParsedQuery {
     if (m) rest = rest.replace(m[0], " ");
     return m?.[0] ?? "";
   };
+
+  // Tallas y precios primero: "size M" o "S/ 300" no deben leerse como otra cosa.
+  const size = rest.match(
+    /\b(?:size|sizes|talla|tallas|talle|in size)\s+((?:xxs|xs|s|m|l|xl|xxl|small|medium|large|extra small|extra large|one size|unica)(?:\s*(?:,|and|or|y|o|\/)\s*(?:xxs|xs|s|m|l|xl|xxl|small|medium|large))*)\b|\b(one size|talla unica)\b/,
+  );
+  if (size) {
+    const list = size[1] ?? size[2];
+    f.sizes = list
+      .split(/\s*(?:,|\band\b|\bor\b|\by\b|\bo\b|\/)\s*/)
+      .map((t) => SIZE_WORDS[t.replace(/^talla /, "")] ?? t.toUpperCase())
+      .filter(Boolean);
+    chips.push({ field: "sizes", label: `Size ${f.sizes.join(", ")}`, from: consume(size) });
+  }
+
+  // Precio: dólares por defecto; "S/", "soles" o "PEN" se convierten a USD.
+  const CUR = String.raw`(us\$|usd|\$|s\/\.?|pen)?\s*`;
+  const CUR_AFTER = String.raw`\s*(usd|dollars?|dolares|bucks|soles|pen|s\/)?`;
+  const isPen = (...t: (string | undefined)[]) => t.some((x) => x && /s\/|sol|pen/.test(x));
+  const toUsd = (n: number, pen: boolean) => (pen ? Math.round(n / fx.penPerUsd) : n);
+  const money = (n: number, pen: boolean) => (pen ? `S/ ${n} (≈ $${toUsd(n, true)})` : `$${n}`);
+  const between = rest.match(new RegExp(String.raw`\b(?:between|entre) ${CUR}(\d+)${CUR_AFTER} (?:and|y|-|to) ${CUR}(\d+)${CUR_AFTER}`));
+  const max = rest.match(
+    new RegExp(String.raw`(?:\bunder|\bbelow|\bless than|\bup to|\bmax(?:imum)?|\bat most|\bmenos de|\bhasta|\bmaximo|\bbajo|<)\s*${CUR}(\d{2,5})${CUR_AFTER}`),
+  );
+  const min = rest.match(new RegExp(String.raw`(?:\bover|\babove|\bmore than|\bat least|\bmas de|\bdesde|\bminimo|>)\s*${CUR}(\d{2,5})${CUR_AFTER}`));
+  if (between) {
+    const pen = isPen(between[1], between[3], between[4], between[6]);
+    f.priceMin = toUsd(+between[2], pen);
+    f.priceMax = toUsd(+between[5], pen);
+    chips.push({ field: "priceMax", label: `${money(+between[2], pen)}–${money(+between[5], pen)}`, from: consume(between) });
+  } else {
+    if (max) {
+      const pen = isPen(max[1], max[3]);
+      f.priceMax = toUsd(+max[2], pen);
+      chips.push({ field: "priceMax", label: `Under ${money(+max[2], pen)}`, from: consume(max) });
+    }
+    if (min) {
+      const pen = isPen(min[1], min[3]);
+      f.priceMin = toUsd(+min[2], pen);
+      chips.push({ field: "priceMin", label: `Over ${money(+min[2], pen)}`, from: consume(min) });
+    }
+  }
+  if (/\b(cheap|cheapest|affordable|budget|barat[ao]s?|economic[ao]s?)\b/.test(rest)) sort = "precio_asc";
+
+  const micronMax = rest.match(/(?:under|below|less than|menos de|hasta|max(?:imo)?|<=?|bajo)\s*(\d{2}(?:[.,]\d)?)\s*(?:microns?|micras|micrones|mic|µm|um|µ)\b/);
+  if (micronMax) {
+    const m = parseFloat(micronMax[1].replace(",", "."));
+    f.qualities = qualitiesUpTo(m);
+    chips.push({ field: "qualities", label: `≤ ${m} µm`, from: consume(micronMax) });
+  }
 
   for (const [type, re] of TYPE_SYNONYMS) {
     const m = rest.match(re);
@@ -70,13 +142,12 @@ export function parseQueryLocal(query: string): ParsedQuery {
     }
   }
 
-  // Calidad: de la más específica a la más general.
+  // Calidad: de la más específica a la más general. "Baby alpaca" = baby o superior.
   const qualityRules: [Quality, RegExp, boolean][] = [
-    ["ultrafina", /\b(royal|ultra ?fin[ao]s?)\b/, true],
+    ["ultrafina", /\b(royal|ultra ?fin[aoe]s?)\b/, true],
     ["super_baby", /\bsuper ?baby\b/, true],
     ["baby", /\bbaby\b/, true],
     ["fleece", /\bfleece\b/, true],
-    ["huarizo", /\bhuarizo\b/, false],
   ];
   for (const [quality, re, andFiner] of qualityRules) {
     const m = rest.match(re);
@@ -84,41 +155,33 @@ export function parseQueryLocal(query: string): ParsedQuery {
       f.qualities = andFiner ? qualitiesAtLeast(quality) : [quality];
       chips.push({
         field: "qualities",
-        label: andFiner && quality !== "ultrafina" ? `${QUALITY_LABEL[quality]} o superior` : QUALITY_LABEL[quality],
+        label: andFiner && quality !== "ultrafina" ? `${QUALITY_LABEL[quality]} or finer` : QUALITY_LABEL[quality],
         from: consume(m),
       });
       break;
     }
   }
 
-  const micronMax = rest.match(/(?:menos de|hasta|max(?:imo)?|<=?|bajo)\s*(\d{2}(?:[.,]\d)?)\s*(?:micras|micrones|mic|µm|um|µ)\b/);
-  if (micronMax) {
-    const max = parseFloat(micronMax[1].replace(",", "."));
-    f.qualities = qualitiesUpTo(max);
-    chips.push({ field: "qualities", label: `≤ ${max} µm`, from: consume(micronMax) });
-  }
-
-  const finest = rest.match(/\b(lo )?mas fin[ao]s?( posible)?\b|\bfinisim[ao]s?\b|\bmas suave\b/);
+  const finest = rest.match(/\b(finest|softest|most luxurious|highest quality|lo )?(mas fin[ao]s?|mas suave)( posible)?\b|\b(finest|softest|most luxurious|highest quality)( possible| available)?\b/);
   if (finest) {
     sort = "micras_asc";
-    chips.push({ field: "sort", label: "Mejor calidad primero", from: consume(finest) });
+    chips.push({ field: "sort", label: "Finest first", from: consume(finest) });
   }
 
   const breed = rest.match(/\b(huacaya|suri)\b/);
   if (breed) {
-    const b = breed[1] as "huacaya" | "suri";
-    f.breeds = [b];
-    chips.push({ field: "breeds", label: b === "suri" ? "Suri" : "Huacaya", from: consume(breed) });
+    f.breeds = [breed[1] as "huacaya" | "suri"];
+    chips.push({ field: "breeds", label: breed[1] === "suri" ? "Suri" : "Huacaya", from: consume(breed) });
   }
 
-  const undyed = rest.match(/\b(sin tenir|sin tinte|color(es)? natural(es)?|natural undyed|undyed|natural)\b/);
-  const dyed = rest.match(/\b(tenid[ao]s?|dyed|tintes? naturales)\b/);
+  const dyed = rest.match(/\b(dyed|hand[- ]?dyed|tenid[ao]s?|tintes? naturales)\b/);
+  const undyed = rest.match(/\b(undyed|natural colou?rs?|natural tones?|sin tenir|sin tinte|colou?r(es)? natural(es)?)\b/);
   if (dyed) {
     f.dye = "tenido";
-    chips.push({ field: "dye", label: "Teñido", from: consume(dyed) });
+    chips.push({ field: "dye", label: "Dyed", from: consume(dyed) });
   } else if (undyed) {
     f.dye = "natural";
-    chips.push({ field: "dye", label: "Color natural (sin teñir)", from: consume(undyed) });
+    chips.push({ field: "dye", label: "Natural, undyed", from: consume(undyed) });
   }
 
   for (const [family, re] of COLOR_SYNONYMS) {
@@ -133,75 +196,32 @@ export function parseQueryLocal(query: string): ParsedQuery {
     const m = rest.match(re);
     if (m) {
       f.origins.push(region);
-      chips.push({ field: "origins", label: `Origen: ${REGION_LABEL[region]}`, from: consume(m) });
+      chips.push({ field: "origins", label: `Origin: ${REGION_LABEL[region]}`, from: consume(m) });
     }
   }
 
-  const pure = rest.match(/\b(100 ?%|100 por ciento|pura|puro)\s*(alpaca)?\b/);
-  const blend = rest.match(/\b(mezcla|blend|mixto)\b/);
+  const pure = rest.match(/\b(100 ?%|100 percent|100 por ciento|pure|pura|puro)\s*(baby\s+)?(alpaca)?\b/);
+  const blend = rest.match(/\b(blend|blended|mix|mixed|mezcla|mixto)\b/);
   if (pure) {
     f.composition = "100";
     chips.push({ field: "composition", label: "100% alpaca", from: consume(pure) });
   } else if (blend) {
     f.composition = "mezcla";
-    chips.push({ field: "composition", label: "Mezcla", from: consume(blend) });
+    chips.push({ field: "composition", label: "Alpaca blend", from: consume(blend) });
   }
 
-  // Precio: soles por defecto; "US$", "$", "usd" o "dólares" lo pasan a dólares.
-  const CUR = String.raw`(us\$|usd|u\$s|\$|s\/\.?)?\s*`;
-  const CUR_AFTER = String.raw`\s*(usd|dolares|soles|s\/)?`;
-  const isUsd = (...tokens: (string | undefined)[]) => tokens.some((t) => t && /us|\$|dolar/.test(t) && !/s\//.test(t));
-  const toPen = (n: number, usd: boolean) => (usd ? Math.round(n * USD_PEN) : n);
-  const between = rest.match(new RegExp(String.raw`\bentre ${CUR}(\d+)${CUR_AFTER} y ${CUR}(\d+)${CUR_AFTER}`));
-  const max = rest.match(new RegExp(String.raw`(?:\bmenos de|\bhasta|\bmaximo|\bmax|\bbajo|\bunder|<)\s*${CUR}(\d{2,5})${CUR_AFTER}`));
-  const min = rest.match(new RegExp(String.raw`(?:\bmas de|\bdesde|\bminimo|>)\s*${CUR}(\d{2,5})${CUR_AFTER}`));
-  const fmt = (n: number, usd: boolean) => (usd ? `US$ ${n}` : `S/ ${n}`);
-  if (between) {
-    const usd = isUsd(between[1], between[3], between[4], between[6]);
-    f.priceCurrency = usd ? "USD" : "PEN";
-    f.priceMin = toPen(+between[2], usd);
-    f.priceMax = toPen(+between[5], usd);
-    chips.push({ field: "priceMax", label: `${fmt(+between[2], usd)}–${+between[5]}`, from: consume(between) });
-  } else {
-    if (max) {
-      const usd = isUsd(max[1], max[3]);
-      f.priceCurrency = usd ? "USD" : "PEN";
-      f.priceMax = toPen(+max[2], usd);
-      chips.push({ field: "priceMax", label: `Hasta ${fmt(+max[2], usd)}`, from: consume(max) });
-    }
-    if (min) {
-      const usd = isUsd(min[1], min[3]);
-      f.priceCurrency = usd ? "USD" : "PEN";
-      f.priceMin = toPen(+min[2], usd);
-      chips.push({ field: "priceMin", label: `Desde ${fmt(+min[2], usd)}`, from: consume(min) });
-    }
-  }
-
-  const size = rest.match(/\b(?:talla|size|talle)s?\s+((?:xxs|xs|s|m|l|xl|xxl|unica)(?:\s*(?:,|y|o|\/)\s*(?:xxs|xs|s|m|l|xl|xxl))*)\b/);
-  if (size) {
-    f.sizes = size[1]
-      .split(/\s*(?:,|\by\b|\bo\b|\/)\s*/)
-      .filter(Boolean)
-      .map((t) => (t === "unica" ? "Única" : t.toUpperCase()));
-    chips.push({ field: "sizes", label: `Talla ${f.sizes.join(", ")}`, from: consume(size) });
-  }
-  if (/\bbarat[ao]s?\b|\beconomic[ao]s?\b/.test(rest)) sort = "precio_asc";
-
-  const peru = rest.match(/\b(envio|envie|envian|envien|envios|llegue|delivery|despacho)s?( a| hasta| en)? (peru|lima|arequipa|cusco|trujillo|piura)\b|\bque (envie|llegue|despache)n? a (peru|lima)\b/);
-  if (peru) {
-    f.shipsToPeru = true;
-    chips.push({ field: "shipsToPeru", label: "Envía a Perú", from: consume(peru) });
-  }
-
-  const stock = rest.match(/\b(en stock|disponibles?|con stock|entrega inmediata)\b/);
+  const stock = rest.match(/\b(in stock|available|ready to ship|en stock|disponibles?)\b/);
   if (stock) {
     f.inStockOnly = true;
-    chips.push({ field: "inStockOnly", label: "Solo en stock", from: consume(stock) });
+    chips.push({ field: "inStockOnly", label: "In stock", from: consume(stock) });
   }
+
+  // "ships to the US" ya es el filtro por defecto; lo consumimos para que no quede como texto.
+  consume(rest.match(/\b(ships?|shipping|delivery|delivered)( to| within)?( the)? (us|usa|united states|america)\b|\bfree shipping\b/));
 
   // Lo que queda (sin palabras vacías) se usa como búsqueda de texto libre.
   f.text = rest
-    .replace(/\b(de|del|la|el|los|las|en|con|y|para|un|una|que|lo|posible|alpaca|alpacas|color|muy|quiero|busco|algo)\b/g, " ")
+    .replace(STOPWORDS, " ")
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();

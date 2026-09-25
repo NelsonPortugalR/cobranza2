@@ -26,7 +26,7 @@ export const PRODUCTS: Product[] = [
     construction: "tejido_a_maquina",
     weightGrams: 290,
     sizes: ["S", "M", "L"],
-    price: { amount: 1190, currency: "PEN", amountPen: 1190 },
+    price: { amount: 1190, currency: "PEN", amountUsd: 317.33 },
     availability: { status: "pocas_unidades", checkedAt: "2026-09-24T08:10:00Z" },
     images: [],
     rawDescription:
@@ -59,7 +59,7 @@ export const PRODUCTS: Product[] = [
     construction: "tejido_a_mano",
     weightGrams: 480,
     sizes: ["M", "L"],
-    price: { amount: 185, currency: "USD", amountPen: 692 },
+    price: { amount: 185, currency: "USD", amountUsd: 185 },
     availability: { status: "en_stock", checkedAt: "2026-09-23T21:40:00Z" },
     images: [],
     rawDescription:
@@ -92,7 +92,7 @@ export const PRODUCTS: Product[] = [
     construction: "tejido_a_maquina",
     weightGrams: 350,
     sizes: ["XS", "S", "M", "L", "XL"],
-    price: { amount: 689, currency: "PEN", amountPen: 689 },
+    price: { amount: 689, currency: "PEN", amountUsd: 183.73 },
     availability: { status: "en_stock", checkedAt: "2026-09-24T06:00:00Z" },
     images: [],
     rawDescription:
@@ -125,7 +125,7 @@ export const PRODUCTS: Product[] = [
     construction: null,
     weightGrams: null,
     sizes: ["M"],
-    price: { amount: 329, currency: "PEN", amountPen: 329 },
+    price: { amount: 329, currency: "PEN", amountUsd: 87.73 },
     availability: { status: "en_stock", checkedAt: "2026-09-24T09:30:00Z" },
     images: [],
     rawDescription:
@@ -162,7 +162,7 @@ export const PRODUCTS: Product[] = [
     construction: "tejido_a_maquina",
     weightGrams: 320,
     sizes: ["S", "M", "L"],
-    price: { amount: 899, currency: "PEN", amountPen: 899 },
+    price: { amount: 899, currency: "PEN", amountUsd: 239.73 },
     availability: { status: "en_stock", checkedAt: "2026-09-24T05:15:00Z" },
     images: [],
     rawDescription:
@@ -195,7 +195,7 @@ export const PRODUCTS: Product[] = [
     construction: "telar",
     weightGrams: 210,
     sizes: ["190 × 70 cm"],
-    price: { amount: 420, currency: "PEN", amountPen: 420 },
+    price: { amount: 420, currency: "PEN", amountUsd: 112 },
     availability: { status: "en_stock", checkedAt: "2026-09-22T17:00:00Z" },
     images: [],
     rawDescription:
@@ -231,7 +231,7 @@ export const PRODUCTS: Product[] = [
     construction: "tejido_a_maquina",
     weightGrams: null,
     sizes: ["M", "L", "XL"],
-    price: { amount: 159, currency: "PEN", amountPen: 159 },
+    price: { amount: 159, currency: "PEN", amountUsd: 42.4 },
     availability: { status: "en_stock", checkedAt: "2026-09-24T09:30:00Z" },
     images: [],
     rawDescription:
@@ -264,7 +264,7 @@ export const PRODUCTS: Product[] = [
     construction: "telar",
     weightGrams: 900,
     sizes: ["Talla única"],
-    price: { amount: 540, currency: "PEN", amountPen: 540 },
+    price: { amount: 540, currency: "PEN", amountUsd: 144 },
     availability: { status: "desconocido", checkedAt: "2026-09-18T12:00:00Z" },
     images: [],
     rawDescription:
@@ -297,7 +297,7 @@ export const PRODUCTS: Product[] = [
     construction: "tejido_a_maquina",
     weightGrams: 80,
     sizes: ["Única"],
-    price: { amount: 129, currency: "PEN", amountPen: 129 },
+    price: { amount: 129, currency: "PEN", amountUsd: 34.4 },
     availability: { status: "agotado", checkedAt: "2026-09-24T06:00:00Z" },
     images: [],
     rawDescription: "Chullo con orejeras en 100% Baby Alpaca, color terracota. Hecho en Perú.",
@@ -332,7 +332,7 @@ export const PRODUCTS: Product[] = [
     construction: "telar",
     weightGrams: 1100,
     sizes: ["130 × 180 cm"],
-    price: { amount: 780, currency: "PEN", amountPen: 780 },
+    price: { amount: 780, currency: "PEN", amountUsd: 208 },
     availability: { status: "en_stock", checkedAt: "2026-09-24T05:15:00Z" },
     images: [],
     rawDescription: "Manta tejida en telar. 60% alpaca, 40% lana. Colores naturales jaspeados, sin teñir. 130x180 cm.",
@@ -364,7 +364,7 @@ export const PRODUCTS: Product[] = [
     construction: null,
     weightGrams: 500,
     sizes: ["5 × 100 g"],
-    price: { amount: 95, currency: "PEN", amountPen: 95 },
+    price: { amount: 95, currency: "PEN", amountUsd: 25.33 },
     availability: { status: "en_stock", checkedAt: "2026-09-24T09:30:00Z" },
     images: [],
     rawDescription:
@@ -397,7 +397,7 @@ export const PRODUCTS: Product[] = [
     construction: null,
     weightGrams: 200,
     sizes: ["200 g"],
-    price: { amount: 38, currency: "USD", amountPen: 142 },
+    price: { amount: 38, currency: "USD", amountUsd: 38 },
     availability: { status: "pocas_unidades", checkedAt: "2026-09-23T21:40:00Z" },
     images: [],
     rawDescription:

@@ -2,13 +2,13 @@ import type { Availability, Breed, ColorFamily, ProductType, Quality, Region } f
 
 /** Rangos de finura (µm) usados para clasificar. Orden: de más fino a más grueso. */
 export const QUALITY_RANGES: { id: Quality; label: string; min: number; max: number }[] = [
-  { id: "ultrafina", label: "Royal / ultrafina", min: 0, max: 18 },
-  { id: "super_baby", label: "Super Baby", min: 18.1, max: 20 },
+  { id: "ultrafina", label: "Royal / ultrafine", min: 0, max: 18 },
+  { id: "super_baby", label: "Super baby", min: 18.1, max: 20 },
   { id: "baby", label: "Baby", min: 20.1, max: 23 },
   { id: "fleece", label: "Fleece", min: 23.1, max: 26.5 },
-  { id: "medium_fleece", label: "Medium Fleece", min: 26.6, max: 29 },
+  { id: "medium_fleece", label: "Medium fleece", min: 26.6, max: 29 },
   { id: "huarizo", label: "Huarizo", min: 29.1, max: 31.5 },
-  { id: "gruesa", label: "Gruesa", min: 31.6, max: 99 },
+  { id: "gruesa", label: "Coarse", min: 31.6, max: 99 },
 ];
 
 export const QUALITY_LABEL = Object.fromEntries(
@@ -34,35 +34,52 @@ export function qualitiesAtLeast(q: Quality): Quality[] {
 }
 
 export const TYPE_LABEL: Record<ProductType, string> = {
-  chompa: "Chompa",
-  cardigan: "Cárdigan",
-  chal: "Chal",
+  chompa: "Sweaters",
+  cardigan: "Cardigans",
+  chal: "Shawls & wraps",
+  poncho: "Ponchos & capes",
+  gorro: "Hats & beanies",
+  bufanda: "Scarves",
+  guantes: "Gloves & mittens",
+  abrigo: "Coats & jackets",
+  chaleco: "Vests",
+  medias: "Socks",
+  fibra: "Yarn & fiber",
+  home: "Home & throws",
+  otro: "Other",
+};
+
+/** Singular para fichas y migas de pan. */
+export const TYPE_SINGULAR: Record<ProductType, string> = {
+  chompa: "Sweater",
+  cardigan: "Cardigan",
+  chal: "Shawl",
   poncho: "Poncho",
-  gorro: "Gorro / chullo",
-  bufanda: "Bufanda",
-  guantes: "Guantes",
-  abrigo: "Abrigo / casaca",
-  chaleco: "Chaleco",
-  medias: "Medias",
-  fibra: "Fibra e hilo",
-  home: "Home / mantas",
-  otro: "Otros",
+  gorro: "Hat",
+  bufanda: "Scarf",
+  guantes: "Gloves",
+  abrigo: "Coat",
+  chaleco: "Vest",
+  medias: "Socks",
+  fibra: "Yarn",
+  home: "Home",
+  otro: "Other",
 };
 
 export const BREED_LABEL: Record<Breed, string> = { huacaya: "Huacaya", suri: "Suri" };
 
 export const COLOR_LABEL: Record<ColorFamily, string> = {
-  blanco: "Blanco / crudo",
-  beige: "Beige",
-  camel: "Camel / vicuña",
-  marron: "Marrón",
-  gris: "Gris",
-  negro: "Negro",
-  azul: "Azul",
-  verde: "Verde",
-  rojo: "Rojo / naranja",
-  rosa: "Rosa / morado",
-  amarillo: "Amarillo / mostaza",
+  blanco: "White & ivory",
+  beige: "Beige & oatmeal",
+  camel: "Camel",
+  marron: "Brown",
+  gris: "Gray",
+  negro: "Black",
+  azul: "Blue",
+  verde: "Green",
+  rojo: "Red & orange",
+  rosa: "Pink & purple",
+  amarillo: "Yellow & mustard",
   multicolor: "Multicolor",
 };
 
@@ -92,10 +109,10 @@ export const REGION_LABEL: Record<Region, string> = {
 };
 
 export const AVAILABILITY_LABEL: Record<Availability, string> = {
-  en_stock: "En stock",
-  pocas_unidades: "Pocas unidades",
-  agotado: "Agotado",
-  desconocido: "Stock sin confirmar",
+  en_stock: "In stock",
+  pocas_unidades: "Low stock",
+  agotado: "Sold out",
+  desconocido: "Stock not confirmed",
 };
 
 export const PRODUCT_TYPES = Object.keys(TYPE_LABEL) as ProductType[];
@@ -104,7 +121,7 @@ export const COLOR_FAMILIES = Object.keys(COLOR_LABEL) as ColorFamily[];
 export const REGIONS = Object.keys(REGION_LABEL) as Region[];
 export const QUALITIES = QUALITY_RANGES.map((q) => q.id);
 
-/** Tipo de cambio referencial PEN por USD. En producción: tipo de cambio diario del BCRP. */
-export const USD_PEN = 3.75;
+/** Soles por dólar de respaldo, solo si nunca se pudo obtener el tipo de cambio del día. */
+export const FALLBACK_PEN_PER_USD = 3.75;
 
 export const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];

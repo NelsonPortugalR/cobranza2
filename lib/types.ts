@@ -70,6 +70,8 @@ export interface Product {
   /** true = producto inventado para la demo (no es un listado real). */
   demo?: boolean;
   title: string;
+  /** Título tal como lo publica la tienda, si se tradujo al inglés. */
+  titleOriginal?: string;
   source: {
     site: string;
     url: string;
@@ -105,13 +107,14 @@ export interface Product {
   sizes?: string[];
   /** Tallas con stock según la tienda. Si falta, no se sabe. */
   sizesAvailable?: string[];
-  price: { amount: number; currency: "PEN" | "USD"; amountPen: number; compareAt?: number | null };
+  /** amount/compareAt en la moneda de la tienda; amountUsd convertido con el tipo de cambio del día de la descarga. */
+  price: { amount: number; currency: "PEN" | "USD"; amountUsd: number; compareAt?: number | null };
   shipping?: {
     summary: string;
     costUsd?: number | null;
     days?: string;
-    /** true = la política de la tienda incluye envíos a Perú; null = no lo publica. */
-    toPeru: boolean | null;
+    /** true = la tienda envía a EE. UU.; null = no lo publica. */
+    toUS: boolean | null;
   };
   availability: { status: Availability; checkedAt: string };
   images: string[];
@@ -140,13 +143,12 @@ export interface Filters {
   composition: "cualquiera" | "100" | "mezcla";
   /** Tallas pedidas (S, M, L…). Se exige stock en esa talla. */
   sizes: string[];
-  /** Límites de precio siempre en soles; la moneda indica cómo lo pidió el usuario. */
+  /** Límites de precio en USD. */
   priceMin: number | null;
   priceMax: number | null;
-  priceCurrency: "PEN" | "USD";
   inStockOnly: boolean;
-  /** Solo tiendas cuya política de envío incluye Perú. */
-  shipsToPeru: boolean;
+  /** Solo tiendas que envían a EE. UU. (activo por defecto: público objetivo). */
+  shipsToUS: boolean;
   sources: string[];
   /** Mostrar también productos de ejemplo de tiendas aún no conectadas. */
   includeDemo: boolean;
@@ -178,9 +180,11 @@ export const EMPTY_FILTERS: Filters = {
   sizes: [],
   priceMin: null,
   priceMax: null,
-  priceCurrency: "PEN",
   inStockOnly: false,
-  shipsToPeru: false,
+  shipsToUS: false,
   sources: [],
   includeDemo: false,
 };
+
+/** Filtros iniciales del portal: el público es de EE. UU., así que solo tiendas que envían allá. */
+export const DEFAULT_FILTERS: Filters = { ...EMPTY_FILTERS, shipsToUS: true };

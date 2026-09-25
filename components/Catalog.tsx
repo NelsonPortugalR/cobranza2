@@ -6,7 +6,9 @@ import type { SearchHit, SearchResponse } from "@/lib/search.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
 import { SORT_LABEL, chipsFromFilters } from "@/lib/chips.ts";
 import { stripNonComparable } from "@/lib/comparable.ts";
-import { EMPTY_FILTERS } from "@/lib/types.ts";
+import { DEFAULT_FILTERS } from "@/lib/types.ts";
+import type { FxRate } from "@/lib/fx.ts";
+import type { ProductType } from "@/lib/types.ts";
 import type { Filters, ParsedQuery, SortKey } from "@/lib/types.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
 import { FilterPanel } from "./FilterPanel.tsx";
@@ -30,18 +32,21 @@ export function Catalog({
   initialResults,
   realCount,
   sources: SOURCES,
-  realSources,
+  usStoreCount,
+  fx,
 }: {
   initialQuery: string;
   /** Resultados ya calculados en el servidor para la primera pintada. */
   initialResults: SearchResponse;
   realCount: number;
   sources: string[];
-  realSources: string[];
+  /** Tiendas que envían a EE. UU. */
+  usStoreCount: number;
+  fx: FxRate;
 }) {
-  const initial = useMemo(() => (initialQuery ? parseQueryLocal(initialQuery) : null), [initialQuery]);
+  const initial = useMemo(() => (initialQuery ? parseQueryLocal(initialQuery, fx) : null), [initialQuery, fx]);
   const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<Filters>(initial ? stripNonComparable(initial.filters).filters : EMPTY_FILTERS);
+  const [filters, setFilters] = useState<Filters>(initial ? stripNonComparable(initial.filters).filters : DEFAULT_FILTERS);
   const [sort, setSort] = useState<SortKey>(initial?.sort ?? "relevancia");
   const [engine, setEngine] = useState<ParsedQuery["engine"] | null>(initial ? "local" : null);
   const [loading, setLoading] = useState(false);
@@ -58,10 +63,10 @@ export function Catalog({
     const id = ++requestId.current;
     setQuery(q);
     // 1) Respuesta instantánea con el parser local.
-    const local = parseQueryLocal(q);
+    const local = parseQueryLocal(q, fx);
     const cleanLocal = stripNonComparable(local.filters);
     setIgnored(cleanLocal.ignored);
-    setFilters((prev) => ({ ...cleanLocal.filters, includeDemo: prev.includeDemo }));
+    setFilters(cleanLocal.filters);
     setSort(local.sort);
     setEngine("local");
     const url = new URL(window.location.href);
@@ -80,9 +85,9 @@ export function Catalog({
       if (!res.ok) return;
       const parsed = (await res.json()) as ParsedQuery;
       if (id !== requestId.current || parsed.engine !== "claude") return;
-      const clean = stripNonComparable({ ...EMPTY_FILTERS, ...parsed.filters });
+      const clean = stripNonComparable({ ...DEFAULT_FILTERS, ...parsed.filters });
       setIgnored(clean.ignored);
-      setFilters((prev) => ({ ...clean.filters, includeDemo: prev.includeDemo }));
+      setFilters(clean.filters);
       setSort(parsed.sort);
       setEngine("claude");
     } catch {
@@ -134,7 +139,7 @@ export function Catalog({
   };
   const reset = () => {
     requestId.current++;
-    setFilters(EMPTY_FILTERS);
+    setFilters(DEFAULT_FILTERS);
     setSort("relevancia");
     setQuery("");
     setIgnored([]);
@@ -158,19 +163,21 @@ export function Catalog({
       <section className="relative overflow-hidden border-b border-arena-oscura/70 bg-arena">
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-20">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-tierra">
-            Alpaca peruana · {realCount.toLocaleString("es-PE")} piezas con stock en {realSources.length} tiendas
+            Peruvian alpaca · {realCount.toLocaleString("en-US")} pieces in stock · {usStoreCount} stores that ship to the US
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-[1.05] tracking-tight text-carbon sm:text-6xl">
-            Describe la prenda. <span className="text-tierra">Nosotros leemos cada ficha.</span>
+            Describe the piece. <span className="text-tierra">We read every listing.</span>
           </h1>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-piedra">
-            Un agente lee las fichas públicas de las tiendas y traduce descripciones desordenadas a composición, calidad,
-            color, talla con stock, precio y envío. Tú filtras; la compra la haces en la tienda original.
+            We read the public catalogs of Peru&rsquo;s alpaca makers and turn messy product pages into facts you can
+            compare: fiber content, grade, color, sizes in stock, price in USD and shipping to the US. You buy directly
+            from the original store.
           </p>
           <div className="mt-8 max-w-2xl">
             <SearchBox initial={query} loading={loading} onSubmit={(q) => void runQuery(q)} />
           </div>
           <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+            <span className="shrink-0 self-center text-xs text-piedra">Try:</span>
             {EXAMPLE_QUERIES.map((q) => (
               <button
                 key={q}
@@ -182,6 +189,24 @@ export function Catalog({
               </button>
             ))}
           </div>
+          <nav aria-label="Shop by category" className="mt-10 grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {CATEGORIES.map(([type, label]) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  setIgnored([]);
+                  setEngine(null);
+                  setFilters({ ...DEFAULT_FILTERS, types: [type] });
+                  resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+                className="rounded-sm border border-arena-oscura bg-lana/60 px-3 py-3 text-left text-sm text-carbon transition hover:border-tierra/50 hover:bg-white"
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
         </div>
       </section>
 
@@ -198,14 +223,14 @@ export function Catalog({
               onClick={() => setSheetOpen(true)}
               className="shrink-0 rounded-full border border-carbon px-3.5 py-2 text-xs font-medium"
             >
-              Filtros{nActive > 0 && ` · ${nActive}`}
+              Filters{nActive > 0 && ` · ${nActive}`}
             </button>
           </div>
 
           {(chips.length > 0 || engine || ignored.length > 0) && (
             <div className="mt-3 flex items-center gap-2 lg:mt-0">
               <span className="hidden shrink-0 text-xs text-piedra sm:inline">
-                {engine === "claude" ? "El agente entendió:" : "Entendimos:"}
+                {engine === "claude" ? "Our agent read:" : "We read:"}
               </span>
               <div className="no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
                 {chips.map((c) => (
@@ -214,7 +239,7 @@ export function Catalog({
                     type="button"
                     onClick={() => patch(c.remove)}
                     className="group flex shrink-0 items-center gap-1.5 rounded-full bg-tierra px-3 py-1 text-xs text-lana"
-                    aria-label={`Quitar filtro ${c.label}`}
+                    aria-label={`Remove filter ${c.label}`}
                   >
                     {c.label}
                     <span className="text-lana/60 group-hover:text-lana">×</span>
@@ -227,13 +252,13 @@ export function Catalog({
                 )}
               </div>
               <button type="button" onClick={reset} className="shrink-0 text-xs text-piedra underline underline-offset-2">
-                Limpiar
+                Clear
               </button>
             </div>
           )}
           {ignored.length > 0 && (
             <p className="mt-2 text-xs text-piedra">
-              No filtramos por {ignored.join(", ")}: las tiendas no lo publican.
+              We don&rsquo;t filter by {ignored.join(", ")}: stores don&rsquo;t publish it.
             </p>
           )}
         </div>
@@ -241,20 +266,19 @@ export function Catalog({
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:pt-6">
           <aside className="hidden lg:block">
             <div className="sticky top-6 max-h-[calc(100dvh-3rem)] overflow-y-auto pb-10 pr-2">
-              <FilterPanel filters={filters} onChange={patch} facets={results.facets} sources={SOURCES} realSources={realSources} />
+              <FilterPanel filters={filters} onChange={patch} facets={results.facets} sources={SOURCES} />
             </div>
           </aside>
 
           <main className={`pt-4 transition-opacity lg:pt-0 ${fetching ? "opacity-60" : ""}`} aria-busy={fetching}>
             <div className="mb-4 flex items-end justify-between gap-4">
               <p className="text-sm text-piedra">
-                <span className="font-serif text-2xl text-carbon">{exact.length}</span>{" "}
-                <span className="hidden sm:inline">{exact.length === 1 ? "coincidencia exacta" : "coincidencias exactas"}</span>
-                <span className="sm:hidden">{exact.length === 1 ? "exacta" : "exactas"}</span>
-                {partial.length > 0 && ` · ${partial.length} por confirmar`}
+                <span className="font-serif text-2xl text-carbon">{exact.length.toLocaleString("en-US")}</span>{" "}
+                {exact.length === 1 ? "exact match" : "exact matches"}
+                {partial.length > 0 && ` · ${partial.length.toLocaleString("en-US")} to confirm`}
               </p>
               <label className="flex items-center gap-2 text-xs text-piedra">
-                <span className="hidden sm:inline">Ordenar</span>
+                <span className="hidden sm:inline">Sort</span>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortKey)}
@@ -271,9 +295,9 @@ export function Catalog({
 
             {total === 0 && (
               <div className="rounded-sm border border-dashed border-arena-oscura px-6 py-16 text-center">
-                <p className="font-serif text-xl">Nada con esos criterios… todavía.</p>
+                <p className="font-serif text-xl">Nothing matches all of that… yet.</p>
                 <p className="mx-auto mt-2 max-w-md text-sm text-piedra">
-                  Prueba quitando un filtro. Cada filtro que el agente aplicó aparece arriba y se puede quitar con un toque.
+                  Try removing a filter. Every filter we applied is listed above and can be removed with one tap.
                 </p>
               </div>
             )}
@@ -287,10 +311,10 @@ export function Catalog({
             {visiblePartial.length > 0 && (
               <section className="mt-12">
                 <div className="mb-4 border-t border-arena-oscura pt-6">
-                  <h2 className="font-serif text-xl">Posibles coincidencias</h2>
+                  <h2 className="font-serif text-xl">Possible matches</h2>
                   <p className="mt-1 max-w-2xl text-sm text-piedra">
-                    No contradicen tu búsqueda, pero la tienda no publica algún dato que pediste. Las mostramos aparte en vez
-                    de adivinar.
+                    Nothing here contradicts your search, but the store doesn&rsquo;t publish something you asked for. We list
+                    them separately instead of guessing.
                   </p>
                 </div>
                 <Grid>
@@ -309,10 +333,10 @@ export function Catalog({
                   disabled={fetching}
                   className="rounded-full border border-carbon px-6 py-3 text-sm font-medium transition hover:bg-carbon hover:text-lana"
                 >
-                  Ver más
+                  Show more
                 </button>
                 <p className="text-xs text-piedra">
-                  Mostrando {hits.length} de {total.toLocaleString("es-PE")}
+                  Showing {hits.length} of {total.toLocaleString("en-US")}
                 </p>
               </div>
             )}
@@ -322,17 +346,17 @@ export function Catalog({
 
       {/* Hoja de filtros (móvil) */}
       {sheetOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filtros">
-          <button className="absolute inset-0 bg-carbon/40" aria-label="Cerrar filtros" onClick={() => setSheetOpen(false)} />
+        <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filters">
+          <button className="absolute inset-0 bg-carbon/40" aria-label="Close filters" onClick={() => setSheetOpen(false)} />
           <div className="absolute inset-x-0 bottom-0 flex max-h-[88dvh] flex-col rounded-t-2xl bg-lana shadow-2xl">
             <div className="flex items-center justify-between border-b border-arena-oscura px-5 py-4">
-              <span className="font-serif text-lg">Filtros</span>
+              <span className="font-serif text-lg">Filters</span>
               <button type="button" onClick={reset} className="text-xs text-piedra underline underline-offset-2">
-                Limpiar todo
+                Clear all
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-5">
-              <FilterPanel filters={filters} onChange={patch} facets={results.facets} sources={SOURCES} realSources={realSources} />
+              <FilterPanel filters={filters} onChange={patch} facets={results.facets} sources={SOURCES} />
             </div>
             <div className="border-t border-arena-oscura p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <button
@@ -340,7 +364,7 @@ export function Catalog({
                 onClick={() => setSheetOpen(false)}
                 className="w-full rounded-full bg-carbon py-3.5 text-sm font-medium text-lana"
               >
-                Ver {total} {total === 1 ? "resultado" : "resultados"}
+                Show {total.toLocaleString("en-US")} {total === 1 ? "result" : "results"}
               </button>
             </div>
           </div>
@@ -349,6 +373,15 @@ export function Catalog({
     </>
   );
 }
+
+const CATEGORIES: [ProductType, string][] = [
+  ["chompa", "Sweaters"],
+  ["cardigan", "Cardigans"],
+  ["bufanda", "Scarves"],
+  ["chal", "Shawls & wraps"],
+  ["gorro", "Hats & beanies"],
+  ["guantes", "Gloves"],
+];
 
 function Grid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3">{children}</div>;

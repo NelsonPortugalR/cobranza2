@@ -1,4 +1,8 @@
-# Vellón: catálogo vertical de alpaca peruana
+# Vellón: Peruvian alpaca, compared
+
+Portal en inglés para compradores de EE. UU.: busca y compara alpaca peruana de 15 tiendas, con precios en USD y envío a EE. UU. (ver `docs/PRODUCTO.md` §9).
+
+## Origen: catálogo vertical de alpaca peruana
 
 Un agente lee listados públicos de tiendas peruanas y marketplaces (Sol Alpaca, Kuna, All Alpaca, Mercado Libre Perú, Etsy, tiendas de Cusco y Arequipa) y los convierte en un **catálogo filtrable** por micronaje (NTP 231.301), raza, color natural o teñido, % de alpaca, origen, precio y stock. No es un chatbot ni un marketplace: la compra se hace en la tienda original.
 

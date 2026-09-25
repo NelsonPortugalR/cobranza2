@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { classifyColor, extractComposition, extractMaterialsFromWords, inferType, normalizeShopifyProduct, storeImageUrl, type ShopifyProduct } from "./shopify.ts";
 import { isAllowed, parseRobots } from "./robots.ts";
+import { englishTitle } from "./translate.ts";
 
 // Casos tomados de descripciones reales de tiendas Shopify de alpaca.
 
@@ -62,7 +63,7 @@ test("normaliza un producto Shopify en un ítem por color", () => {
     site: "Tienda",
     baseUrl: "https://tienda.example",
     currency: "USD",
-    shipping: { summary: "Envío", toPeru: null },
+    shipping: { summary: "Shipping", toUS: null },
     retrievedAt: "2026-09-25T00:00:00Z",
   });
   assert.equal(items.length, 2);
@@ -76,11 +77,11 @@ test("normaliza un producto Shopify en un ítem por color", () => {
   assert.deepEqual(gray.sizes, ["S", "M"]);
   assert.deepEqual(gray.sizesAvailable, ["S"]);
   assert.equal(gray.price.compareAt, 232);
-  assert.equal(gray.price.amountPen, 435);
+  assert.equal(gray.price.amountUsd, 116);
   assert.equal(brown.color.family, "marron");
   assert.deepEqual(brown.sizesAvailable, ["M"]);
   assert.equal(gray.origin.region, null, "'Made in Peru' no asigna región");
-  assert.equal(gray.evidence.origin?.quote, "made in Peru");
+  assert.equal(gray.origin.detail, "Made in Peru");
 });
 
 test("robots.txt: gana la regla más larga", () => {
@@ -124,4 +125,14 @@ test("formatos mixtos, colores en el título y tipos en español", () => {
   for (const [title, type] of [["Saco Lid Arena", "cardigan"], ["Sacón Largo", "abrigo"], ["Troyer Andes", "chompa"], ["CHAL LUNA", "chal"], ["Ovillo Baby Alpaca", "fibra"], ["Cuellera Tejida", "bufanda"]] as const) {
     assert.equal(inferType({ ...base, title }), type, title);
   }
+});
+
+test("Spanish store titles become English", () => {
+  assert.equal(englishTitle("Suéter Clark De Baby Alpaca Color Celeste"), "Clark Baby Alpaca Sweater — Light Blue");
+  assert.equal(englishTitle("CASACA BOLSENA | VERDE"), "Bolsena Jacket — Green");
+  assert.equal(englishTitle("Chompa Scarlet Azul Marino"), "Scarlet Sweater — Navy");
+  assert.equal(englishTitle("Bufanda Gris Claro"), "Scarf — Light Gray");
+  assert.equal(englishTitle("Chalina Parbat | Camel"), "Parbat Scarf — Camel");
+  assert.equal(englishTitle("Estola Jee De Royal Alpaca Color Rojo"), "Jee Royal Alpaca Wrap — Red");
+  assert.equal(englishTitle("Links Sweater - Rainy Day"), null, "English titles are left alone");
 });

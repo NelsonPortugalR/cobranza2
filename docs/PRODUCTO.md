@@ -282,3 +282,20 @@ Aprendizajes de la segunda descarga:
 - **Colores en español** (celeste, guinda, rosado, turquesa…) y nombres de fantasía en inglés (willow, pebble, cabernet…) se mapean a familias.
 - **Relevancia intercala tiendas** para que la comparación sea horizontal.
 - La búsqueda corre en el servidor (`/api/search`, ~20 ms). El celular recibe solo la página visible: la portada pesa ~14 KB comprimida.
+
+---
+
+## 9. Público objetivo y versión en inglés (25 sep 2026)
+
+**Decisión:** el portal apunta primero a **compradores de EE. UU.** de poder adquisitivo medio-alto, interesados en moda premium, fibras naturales, sostenibilidad y alpaca peruana auténtica. Buscan sobre todo suéteres, cárdigans, bufandas y accesorios **con envío a EE. UU.**
+
+| Aspecto | Cómo quedó |
+|---|---|
+| Idioma | Portal en **inglés** (interfaz, filtros, fichas, avisos). El intérprete de búsquedas entiende inglés primero y sigue entendiendo español. Una versión en español puede venir después. |
+| Moneda | Todo en **USD**. Si la tienda publica en soles, se convierte con el tipo de cambio del día de la descarga y se muestra el precio original como referencia ("Listed at S/ 324.50 by the store"). |
+| Tipo de cambio | `npm run ingest` lo obtiene del **BCRP** (serie PD04640PD, oficial) y, si falla, de open.er-api.com; guarda fecha y fuente en `data/fx.json`. Si ninguna responde usa el último conocido y el portal lo indica. **Hoy ambas fuentes están bloqueadas en la red del entorno**, así que se usa la referencia de S/ 3.75: hay que permitir `estadisticas.bcrp.gob.pe` (y opcionalmente `open.er-api.com`). |
+| Envío | Filtro **"Ships to the US" activo por defecto**, según la política publicada por cada tienda. Las tiendas que solo envían dentro de Perú (Kuna Perú, Anntarah, Pure Alpaca, Incalpaca Remate) no aparecen salvo que el usuario desactive el filtro. |
+| Títulos en español | Se traducen prenda, material y color ("SUÉTER LANGUI \| GRIS" → "Langui Sweater — Gray"); el título original queda en la ficha. |
+| Portada | Accesos directos a Sweaters, Cardigans, Scarves, Shawls & wraps, Hats & beanies y Gloves; ejemplos de búsqueda en inglés; sección "Makers that ship to the US". |
+
+Tiendas que envían a EE. UU. (4.584 prendas con stock): Sol Alpaca, Kuna USA, Incalpaca, Alpaca Collections, Peruvian Link, PAKA, Peruvian Connection, All Alpaca, Etno Alpaca y Krimson Klover. PAKA y Krimson Klover no publican política de envío, pero son marcas con sede en EE. UU. Qinti no publica política: sus prendas aparecen como "to confirm".

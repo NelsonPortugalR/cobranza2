@@ -65,7 +65,7 @@ export function normalizeWooProduct(w: WooProduct, src: ShopifySource): Product[
   return normalizeShopifyProduct(wooToShopify(w), src).map((p) => ({
     ...p,
     source: { ...p.source, url: w.permalink },
-    // La Store API no informa stock por talla: solo si el producto tiene stock.
+    // La Store API no informa stock por talla, solo si el producto tiene stock.
     sizesAvailable: undefined,
     availability: { ...p.availability, status: w.is_in_stock ? "en_stock" : "agotado" },
   }));

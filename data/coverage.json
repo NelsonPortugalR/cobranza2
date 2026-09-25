@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T13:45:47.463Z",
+  "generatedAt": "2026-09-25T13:57:41.312Z",
   "items": 6956,
   "sources": [
     {
@@ -9,6 +9,18 @@
     {
       "site": "Kuna",
       "items": 749
+    },
+    {
+      "site": "Kuna USA",
+      "items": 641
+    },
+    {
+      "site": "Incalpaca",
+      "items": 325
+    },
+    {
+      "site": "Incalpaca Remate",
+      "items": 254
     },
     {
       "site": "Alpaca Collections",
@@ -29,18 +41,6 @@
     {
       "site": "Peruvian Link",
       "items": 863
-    },
-    {
-      "site": "Incalpaca",
-      "items": 325
-    },
-    {
-      "site": "Incalpaca Remate",
-      "items": 254
-    },
-    {
-      "site": "Kuna USA",
-      "items": 641
     },
     {
       "site": "Anntarah",
@@ -66,57 +66,57 @@
   "fields": [
     {
       "key": "composition",
-      "label": "Composición (100% o mezcla)",
+      "label": "Fiber content (100% or blend)",
       "count": 5332,
       "pct": 77
     },
     {
       "key": "quality",
-      "label": "Calidad (baby, super baby…)",
+      "label": "Fiber grade (baby, super baby…)",
       "count": 4648,
       "pct": 67
     },
     {
       "key": "micron",
-      "label": "Micronaje (µm)",
+      "label": "Micron count",
       "count": 0,
       "pct": 0
     },
     {
       "key": "breed",
-      "label": "Raza (Huacaya / Suri)",
+      "label": "Breed (Huacaya / Suri)",
       "count": 201,
       "pct": 3
     },
     {
       "key": "color",
-      "label": "Color clasificable",
+      "label": "Color",
       "count": 6182,
       "pct": 89
     },
     {
       "key": "natural",
-      "label": "Natural vs. teñido",
+      "label": "Natural vs. dyed",
       "count": 3172,
       "pct": 46
     },
     {
       "key": "origin",
-      "label": "Región de origen",
+      "label": "Region of origin",
       "count": 0,
       "pct": 0
     },
     {
       "key": "sizes",
-      "label": "Tallas con stock",
+      "label": "Sizes in stock",
       "count": 6666,
       "pct": 96
     },
     {
       "key": "shipping",
-      "label": "Envío",
-      "count": 6339,
-      "pct": 91
+      "label": "Shipping to the US",
+      "count": 4584,
+      "pct": 66
     }
   ]
 }

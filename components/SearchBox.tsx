@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 export const EXAMPLE_QUERIES = [
-  "Suéter marrón, 100% baby alpaca, talla M, menos de US$180",
-  "chal de baby alpaca con envío a Lima, menos de 600 soles",
-  "cárdigan super baby alpaca talla S",
-  "poncho mezcla de alpaca, talla única",
-  "gorro de alpaca hasta 40 dólares",
+  "Brown sweater, 100% baby alpaca, size M, under $180",
+  "Gray baby alpaca cardigan, size S",
+  "Scarf under $80",
+  "Royal alpaca wrap in camel",
+  "Alpaca beanie and gloves under $60",
 ];
 
 /** Consulta en lenguaje natural. El agente la convierte en filtros; no es un chat. */
@@ -45,8 +45,8 @@ export function SearchBox({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         enterKeyHint="search"
-        aria-label="Describe lo que buscas"
-        placeholder={hero ? "Describe la prenda: fibra, color, origen, finura…" : "Buscar en el catálogo"}
+        aria-label="Describe what you are looking for"
+        placeholder={hero ? "Describe it: fiber, color, size, budget…" : "Search the catalog"}
         className={`min-w-0 flex-1 bg-transparent outline-none placeholder:text-piedra/70 ${hero ? "py-2 text-base sm:text-lg" : "py-1.5 text-sm"}`}
       />
       <button
@@ -56,7 +56,7 @@ export function SearchBox({
           hero ? "px-5 py-2.5 text-sm sm:px-6 sm:py-3" : "px-4 py-2 text-xs"
         }`}
       >
-        {loading ? "Leyendo…" : "Buscar"}
+        {loading ? "Reading…" : "Search"}
       </button>
     </form>
   );

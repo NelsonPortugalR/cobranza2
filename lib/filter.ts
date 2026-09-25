@@ -37,15 +37,15 @@ function sizeCheck(p: Product, sizes: string[]): Verdict {
 export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: string[] } {
   if (p.demo && !f.includeDemo) return { verdict: "fail", unknown: [] };
   const checks: [string, Verdict][] = [
-    ["talla", sizeCheck(p, f.sizes)],
-    ["tipo", check(f.types, p.productType)],
-    ["calidad", check(f.qualities, p.fiber.quality)],
-    ["raza", check(f.breeds, p.fiber.breed)],
+    ["size", sizeCheck(p, f.sizes)],
+    ["type", check(f.types, p.productType)],
+    ["fiber grade", check(f.qualities, p.fiber.quality)],
+    ["breed", check(f.breeds, p.fiber.breed)],
     ["color", check(f.colorFamilies, p.color.family)],
-    ["origen", check(f.origins, p.origin.region)],
-    ["fuente", check(f.sources, p.source.site)],
+    ["origin", check(f.origins, p.origin.region)],
+    ["store", check(f.sources, p.source.site)],
     [
-      "tinte",
+      "dye",
       f.dye === "cualquiera"
         ? "pass"
         : p.color.natural == null
@@ -55,7 +55,7 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             : "fail",
     ],
     [
-      "composición",
+      "fiber content",
       f.composition === "cualquiera"
         ? "pass"
         : p.fiber.alpacaPct != null
@@ -68,7 +68,7 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
               : "fail"
             : "unknown",
     ],
-    ["precio", (f.priceMax == null || p.price.amountPen <= f.priceMax) && (f.priceMin == null || p.price.amountPen >= f.priceMin) ? "pass" : "fail"],
+    ["price", (f.priceMax == null || p.price.amountUsd <= f.priceMax) && (f.priceMin == null || p.price.amountUsd >= f.priceMin) ? "pass" : "fail"],
     [
       "stock",
       !f.inStockOnly
@@ -79,8 +79,8 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             ? "unknown"
             : "pass",
     ],
-    ["envío a Perú", !f.shipsToPeru ? "pass" : p.shipping?.toPeru == null ? "unknown" : p.shipping.toPeru ? "pass" : "fail"],
-    ["texto", textMatch(p, f.text)],
+    ["US shipping", !f.shipsToUS ? "pass" : p.shipping?.toUS == null ? "unknown" : p.shipping.toUS ? "pass" : "fail"],
+    ["text", textMatch(p, f.text)],
   ];
   if (checks.some(([, v]) => v === "fail")) return { verdict: "fail", unknown: [] };
   const unknown = checks.filter(([, v]) => v === "unknown").map(([k]) => k);
@@ -144,9 +144,9 @@ function comparator(sort: SortKey) {
       case "micras_asc":
         return effectiveMicron(a.product) - effectiveMicron(b.product) || b.score - a.score;
       case "precio_asc":
-        return a.product.price.amountPen - b.product.price.amountPen;
+        return a.product.price.amountUsd - b.product.price.amountUsd;
       case "precio_desc":
-        return b.product.price.amountPen - a.product.price.amountPen;
+        return b.product.price.amountUsd - a.product.price.amountUsd;
       default:
         return b.score - a.score;
     }
@@ -166,7 +166,7 @@ export function activeFilterCount(f: Filters): number {
     (f.priceMin != null ? 1 : 0) +
     (f.priceMax != null ? 1 : 0) +
     (f.inStockOnly ? 1 : 0) +
-    (f.shipsToPeru ? 1 : 0) +
+
     f.sizes.length
   );
 }

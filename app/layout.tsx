@@ -3,9 +3,9 @@ import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vellón — catálogo de alpaca peruana",
+  title: "Vellón — Peruvian alpaca, compared",
   description:
-    "Un agente lee las fichas de tiendas peruanas y marketplaces y las convierte en un catálogo filtrable por micronaje, raza, color natural y origen.",
+    "Search and compare authentic Peruvian alpaca sweaters, cardigans, scarves and accessories from Peru's leading makers. Fiber content, sizes in stock, USD prices and US shipping in one place.",
 };
 
 export const viewport: Viewport = {
@@ -16,7 +16,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="en">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <div className="bg-carbon px-4 py-1.5 text-center text-[11px] tracking-wide text-arena">
-          Prototipo · datos públicos leídos de las tiendas · la compra se hace en cada tienda
+          Prices in USD · you buy directly from each store
         </div>
         <header className="border-b border-arena-oscura/70">
           <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
@@ -35,11 +35,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               Vellón
             </Link>
             <nav className="flex items-center gap-5 text-sm text-piedra">
-              <a href="#catalogo" className="hover:text-carbon">
-                Catálogo
+              <a href="/#catalogo" className="hover:text-carbon">
+                Shop
               </a>
-              <a href="#como-funciona" className="hidden hover:text-carbon sm:inline">
-                Cómo leemos las fichas
+              <a href="/#como-funciona" className="hidden hover:text-carbon sm:inline">
+                How it works
               </a>
             </nav>
           </div>
@@ -49,8 +49,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="mx-auto max-w-7xl px-4 py-10 text-xs leading-relaxed text-piedra sm:px-6">
             <p className="font-serif text-base text-carbon">Vellón</p>
             <p className="mt-2 max-w-2xl">
-              No vendemos ni tenemos inventario: enlazamos a la tienda original. Los datos técnicos se extraen de
-              lo que cada tienda publica; marcamos qué está declarado y qué fue inferido por el agente.
+              We don&rsquo;t sell anything or hold inventory: every product links to the store that makes it. Product
+              details come from what each store publishes; prices in soles are converted to USD at the day&rsquo;s rate.
             </p>
           </div>
         </footer>

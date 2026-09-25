@@ -11,15 +11,15 @@ export interface Coverage {
 export function coverageReport(items: Product[]): Coverage {
   const real = items.filter((p) => !p.demo);
   const has: [string, string, (p: Product) => boolean][] = [
-    ["composition", "Composición (100% o mezcla)", (p) => p.fiber.alpacaPct != null || p.fiber.blend === true],
-    ["quality", "Calidad (baby, super baby…)", (p) => p.fiber.quality != null],
-    ["micron", "Micronaje (µm)", (p) => p.fiber.micron != null],
-    ["breed", "Raza (Huacaya / Suri)", (p) => p.fiber.breed != null],
-    ["color", "Color clasificable", (p) => p.color.family != null],
-    ["natural", "Natural vs. teñido", (p) => p.color.natural != null],
-    ["origin", "Región de origen", (p) => p.origin.region != null],
-    ["sizes", "Tallas con stock", (p) => (p.sizesAvailable?.length ?? 0) > 0],
-    ["shipping", "Envío", (p) => p.shipping != null],
+    ["composition", "Fiber content (100% or blend)", (p) => p.fiber.alpacaPct != null || p.fiber.blend === true],
+    ["quality", "Fiber grade (baby, super baby…)", (p) => p.fiber.quality != null],
+    ["micron", "Micron count", (p) => p.fiber.micron != null],
+    ["breed", "Breed (Huacaya / Suri)", (p) => p.fiber.breed != null],
+    ["color", "Color", (p) => p.color.family != null],
+    ["natural", "Natural vs. dyed", (p) => p.color.natural != null],
+    ["origin", "Region of origin", (p) => p.origin.region != null],
+    ["sizes", "Sizes in stock", (p) => (p.sizesAvailable?.length ?? 0) > 0],
+    ["shipping", "Shipping to the US", (p) => p.shipping?.toUS === true],
   ];
   const n = real.length || 1;
   const bySite = new Map<string, number>();

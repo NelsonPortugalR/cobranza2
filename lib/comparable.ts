@@ -7,8 +7,8 @@ import { BREED_LABEL, REGION_LABEL } from "./taxonomy.ts";
 
 export function stripNonComparable(f: Filters): { filters: Filters; ignored: string[] } {
   const ignored: string[] = [];
-  if (f.origins.length) ignored.push(`origen (${f.origins.map((r) => REGION_LABEL[r]).join(", ")})`);
-  if (f.breeds.length) ignored.push(`raza (${f.breeds.map((b) => BREED_LABEL[b]).join(", ")})`);
-  if (f.dye !== "cualquiera") ignored.push(f.dye === "natural" ? "color natural sin teñir" : "teñido");
+  if (f.origins.length) ignored.push(`region of origin (${f.origins.map((r) => REGION_LABEL[r]).join(", ")})`);
+  if (f.breeds.length) ignored.push(`breed (${f.breeds.map((b) => BREED_LABEL[b]).join(", ")})`);
+  if (f.dye !== "cualquiera") ignored.push(f.dye === "natural" ? "undyed natural color" : "dyed");
   return { filters: { ...f, origins: [], breeds: [], dye: "cualquiera" }, ignored };
 }

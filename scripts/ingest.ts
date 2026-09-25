@@ -11,6 +11,7 @@ import { normalizeShopifyProduct, type ShopifyProduct, type ShopifySource } from
 import { coverageReport } from "../lib/ingest/coverage.ts";
 import { isAllowed, parseRobots } from "../lib/ingest/robots.ts";
 import { normalizeWooProduct, type WooProduct } from "../lib/ingest/woocommerce.ts";
+import { FALLBACK_FX, parseBcrp, parseOpenEr, type FxRate } from "../lib/fx.ts";
 import type { Product } from "../lib/types.ts";
 
 const USER_AGENT = "VellonBot/0.1 (catalogo de alpaca; solo lectura)";
@@ -24,6 +25,7 @@ interface SourceConfig extends Omit<ShopifySource, "retrievedAt"> {
 
 // Para activar una fuente, su dominio debe estar permitido en la red del entorno.
 // Las que no respondan se omiten y se conserva su última descarga (data/raw/).
+// shipping.toUS: según la política de envío publicada por cada tienda (revisada el 25 sep 2026).
 const SOURCES: SourceConfig[] = [
   {
     key: "solalpaca",
@@ -31,14 +33,8 @@ const SOURCES: SourceConfig[] = [
     site: "Sol Alpaca",
     baseUrl: "https://www.solalpaca.com",
     currency: "USD",
-    shipping: {
-      summary: "Envío mundial desde Perú (DHL), aranceles incluidos",
-      costUsd: 25,
-      days: "3–10 días hábiles",
-      toPeru: true,
-    },
+    shipping: { summary: "Ships worldwide from Peru via DHL, duties included", costUsd: 25, days: "3–6 business days to the US", toUS: true },
   },
-  // Kuna (Grupo Inca) migró de kuna.com.pe a kunastores.com; la tienda de Perú vende en soles.
   {
     key: "kuna-pe",
     kind: "shopify",
@@ -46,47 +42,16 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://pe.kunastores.com",
     currency: "PEN",
     alpacaOnly: true,
-    shipping: {
-      summary: "Envío a todo Perú: S/ 15 (gratis desde S/ 399) o recojo gratis en tienda",
-      days: "Lima 2 días hábiles, provincias 7",
-      toPeru: true,
-    },
+    shipping: { summary: "Ships within Peru only (for the US, see Kuna USA)", toUS: false },
   },
-  // Multimarca con varias marcas peruanas (incluida Kuna): el vendedor es la marca.
   {
-    key: "alpacacollections",
+    key: "kuna-us",
     kind: "shopify",
-    site: "Alpaca Collections",
-    baseUrl: "https://www.alpacacollections.com",
-    currency: "USD",
-    multiBrand: true,
-    alpacaOnly: true,
-    shipping: {
-      summary: "Desde EE. UU.; internacional desde US$ 39, aranceles no incluidos",
-      costUsd: 39,
-      days: "8–15 días (internacional)",
-      toPeru: true,
-    },
-  },
-  { key: "paka", kind: "shopify", site: "PAKA", baseUrl: "https://www.pakaapparel.com", currency: "USD", alpacaOnly: true },
-  {
-    key: "peruvianconnection",
-    kind: "shopify",
-    site: "Peruvian Connection",
-    baseUrl: "https://www.peruvianconnection.com",
+    site: "Kuna USA",
+    baseUrl: "https://us.kunastores.com",
     currency: "USD",
     alpacaOnly: true,
-    shipping: { summary: "Envíos en EE. UU. desde US$ 7.95 (gratis desde US$ 350)", costUsd: 7.95, days: "7–10 días hábiles", toPeru: null },
-  },
-  { key: "krimsonklover", kind: "shopify", site: "Krimson Klover", baseUrl: "https://krimsonklover.com", currency: "USD", alpacaOnly: true },
-  {
-    key: "peruvianlink",
-    kind: "shopify",
-    site: "Peruvian Link",
-    baseUrl: "https://peruvianlink.com",
-    currency: "USD",
-    alpacaOnly: true,
-    shipping: { summary: "Envíos desde EE. UU. desde US$ 20; internacional según peso", costUsd: 20, toPeru: null },
+    shipping: { summary: "Ships within the US", toUS: true },
   },
   {
     key: "incalpaca",
@@ -96,7 +61,7 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://incalpacastores.com",
     currency: "PEN",
     alpacaOnly: true,
-    shipping: { summary: "Envíos a todo Perú e internacionales; recojo en tienda", toPeru: true },
+    shipping: { summary: "Ships internationally from Peru, including the US", toUS: true },
   },
   {
     key: "incalpaca-remate",
@@ -105,16 +70,53 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://remate.incalpacastores.com",
     currency: "PEN",
     alpacaOnly: true,
-    shipping: { summary: "Envíos a todo Perú (outlet de Incalpaca)", toPeru: true },
+    shipping: { summary: "Outlet store; ships within Peru", toUS: false },
   },
   {
-    key: "kuna-us",
+    key: "alpacacollections",
     kind: "shopify",
-    site: "Kuna USA",
-    baseUrl: "https://us.kunastores.com",
+    site: "Alpaca Collections",
+    baseUrl: "https://www.alpacacollections.com",
+    currency: "USD",
+    multiBrand: true,
+    alpacaOnly: true,
+    shipping: { summary: "Ships from the US: standard $12 (2–3 business days)", costUsd: 12, days: "2–3 business days", toUS: true },
+  },
+  {
+    key: "paka",
+    kind: "shopify",
+    site: "PAKA",
+    baseUrl: "https://www.pakaapparel.com",
     currency: "USD",
     alpacaOnly: true,
-    shipping: { summary: "Envíos dentro de EE. UU.", toPeru: false },
+    shipping: { summary: "US-based brand; shipping policy not published", toUS: true },
+  },
+  {
+    key: "peruvianconnection",
+    kind: "shopify",
+    site: "Peruvian Connection",
+    baseUrl: "https://www.peruvianconnection.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "US shipping from $7.95, free over $350", costUsd: 7.95, days: "7–10 business days", toUS: true },
+  },
+  {
+    key: "krimsonklover",
+    kind: "shopify",
+    site: "Krimson Klover",
+    baseUrl: "https://krimsonklover.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "US-based brand; shipping policy not published", toUS: true },
+  },
+  {
+    key: "peruvianlink",
+    kind: "shopify",
+    site: "Peruvian Link",
+    baseUrl: "https://peruvianlink.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Ships from the US via USPS, UPS or FedEx, from $20", costUsd: 20, toUS: true },
   },
   {
     key: "anntarah",
@@ -123,7 +125,7 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://anntarah.com",
     currency: "PEN",
     alpacaOnly: true,
-    shipping: { summary: "Envío a todo Perú: S/ 20 (gratis desde S/ 399)", days: "hasta 10 días hábiles", toPeru: true },
+    shipping: { summary: "Ships within Peru only", toUS: false },
   },
   {
     key: "etnoalpaca",
@@ -132,9 +134,17 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://etnoalpaca.com",
     currency: "USD",
     alpacaOnly: true,
-    shipping: { summary: "Envío desde Perú al día hábil siguiente; aranceles no incluidos", toPeru: true },
+    shipping: { summary: "Ships internationally from Peru (EMS); import duties not included", toUS: true },
   },
-  { key: "qinti", kind: "shopify", site: "Qinti", baseUrl: "https://www.qintiperu.com", currency: "USD", alpacaOnly: true },
+  {
+    key: "qinti",
+    kind: "shopify",
+    site: "Qinti",
+    baseUrl: "https://www.qintiperu.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Shipping policy not published", toUS: null },
+  },
   {
     key: "allalpaca",
     kind: "shopify",
@@ -142,7 +152,7 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://allalpaca.com.pe",
     currency: "USD",
     alpacaOnly: true,
-    shipping: { summary: "Envío gratis a todo Perú desde S/ 150 y al mundo desde US$ 150", toPeru: true },
+    shipping: { summary: "Ships worldwide from Peru, free over $150", toUS: true },
   },
   {
     key: "purealpaca",
@@ -152,10 +162,9 @@ const SOURCES: SourceConfig[] = [
     wooPath: "/peru",
     currency: "PEN",
     alpacaOnly: true,
-    shipping: { summary: "Envío a todo Perú: Lima 3–5 días hábiles, provincias 5–8", toPeru: true },
+    shipping: { summary: "Ships within Peru only", toUS: false },
   },
 ];
-
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -215,9 +224,35 @@ async function fetchWoo(src: SourceConfig): Promise<WooProduct[]> {
   return all;
 }
 
+/** Tipo de cambio del día: BCRP (oficial) → open.er-api.com → último conocido → respaldo fijo. */
+async function getFx(useCache: boolean): Promise<FxRate> {
+  let last: FxRate | null = null;
+  try {
+    last = JSON.parse(await readFile("data/fx.json", "utf8"));
+  } catch {}
+  if (!useCache) {
+    const sources: [string, (j: unknown) => FxRate | null][] = [
+      ["https://estadisticas.bcrp.gob.pe/estadisticas/series/api/PD04640PD/json", parseBcrp],
+      ["https://open.er-api.com/v6/latest/USD", parseOpenEr],
+    ];
+    for (const [url, parse] of sources) {
+      try {
+        const res = await politeFetch(url);
+        const fx = res.ok ? parse(await res.json()) : null;
+        if (fx) return fx;
+      } catch {}
+    }
+  }
+  if (last) return { ...last, source: last.source === "fallback" ? "fallback" : "last-known" };
+  return FALLBACK_FX;
+}
+
 async function main() {
   const useCache = process.argv.includes("--cache");
   await mkdir("data/raw", { recursive: true });
+  const fx = await getFx(useCache);
+  await writeFile("data/fx.json", JSON.stringify(fx, null, 2));
+  console.log(`Tipo de cambio: S/ ${fx.penPerUsd} por USD (${fx.source}${fx.date ? `, ${fx.date}` : ""})`);
   const catalog: Product[] = [];
 
   for (const src of SOURCES) {
@@ -251,8 +286,8 @@ async function main() {
     // Solo lo que se puede comprar hoy: las fichas agotadas (archivo, temporadas pasadas) son ruido.
     const all = raw.flatMap((p) =>
       src.kind === "woocommerce"
-        ? normalizeWooProduct(p as WooProduct, { ...src, retrievedAt })
-        : normalizeShopifyProduct(p as ShopifyProduct, { ...src, retrievedAt }),
+        ? normalizeWooProduct(p as WooProduct, { ...src, retrievedAt, fx })
+        : normalizeShopifyProduct(p as ShopifyProduct, { ...src, retrievedAt, fx }),
     );
     const items = all.filter((p) => p.availability.status !== "agotado");
     console.log(`${src.site}: ${raw.length} productos → ${items.length} ítems con stock (${all.length - items.length} agotados omitidos)`);

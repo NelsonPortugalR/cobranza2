@@ -1,12 +1,12 @@
 // Solo servidor: usa node:fs.
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { PRODUCTS as DEMO_PRODUCTS } from "./products.ts";
 import type { Product } from "./types.ts";
 import type { Coverage } from "./ingest/coverage.ts";
+import { FALLBACK_FX, type FxRate } from "./fx.ts";
 
-// Catálogo servido por la app: datos reales de data/catalog.json (generado por
-// `npm run ingest`) + productos de ejemplo de tiendas aún no conectadas.
+// Catálogo servido por la app: datos reales de data/catalog.json, generado por
+// `npm run ingest`. Los productos de ejemplo (lib/products.ts) solo se usan en tests.
 
 function readJson<T>(file: string, fallback: T): T {
   try {
@@ -16,16 +16,14 @@ function readJson<T>(file: string, fallback: T): T {
   }
 }
 
-const REAL: Product[] = readJson<Product[]>("catalog.json", []);
-const REAL_SITES = new Set(REAL.map((p) => p.source.site));
-const DEMO: Product[] = DEMO_PRODUCTS.filter((p) => !REAL_SITES.has(p.source.site)).map((p) => ({ ...p, demo: true }));
-
-export const ALL_PRODUCTS: Product[] = [...REAL, ...DEMO];
+export const ALL_PRODUCTS: Product[] = readJson<Product[]>("catalog.json", []);
 export const COVERAGE: Coverage | null = readJson<Coverage | null>("coverage.json", null);
+export const FX: FxRate = readJson<FxRate>("fx.json", FALLBACK_FX);
 
 export function getProduct(id: string): Product | undefined {
   return ALL_PRODUCTS.find((p) => p.id === id);
 }
 
 export const SOURCES = [...new Set(ALL_PRODUCTS.map((p) => p.source.site))];
-export const REAL_SOURCES = [...REAL_SITES];
+/** Tiendas que envían a EE. UU. según su política publicada. */
+export const US_SOURCES = [...new Set(ALL_PRODUCTS.filter((p) => p.shipping?.toUS).map((p) => p.source.site))];
