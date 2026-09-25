@@ -5,7 +5,7 @@ Un agente lee listados públicos de tiendas peruanas y marketplaces (Sol Alpaca,
 📄 **Documento de producto** (visión, arquitectura, schema, pantallas, flujo del agente y limitaciones): [`docs/PRODUCTO.md`](docs/PRODUCTO.md)
 🧩 **JSON Schema del producto**: [`schema/product.schema.json`](schema/product.schema.json)
 
-> **Datos reales:** 1.038 ítems de Sol Alpaca leídos de su catálogo público (`npm run ingest`). Las demás tiendas aún no están conectadas; sus 12 productos de ejemplo (`lib/products.ts`) solo aparecen si se activa "Mostrar ejemplos" y van marcados como **Ejemplo**. Resultados de cobertura en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
+> **Datos reales:** 1.038 ítems de Sol Alpaca leídos de su catálogo público (`npm run ingest`). Kuna, Alpaca Collections, PAKA, Peruvian Connection, Krimson Klover y Peruvian Link ya están configuradas y entran en cuanto su dominio esté permitido en la red (lista en `docs/PRODUCTO.md` §8). Las tiendas sin conectar no aparecen; sus 12 productos de ejemplo (`lib/products.ts`) solo aparecen si se activa "Mostrar ejemplos" y van marcados como **Ejemplo**. Resultados de cobertura en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
 
 ## Correr en local
 

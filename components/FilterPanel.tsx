@@ -2,19 +2,14 @@
 
 import type { Filters } from "@/lib/types.ts";
 import {
-  BREEDS,
-  BREED_LABEL,
   COLOR_FAMILIES,
   COLOR_LABEL,
   COLOR_SWATCH,
   PRODUCT_TYPES,
   QUALITY_RANGES,
-  REGIONS,
-  REGION_LABEL,
   SIZE_ORDER,
   TYPE_LABEL,
   USD_PEN,
-  micronRangeLabel,
 } from "@/lib/taxonomy.ts";
 
 /** Devuelve coincidencias exactas y total (incluidas las "por confirmar"). */
@@ -79,47 +74,22 @@ export function FilterPanel({
         </div>
       </Section>
 
-      <Section title="Finura (NTP 231.301)" hint="Micras = diámetro de la fibra. Menos µm, más suave.">
+      <Section title="Calidad declarada" hint="Como la nombra la tienda. De más fina a menos fina.">
         <ul className="space-y-1">
-          {QUALITY_RANGES.slice(0, 5).map((q) => (
+          {QUALITY_RANGES.slice(0, 4).map((q) => (
             <CheckRow
               key={q.id}
               checked={filters.qualities.includes(q.id)}
               onChange={() => toggle("qualities", q.id)}
-              label={q.label}
-              detail={micronRangeLabel(q.id)}
+              label={q.id === "ultrafina" ? "Royal / ultrafina" : q.label}
               n={optionCount("qualities", q.id)}
             />
           ))}
         </ul>
       </Section>
 
-      <Section title="Raza">
-        <div className="grid grid-cols-2 gap-1.5">
-          {BREEDS.map((b) => (
-            <Pill
-              key={b}
-              active={filters.breeds.includes(b)}
-              onClick={() => toggle("breeds", b)}
-              label={BREED_LABEL[b]}
-              n={optionCount("breeds", b)}
-              block
-            />
-          ))}
-        </div>
-      </Section>
-
       <Section title="Color">
-        <Segmented
-          value={filters.dye}
-          options={[
-            ["cualquiera", "Todos"],
-            ["natural", "Natural"],
-            ["tenido", "Teñido"],
-          ]}
-          onChange={(dye) => onChange({ dye })}
-        />
-        <div className="mt-3 grid max-w-xs grid-cols-6 gap-2">
+        <div className="grid max-w-xs grid-cols-6 gap-2">
           {COLOR_FAMILIES.map((c) => {
             const active = filters.colorFamilies.includes(c);
             return (
@@ -153,20 +123,6 @@ export function FilterPanel({
           ]}
           onChange={(composition) => onChange({ composition })}
         />
-      </Section>
-
-      <Section title="Origen declarado" hint="Solo cuando la tienda lo indica.">
-        <ul className="space-y-1">
-          {REGIONS.map((r) => (
-            <CheckRow
-              key={r}
-              checked={filters.origins.includes(r)}
-              onChange={() => toggle("origins", r)}
-              label={REGION_LABEL[r]}
-              n={optionCount("origins", r)}
-            />
-          ))}
-        </ul>
       </Section>
 
       <Section title="Precio">

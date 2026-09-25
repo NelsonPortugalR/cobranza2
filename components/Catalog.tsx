@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { activeFilterCount, applyFilters, countMatches } from "@/lib/filter.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
 import { SORT_LABEL, chipsFromFilters } from "@/lib/chips.ts";
+import { stripNonComparable } from "@/lib/comparable.ts";
 import { EMPTY_FILTERS } from "@/lib/types.ts";
 import type { Filters, ParsedQuery, Product, SortKey } from "@/lib/types.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
@@ -25,12 +26,13 @@ export function Catalog({
 }) {
   const initial = useMemo(() => (initialQuery ? parseQueryLocal(initialQuery) : null), [initialQuery]);
   const [query, setQuery] = useState(initialQuery);
-  const [filters, setFilters] = useState<Filters>(initial?.filters ?? EMPTY_FILTERS);
+  const [filters, setFilters] = useState<Filters>(initial ? stripNonComparable(initial.filters).filters : EMPTY_FILTERS);
   const [sort, setSort] = useState<SortKey>(initial?.sort ?? "relevancia");
   const [engine, setEngine] = useState<ParsedQuery["engine"] | null>(initial ? "local" : null);
   const [loading, setLoading] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [shown, setShown] = useState(PAGE);
+  const [ignored, setIgnored] = useState<string[]>(() => (initial ? stripNonComparable(initial.filters).ignored : []));
   const resultsRef = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
 
@@ -39,8 +41,10 @@ export function Catalog({
     setQuery(q);
     // 1) Respuesta instantánea con el parser local.
     const local = parseQueryLocal(q);
+    const cleanLocal = stripNonComparable(local.filters);
     setShown(PAGE);
-    setFilters((prev) => ({ ...local.filters, includeDemo: prev.includeDemo }));
+    setIgnored(cleanLocal.ignored);
+    setFilters((prev) => ({ ...cleanLocal.filters, includeDemo: prev.includeDemo }));
     setSort(local.sort);
     setEngine("local");
     const url = new URL(window.location.href);
@@ -59,7 +63,9 @@ export function Catalog({
       if (!res.ok) return;
       const parsed = (await res.json()) as ParsedQuery;
       if (id !== requestId.current || parsed.engine !== "claude") return;
-      setFilters((prev) => ({ ...EMPTY_FILTERS, ...parsed.filters, includeDemo: prev.includeDemo }));
+      const clean = stripNonComparable({ ...EMPTY_FILTERS, ...parsed.filters });
+      setIgnored(clean.ignored);
+      setFilters((prev) => ({ ...clean.filters, includeDemo: prev.includeDemo }));
       setSort(parsed.sort);
       setEngine("claude");
     } catch {
@@ -82,6 +88,7 @@ export function Catalog({
     setFilters(EMPTY_FILTERS);
     setSort("relevancia");
     setQuery("");
+    setIgnored([]);
     setEngine(null);
     setLoading(false);
     window.history.replaceState(null, "", window.location.pathname);
@@ -152,7 +159,7 @@ export function Catalog({
             </button>
           </div>
 
-          {(chips.length > 0 || engine) && (
+          {(chips.length > 0 || engine || ignored.length > 0) && (
             <div className="mt-3 flex items-center gap-2 lg:mt-0">
               <span className="hidden shrink-0 text-xs text-piedra sm:inline">
                 {engine === "claude" ? "El agente entendió:" : "Entendimos:"}
@@ -180,6 +187,11 @@ export function Catalog({
                 Limpiar
               </button>
             </div>
+          )}
+          {ignored.length > 0 && (
+            <p className="mt-2 text-xs text-piedra">
+              No filtramos por {ignored.join(", ")}: las tiendas no lo publican.
+            </p>
           )}
         </div>
 

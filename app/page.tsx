@@ -18,6 +18,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
   );
 }
 
+const COMPARABLE_FIELDS = ["composition", "quality", "color", "sizes", "shipping"];
+
 function CoverageSection() {
   if (!COVERAGE) return null;
   return (
@@ -25,16 +27,15 @@ function CoverageSection() {
       <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr]">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Datos reales</p>
-          <h2 className="mt-2 font-serif text-3xl tracking-tight">Lo que las tiendas publican de verdad</h2>
+          <h2 className="mt-2 font-serif text-3xl tracking-tight">Lo que comparamos entre tiendas</h2>
           <p className="mt-4 text-sm leading-relaxed text-piedra">
             Leímos {COVERAGE.items.toLocaleString("es-PE")} piezas ({COVERAGE.sources.map((s) => s.site).join(", ")}) el{" "}
-            {formatDate(COVERAGE.generatedAt)}. La composición casi siempre está; el micronaje y la región de origen, casi
-            nunca. Por eso mostramos &ldquo;no declarado&rdquo; en vez de inventarlo, y separamos las coincidencias por
-            confirmar.
+            {formatDate(COVERAGE.generatedAt)}. Comparamos solo lo que las tiendas publican de forma consistente: composición,
+            calidad, color, tallas con stock, precio y envío.
           </p>
         </div>
         <ul className="space-y-3">
-          {COVERAGE.fields.map((f) => (
+          {COVERAGE.fields.filter((f) => COMPARABLE_FIELDS.includes(f.key)).map((f) => (
             <li key={f.key} className="grid grid-cols-[minmax(0,11rem)_1fr_3rem] items-center gap-3 text-sm">
               <span className="truncate text-carbon">{f.label}</span>
               <span className="h-2 overflow-hidden rounded-full bg-arena-oscura/60">
@@ -67,7 +68,7 @@ function HowItWorks() {
     {
       n: "03",
       title: "No adivinamos",
-      body: "Si una tienda no declara origen o micronaje, lo decimos. Esos productos aparecen como “posibles coincidencias”, separados de los exactos.",
+      body: "Comparamos solo lo que las tiendas publican. Si a una ficha le falta un dato que pediste, la mostramos aparte como “posible coincidencia” en vez de adivinar.",
     },
   ];
   return (

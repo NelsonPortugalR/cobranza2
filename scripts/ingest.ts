@@ -19,6 +19,8 @@ interface SourceConfig extends Omit<ShopifySource, "retrievedAt"> {
   kind: "shopify";
 }
 
+// Para activar una fuente, su dominio debe estar permitido en la red del entorno.
+// Las que no respondan se omiten y se conserva su última descarga (data/raw/).
 const SOURCES: SourceConfig[] = [
   {
     key: "solalpaca",
@@ -32,7 +34,16 @@ const SOURCES: SourceConfig[] = [
       days: "3–10 días hábiles",
     },
   },
+  // Kuna (Grupo Inca) migró de kuna.com.pe a kunastores.com; la tienda de Perú vende en soles.
+  { key: "kuna-pe", kind: "shopify", site: "Kuna", baseUrl: "https://pe.kunastores.com", currency: "PEN" },
+  // Multimarca con varias marcas peruanas (incluida Kuna): el vendedor es la marca.
+  { key: "alpacacollections", kind: "shopify", site: "Alpaca Collections", baseUrl: "https://www.alpacacollections.com", currency: "USD", multiBrand: true, alpacaOnly: true },
+  { key: "paka", kind: "shopify", site: "PAKA", baseUrl: "https://www.pakaapparel.com", currency: "USD", alpacaOnly: true },
+  { key: "peruvianconnection", kind: "shopify", site: "Peruvian Connection", baseUrl: "https://www.peruvianconnection.com", currency: "USD", alpacaOnly: true },
+  { key: "krimsonklover", kind: "shopify", site: "Krimson Klover", baseUrl: "https://krimsonklover.com", currency: "USD", alpacaOnly: true },
+  { key: "peruvianlink", kind: "shopify", site: "Peruvian Link", baseUrl: "https://peruvianlink.com", currency: "USD", alpacaOnly: true },
 ];
+
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -68,16 +79,29 @@ async function main() {
 
   for (const src of SOURCES) {
     const rawPath = `data/raw/${src.key}.json`;
-    let raw: ShopifyProduct[];
-    let retrievedAt: string;
-    if (useCache) {
+    let raw: ShopifyProduct[] = [];
+    let retrievedAt = "";
+    const readCache = async () => {
       const cached = JSON.parse(await readFile(rawPath, "utf8"));
       raw = Array.isArray(cached) ? cached : cached.products;
       retrievedAt = Array.isArray(cached) ? new Date().toISOString() : cached.retrievedAt;
-    } else {
-      raw = await fetchShopify(src);
-      retrievedAt = new Date().toISOString();
-      await writeFile(rawPath, JSON.stringify({ retrievedAt, products: raw }));
+    };
+    try {
+      if (useCache) await readCache();
+      else {
+        raw = await fetchShopify(src);
+        retrievedAt = new Date().toISOString();
+        await writeFile(rawPath, JSON.stringify({ retrievedAt, products: raw }));
+      }
+    } catch (err) {
+      const reason = err instanceof Error ? (err.cause as { code?: string })?.code ?? err.message : String(err);
+      try {
+        await readCache();
+        console.warn(`${src.site}: sin acceso (${reason}); uso la descarga del ${retrievedAt!.slice(0, 10)}`);
+      } catch {
+        console.warn(`${src.site}: sin acceso (${reason}); se omite`);
+        continue;
+      }
     }
     const items = raw.flatMap((p) => normalizeShopifyProduct(p, { ...src, retrievedAt }));
     console.log(`${src.site}: ${raw.length} productos → ${items.length} ítems (producto × color)`);

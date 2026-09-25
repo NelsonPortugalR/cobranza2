@@ -23,6 +23,10 @@ test("color: familia y natural vs teñido", () => {
   assert.equal(classifyColor("rainy day").family, "gris");
   assert.equal(classifyColor("Oatmeal").natural, null, "beige sin decir 'natural' no se asume sin teñir");
   assert.equal(classifyColor("20753w|C003").family, null);
+  assert.equal(classifyColor("Black Oyster").family, "gris");
+  assert.equal(classifyColor("Sand Yellow").family, "amarillo");
+  assert.equal(classifyColor("Olive Green").family, "verde");
+  assert.equal(classifyColor("Blue And Turquoise").family, "azul", "dos tonos de la misma familia no es multicolor");
 });
 
 const base: ShopifyProduct = {

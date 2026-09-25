@@ -35,8 +35,12 @@ export interface ShopifySource {
   site: string;
   baseUrl: string;
   currency: "USD" | "PEN";
-  shipping: NonNullable<Product["shipping"]>;
+  shipping?: Product["shipping"];
   retrievedAt: string;
+  /** Tienda multimarca: el vendedor es la marca (campo vendor de Shopify). */
+  multiBrand?: boolean;
+  /** Tienda que también vende otras fibras: descarta productos sin alpaca. */
+  alpacaOnly?: boolean;
 }
 
 export const ENGINE = { engine: "reglas", version: "shopify-rules-v1" };
@@ -126,12 +130,12 @@ export function qualityFromMaterial(material: string): { quality: Quality | null
 
 const COLOR_RULES: [ColorFamily, RegExp][] = [
   ["multicolor", /\b(multi|multicolou?r|rainbow|stripes?|patchwork|mix)\b/i],
-  ["beige", /\b(beige|oatmeal|oat|sand|camel light|ecru|nude|taupe|khaki|stone|linen|latte|cream|crema|off ?white|bone|hueso|vanilla|coconut|toasted|oyster|hummus|biscotti|almond)\b/i],
+  ["beige", /\b(beige|oatmeal|oat|sand|camel light|ecru|nude|taupe|khaki|stone|linen|latte|cream|crema|off ?white|bone|hueso|vanilla|coconut|toasted|hummus|biscotti|almond)\b/i],
   ["camel", /\b(camel|vicu[nñ]a|fawn|caramel|cognac|honey|tan|toffee|biscuit|cinnamon|canela)\b/i],
   ["marron", /\b(brown|chocolate|coffee|mocha|espresso|chestnut|walnut|marr[oó]n|caf[eé]|brick brown|russet|russed|tobacco|mahogany|umber|cacao|cocoa|pecan|rooibos|earth|bronze|twig|autumnal)\b/i],
   ["blanco", /\b(white|ivory|snow|blanco|natural white|pearl white|chalk|pearl|ghost)\b/i],
   ["negro", /\b(black|negro|onyx|jet|ebony|eclipse|outer space)\b/i],
-  ["gris", /\b(gr[ae]y|charcoal|silver|slate|smoke|ash|plomo|gris|graphite|heather|melange|anthracite|fog|mist|rainy|wet weather|shark|gargoyle|magnet|iron|tornado)\b/i],
+  ["gris", /\b(gr[ae]y|charcoal|silver|slate|smoke|ash|plomo|gris|graphite|heather|melange|anthracite|fog|mist|rainy|wet weather|oyster|shark|gargoyle|magnet|iron|tornado)\b/i],
   ["azul", /\b(blue|navy|indigo|denim|azul|turquoise|teal|aqua|cobalt|sky|petrol|ocean|marine)\b/i],
   ["verde", /\b(green|olive|sage|moss|forest|emerald|mint|verde|pistachio|khaki green|bottle|pine|jade|lime|oasis|spruce|cactus)\b/i],
   ["rojo", /\b(red|rojo|burgundy|wine|bordeaux|maroon|cherry|scarlet|ruby|orange|naranja|rust|terracotta|coral|ketchup|koi|brick|copper|pumpkin|tomato|paprika|henna|pepper|chili|mandarin|tango|apple)\b/i],
@@ -142,8 +146,18 @@ const COLOR_RULES: [ColorFamily, RegExp][] = [
 const NATURAL_FAMILIES: ColorFamily[] = ["blanco", "beige", "camel", "marron", "gris", "negro"];
 
 export function classifyColor(name: string): { family: ColorFamily | null; natural: boolean | null; evidence: FieldEvidence } {
-  const matches = COLOR_RULES.filter(([, re]) => re.test(name)).map(([f]) => f);
-  const family = matches.length === 0 ? null : matches.length > 1 && /\band\b|&|\//.test(name) ? "multicolor" : matches[0];
+  // En nombres compuestos manda la última palabra de color ("Sand Yellow" → amarillo).
+  const hits = COLOR_RULES.flatMap(([f, re]) => {
+    const g = new RegExp(re.source, "gi");
+    return [...name.matchAll(g)].map((m) => ({ f, at: m.index ?? 0 }));
+  }).sort((a, b) => a.at - b.at);
+  const families = [...new Set(hits.map((h) => h.f))];
+  const family =
+    families.length === 0
+      ? null
+      : families.includes("multicolor") || (families.length > 1 && /\band\b|&|\//i.test(name))
+        ? "multicolor"
+        : hits[hits.length - 1].f;
   if (/\bnatural\b/i.test(name) && family && NATURAL_FAMILIES.includes(family)) {
     return { family, natural: true, evidence: { provenance: "declarado", confidence: 0.7, quote: name } };
   }
@@ -178,6 +192,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
 
   const body = htmlToText(p.body_html);
   const text = `${p.title}\n${body}`;
+  if (src.alpacaOnly && !/alpaca|suri|vicu[nñ]a/i.test(`${text} ${p.tags.join(" ")}`)) return [];
   const { composition, quote: compQuote } = extractComposition(text);
   const alpacaPct = composition.length ? composition.filter((c) => isAlpaca(c.material)).reduce((a, c) => a + c.pct, 0) : null;
   const mainAlpaca = composition.filter((c) => isAlpaca(c.material)).sort((a, b) => b.pct - a.pct)[0];
@@ -209,7 +224,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
   if (!composition.length) warnings.push("Composición no declarada");
   if (!q.quality && composition.length) warnings.push("La composición no indica calidad (solo 'alpaca')");
   if (q.quality && !mainAlpaca) warnings.push("Menciona la calidad pero no el % de alpaca");
-  warnings.push("Micronaje no declarado", "Región de origen no declarada");
+
 
   return [...byColor].map(([colorName, variants]) => {
     const color = classifyColor(colorName);
@@ -237,7 +252,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
         method: "feed",
         retrievedAt: src.retrievedAt,
       },
-      seller: { name: src.site },
+      seller: { name: src.multiBrand && p.vendor ? p.vendor : src.site },
       productType,
       fiber: { alpacaPct, composition, quality: q.quality, micron: null, breed },
       color: {

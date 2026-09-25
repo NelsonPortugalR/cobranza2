@@ -250,14 +250,20 @@ Leímos el catálogo público de **Sol Alpaca** (tienda Shopify, `/products.json
 2. **Micronaje, raza y región de origen no existen en los datos públicos** de esta tienda. Los filtros siguen, pero su valor está en decir la verdad ("no declarado") y no en filtrar. Para que esos filtros sean útiles hará falta, en v2, un sello "verificado" para tiendas que compartan certificados de laboratorio o de origen.
 3. El valor diferencial frente a un buscador está confirmado en lo que sí hay: stock **por talla y color**, composición real, precio de oferta y envío, todo en un mismo filtro.
 
-**Estado de las fuentes:**
+**Decisión de producto (25 sep):** comparamos solo lo que las tiendas publican de forma consistente: tipo de prenda, composición, calidad declarada (baby, super baby, royal), color, tallas con stock, precio (soles o dólares), oferta y envío. Micronaje, raza, región de origen y natural/teñido no se muestran como filtros. Si el usuario los pide, el catálogo avisa: "No filtramos por origen (Puno): las tiendas no lo publican".
 
-| Fuente | Estado | Qué falta |
+**Estado de las fuentes:** todas son tiendas Shopify y usan el mismo conector (`scripts/ingest.ts`). Para activar una fuente basta con permitir su dominio en la red del entorno y correr `npm run ingest`.
+
+| Fuente | Dominio a permitir | Estado |
 |---|---|---|
-| Sol Alpaca | ✅ Conectada (feed público Shopify) | Programar la ingesta diaria |
-| Kuna | ⛔ No accesible desde el entorno | Revisar dominio y acceso de red |
-| Mercado Libre Perú | 🔑 La API respondió 403 sin autenticación | Registrar una app de desarrollador (OAuth) |
-| Etsy | 🔑 Requiere API key | Crear la key en Etsy Developers |
-| Tiendas de Cusco/Arequipa, All Alpaca | ⏳ Pendiente | Dominios y permiso de red |
+| Sol Alpaca | `www.solalpaca.com` | ✅ Conectada: 608 productos, 1.038 ítems |
+| **Kuna** (Perú, en soles) | `pe.kunastores.com` | ⏳ Configurada. Kuna dejó `kuna.com.pe` (ahora responde 404) y vende en `kunastores.com` |
+| Alpaca Collections (multimarca, incluye Kuna y otras) | `www.alpacacollections.com` | ⏳ Configurada: una conexión suma varias marcas |
+| PAKA | `www.pakaapparel.com` | ⏳ Configurada |
+| Peruvian Connection | `www.peruvianconnection.com` | ⏳ Configurada (solo productos con alpaca) |
+| Krimson Klover | `krimsonklover.com` | ⏳ Configurada (solo productos con alpaca) |
+| Peruvian Link | `peruvianlink.com` | ⏳ Configurada |
+| Mercado Libre Perú | `api.mercadolibre.com` | 🔑 Requiere registrar una app (OAuth) |
+| Etsy | `openapi.etsy.com` | 🔑 Requiere API key |
 
 Las fuentes no conectadas se muestran solo si el usuario activa "Mostrar ejemplos", y cada tarjeta dice **Ejemplo**.

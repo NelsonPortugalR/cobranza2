@@ -20,7 +20,7 @@ export function chipsFromFilters(f: Filters): ActiveChip[] {
     const max = QUALITY_RANGES.find((q) => q.id === coarsest)!.max;
     chips.push({
       key: "q",
-      label: isAtLeast ? `${QUALITY_LABEL[coarsest]} o más fina (≤ ${max} µm)` : f.qualities.map((q) => QUALITY_LABEL[q]).join(" / "),
+      label: isAtLeast ? `${QUALITY_LABEL[coarsest]} o superior` : f.qualities.map((q) => QUALITY_LABEL[q]).join(" / "),
       remove: { qualities: [] },
     });
   }
@@ -44,7 +44,7 @@ export function chipsFromFilters(f: Filters): ActiveChip[] {
 
 export const SORT_LABEL: Record<SortKey, string> = {
   relevancia: "Relevancia",
-  micras_asc: "Más fino primero",
+  micras_asc: "Mejor calidad primero",
   precio_asc: "Precio: menor a mayor",
   precio_desc: "Precio: mayor a menor",
 };

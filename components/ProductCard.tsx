@@ -1,12 +1,10 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types.ts";
-import { AVAILABILITY_LABEL, BREED_LABEL, REGION_LABEL, TYPE_LABEL } from "@/lib/taxonomy.ts";
-import { compositionLabel, finenessLabel, formatPen, formatUsd } from "@/lib/format.ts";
+import { AVAILABILITY_LABEL, QUALITY_LABEL, TYPE_LABEL } from "@/lib/taxonomy.ts";
+import { compositionLabel, formatPen, formatUsd } from "@/lib/format.ts";
 import { ProductImage } from "./ProductImage.tsx";
 
 export function ProductCard({ product: p, unknownFields = [] }: { product: Product; unknownFields?: string[] }) {
-  const fineness = finenessLabel(p);
-  const micronInferred = p.evidence.micron?.provenance !== "declarado";
   const soldOut = p.availability.status === "agotado";
 
   return (
@@ -24,10 +22,9 @@ export function ProductCard({ product: p, unknownFields = [] }: { product: Produ
             Ejemplo
           </span>
         )}
-        {fineness && (
+        {p.price.compareAt && (
           <span className="absolute left-2 top-2 rounded-full bg-carbon/85 px-2.5 py-1 text-[11px] font-medium text-lana backdrop-blur sm:left-3 sm:top-3">
-            {fineness}
-            {p.fiber.micron != null && micronInferred && " (inf.)"}
+            −{Math.round((1 - p.price.amount / p.price.compareAt) * 100)}%
           </span>
         )}
         {p.availability.status !== "en_stock" && (
@@ -47,12 +44,12 @@ export function ProductCard({ product: p, unknownFields = [] }: { product: Produ
 
         <dl className="grid grid-cols-1 gap-y-1 text-[11px] leading-tight sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
           <Spec label="Fibra" value={compositionLabel(p)} />
-          <Spec label="Raza" value={p.fiber.breed ? BREED_LABEL[p.fiber.breed] : null} />
+          <Spec label="Calidad" value={p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null} />
           <Spec
             label="Color"
-            value={`${p.color.name.split(" (")[0]}${p.color.natural === true ? " · natural" : p.color.natural === false ? " · teñido" : ""}`}
+            value={p.color.name.split(" (")[0]}
           />
-          <Spec label="Origen" value={p.origin.region ? REGION_LABEL[p.origin.region] : null} />
+          <Spec label="Marca" value={p.seller.name} />
         </dl>
 
         {p.sizes && p.sizes.length > 0 && !(p.sizes.length === 1 && p.sizes[0] === "Única") && (
@@ -77,7 +74,7 @@ export function ProductCard({ product: p, unknownFields = [] }: { product: Produ
 
         {unknownFields.length > 0 && (
           <p className="rounded-sm bg-arena px-2 py-1.5 text-[11px] text-tierra">
-            Sin dato de {unknownFields.join(", ")} — no podemos confirmar que cumpla tu filtro.
+            La tienda no indica {unknownFields.join(", ")}: revisa la ficha antes de comprar.
           </p>
         )}
 

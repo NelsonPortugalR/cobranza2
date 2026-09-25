@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ALL_PRODUCTS, getProduct } from "@/lib/catalog.ts";
 import type { FieldEvidence, Product } from "@/lib/types.ts";
-import { AVAILABILITY_LABEL, BREED_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL, micronRangeLabel } from "@/lib/taxonomy.ts";
-import { compositionLabel, finenessLabel, formatDate, formatPen, formatUsd } from "@/lib/format.ts";
+import { AVAILABILITY_LABEL, BREED_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL } from "@/lib/taxonomy.ts";
+import { compositionLabel, formatDate, formatPen, formatUsd } from "@/lib/format.ts";
 import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
 
@@ -34,12 +34,12 @@ export default async function ProductPage({ params }: Params) {
     .slice(0, 3);
   const rows: { label: string; value: string | null; ev?: FieldEvidence; hint?: string }[] = [
     {
-      label: "Calidad (NTP 231.301)",
+      label: "Calidad",
       value: p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null,
       ev: p.evidence.quality,
       hint:
         p.fiber.quality && p.fiber.micron == null
-          ? `Rango de la norma: ${micronRangeLabel(p.fiber.quality)}. La tienda no informa una medición.`
+          ? "Calidad según la tienda."
           : undefined,
     },
     { label: "Micronaje", value: p.fiber.micron != null ? `${p.fiber.micron} µm` : null, ev: p.evidence.micron },
@@ -48,7 +48,7 @@ export default async function ProductPage({ params }: Params) {
       label: "Color",
       value: `${p.color.name}${p.color.natural === true ? " — natural, sin teñir" : p.color.natural === false ? " — teñido" : ""}`,
       ev: p.evidence.natural,
-      hint: p.color.natural == null ? "No se sabe si es color natural o teñido." : undefined,
+
     },
     {
       label: "Origen",
@@ -69,6 +69,10 @@ export default async function ProductPage({ params }: Params) {
         : undefined,
     },
   ];
+
+  // Solo mostramos lo que la tienda publica: los campos sin dato no se listan.
+  const OPTIONAL = new Set(["Micronaje", "Raza", "Origen", "Construcción", "Peso"]);
+  const visibleRows = rows.filter((r) => r.value != null || !OPTIONAL.has(r.label));
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-28 sm:px-6 lg:pb-0">
@@ -99,7 +103,7 @@ export default async function ProductPage({ params }: Params) {
           <h1 className="mt-3 font-serif text-3xl leading-tight tracking-tight sm:text-4xl">{p.title}</h1>
 
           <div className="mt-5 flex flex-wrap gap-2">
-            {[finenessLabel(p), p.fiber.breed && BREED_LABEL[p.fiber.breed], compositionLabel(p), p.color.natural && "Color natural"]
+            {[p.fiber.quality && QUALITY_LABEL[p.fiber.quality], compositionLabel(p), p.sizesAvailable?.length ? `Tallas: ${p.sizesAvailable.join(" · ")}` : null]
               .filter(Boolean)
               .map((t) => (
                 <span key={t as string} className="rounded-full bg-arena px-3 py-1 text-xs text-tierra">
@@ -141,9 +145,9 @@ export default async function ProductPage({ params }: Params) {
           </a>
 
           <section className="mt-10">
-            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Ficha técnica normalizada</h2>
+            <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Ficha comparable</h2>
             <dl className="mt-3 divide-y divide-arena-oscura border-y border-arena-oscura">
-              {rows.map((r) => (
+              {visibleRows.map((r) => (
                 <div key={r.label} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
                   <dt className="text-piedra">{r.label}</dt>
                   <dd>
@@ -168,7 +172,7 @@ export default async function ProductPage({ params }: Params) {
 
           {p.extraction.warnings.length > 0 && (
             <section className="mt-8 rounded-sm bg-arena p-4">
-              <h2 className="text-sm font-medium">Lo que el agente no pudo confirmar</h2>
+              <h2 className="text-sm font-medium">A tener en cuenta</h2>
               <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-tierra">
                 {p.extraction.warnings.map((w) => (
                   <li key={w}>{w}</li>

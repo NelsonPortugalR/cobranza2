@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T12:06:32.438Z",
+  "generatedAt": "2026-09-25T12:16:15.904Z",
   "items": 1038,
   "sources": [
     {
@@ -41,8 +41,8 @@
     {
       "key": "natural",
       "label": "Natural vs. teñido",
-      "count": 607,
-      "pct": 58
+      "count": 629,
+      "pct": 61
     },
     {
       "key": "origin",

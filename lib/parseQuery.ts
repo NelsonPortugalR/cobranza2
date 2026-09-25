@@ -84,7 +84,7 @@ export function parseQueryLocal(query: string): ParsedQuery {
       f.qualities = andFiner ? qualitiesAtLeast(quality) : [quality];
       chips.push({
         field: "qualities",
-        label: andFiner && quality !== "ultrafina" ? `${QUALITY_LABEL[quality]} o más fina` : QUALITY_LABEL[quality],
+        label: andFiner && quality !== "ultrafina" ? `${QUALITY_LABEL[quality]} o superior` : QUALITY_LABEL[quality],
         from: consume(m),
       });
       break;
@@ -101,7 +101,7 @@ export function parseQueryLocal(query: string): ParsedQuery {
   const finest = rest.match(/\b(lo )?mas fin[ao]s?( posible)?\b|\bfinisim[ao]s?\b|\bmas suave\b/);
   if (finest) {
     sort = "micras_asc";
-    chips.push({ field: "sort", label: "Ordenado por finura (µm ↑)", from: consume(finest) });
+    chips.push({ field: "sort", label: "Mejor calidad primero", from: consume(finest) });
   }
 
   const breed = rest.match(/\b(huacaya|suri)\b/);
