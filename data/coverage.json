@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-25T12:27:57.169Z",
-  "items": 4160,
+  "generatedAt": "2026-09-25T12:53:50.223Z",
+  "items": 6631,
   "sources": [
     {
       "site": "Sol Alpaca",
@@ -12,7 +12,7 @@
     },
     {
       "site": "Alpaca Collections",
-      "items": 988
+      "items": 987
     },
     {
       "site": "PAKA",
@@ -29,20 +29,48 @@
     {
       "site": "Peruvian Link",
       "items": 863
+    },
+    {
+      "site": "Incalpaca Remate",
+      "items": 255
+    },
+    {
+      "site": "Kuna USA",
+      "items": 641
+    },
+    {
+      "site": "Anntarah",
+      "items": 829
+    },
+    {
+      "site": "Etno Alpaca",
+      "items": 89
+    },
+    {
+      "site": "Qinti",
+      "items": 250
+    },
+    {
+      "site": "All Alpaca",
+      "items": 118
+    },
+    {
+      "site": "Pure Alpaca",
+      "items": 290
     }
   ],
   "fields": [
     {
       "key": "composition",
       "label": "Composición (100% o mezcla)",
-      "count": 3081,
-      "pct": 74
+      "count": 5051,
+      "pct": 76
     },
     {
       "key": "quality",
       "label": "Calidad (baby, super baby…)",
-      "count": 2484,
-      "pct": 60
+      "count": 4417,
+      "pct": 67
     },
     {
       "key": "micron",
@@ -53,20 +81,20 @@
     {
       "key": "breed",
       "label": "Raza (Huacaya / Suri)",
-      "count": 103,
-      "pct": 2
+      "count": 195,
+      "pct": 3
     },
     {
       "key": "color",
       "label": "Color clasificable",
-      "count": 3612,
-      "pct": 87
+      "count": 5861,
+      "pct": 88
     },
     {
       "key": "natural",
       "label": "Natural vs. teñido",
-      "count": 1857,
-      "pct": 45
+      "count": 3039,
+      "pct": 46
     },
     {
       "key": "origin",
@@ -77,13 +105,13 @@
     {
       "key": "sizes",
       "label": "Tallas con stock",
-      "count": 4160,
-      "pct": 100
+      "count": 6341,
+      "pct": 96
     },
     {
       "key": "shipping",
       "label": "Envío",
-      "count": 3793,
+      "count": 6014,
       "pct": 91
     }
   ]

@@ -114,3 +114,14 @@ test("composición escrita con palabras (Kuna y otras)", () => {
   assert.equal(classifyColor("Celeste").family, "azul");
   assert.equal(classifyColor("Rosado").family, "rosa");
 });
+
+test("formatos mixtos, colores en el título y tipos en español", () => {
+  assert.deepEqual(extractComposition("Made with 30% silk. Composition: baby alpaca 70%.").composition, [
+    { material: "Silk", pct: 30 },
+    { material: "Baby Alpaca", pct: 70 },
+  ]);
+  assert.equal(classifyColor("Naranja Jaspeado").family, "rojo");
+  for (const [title, type] of [["Saco Lid Arena", "cardigan"], ["Sacón Largo", "abrigo"], ["Troyer Andes", "chompa"], ["CHAL LUNA", "chal"], ["Ovillo Baby Alpaca", "fibra"], ["Cuellera Tejida", "bufanda"]] as const) {
+    assert.equal(inferType({ ...base, title }), type, title);
+  }
+});

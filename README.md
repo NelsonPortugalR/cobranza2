@@ -5,7 +5,7 @@ Un agente lee listados públicos de tiendas peruanas y marketplaces (Sol Alpaca,
 📄 **Documento de producto** (visión, arquitectura, schema, pantallas, flujo del agente y limitaciones): [`docs/PRODUCTO.md`](docs/PRODUCTO.md)
 🧩 **JSON Schema del producto**: [`schema/product.schema.json`](schema/product.schema.json)
 
-> **Datos reales:** 4.160 prendas con stock de 7 tiendas (Sol Alpaca, Kuna, Alpaca Collections, PAKA, Peruvian Connection, Krimson Klover, Peruvian Link), leídas de sus catálogos públicos con `npm run ingest`. Comparamos solo lo que publican: tipo, composición, calidad, color, tallas con stock, precio y envío. Detalle en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
+> **Datos reales:** 6.631 prendas con stock de 14 tiendas (Sol Alpaca, Kuna Perú y USA, Alpaca Collections, Anntarah, Peruvian Link, PAKA, Pure Alpaca, Peruvian Connection, Incalpaca Remate, Qinti, All Alpaca, Etno Alpaca, Krimson Klover), leídas de sus catálogos públicos con `npm run ingest`. Comparamos solo lo que publican: tipo, composición, calidad, color, tallas con stock, precio y envío. Detalle en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
 
 ## Correr en local
 
@@ -41,6 +41,7 @@ data/
   coverage.json            % de ítems con cada dato técnico (generado)
 lib/
   ingest/shopify.ts        Normalizador de fichas Shopify (composición, calidad, color, tallas con stock)
+  ingest/woocommerce.ts    Conector WooCommerce (Store API) que reutiliza el normalizador de Shopify
   ingest/robots.ts         Evaluación de robots.txt (RFC 9309)
   catalog.ts               Carga el catálogo en el servidor y arma la versión liviana para el cliente
   types.ts                 Modelo de datos

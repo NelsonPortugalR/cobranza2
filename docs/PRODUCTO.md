@@ -252,19 +252,29 @@ Leímos el catálogo público de **Sol Alpaca** (tienda Shopify, `/products.json
 
 **Decisión de producto (25 sep):** comparamos solo lo que las tiendas publican de forma consistente: tipo de prenda, composición, calidad declarada (baby, super baby, royal), color, tallas con stock, precio (soles o dólares), oferta y envío. Micronaje, raza, región de origen y natural/teñido no se muestran como filtros. Si el usuario los pide, el catálogo avisa: "No filtramos por origen (Puno): las tiendas no lo publican".
 
-**Estado de las fuentes (25 sep, segunda descarga):** 7 tiendas conectadas por el mismo conector Shopify, **4.160 ítems con stock** (se omiten los agotados).
+**Estado de las fuentes (25 sep, tercera descarga):** 14 tiendas, **6.631 ítems con stock** (se omiten los agotados). 13 usan el conector Shopify y 1 el conector WooCommerce (Store API pública).
 
-| Fuente | Ítems con stock | Composición | Calidad | Color | Envío a Perú |
-|---|---|---|---|---|---|
-| Sol Alpaca | 924 | 93 % | 94 % | 88 % | Sí (DHL desde Perú) |
-| Kuna (`pe.kunastores.com`, en soles) | 749 | 80 % | 81 % | 100 % | Sí (S/ 15, gratis desde S/ 399) |
-| Alpaca Collections (multimarca) | 988 | 63 % | 51 % | 95 % | Sí (internacional desde US$ 39) |
-| PAKA | 326 | 28 % | 17 % | 91 % | No publica |
-| Peruvian Connection | 269 | 99 % | 71 % | 80 % | No publica |
-| Krimson Klover | 41 | 85 % | 51 % | 95 % | No publica |
-| Peruvian Link | 863 | 86 % | 28 % | 65 % | No publica |
-| Mercado Libre Perú | — | | | | 🔑 Requiere app de desarrollador (OAuth) |
-| Etsy | — | | | | 🔑 Requiere API key |
+| Fuente | Plataforma | Moneda | Ítems | Composición | Calidad | Envía a Perú |
+|---|---|---|---|---|---|---|
+| Sol Alpaca | Shopify | USD | 924 | 92 % | 94 % | Sí |
+| Kuna Perú (`pe.kunastores.com`) | Shopify | PEN | 749 | 87 % | 81 % | Sí (gratis desde S/ 399) |
+| Kuna USA (`us.kunastores.com`) | Shopify | USD | 641 | 57 % | 83 % | No (solo EE. UU.) |
+| Alpaca Collections (multimarca) | Shopify | USD | 987 | 53 % | 51 % | Sí (desde US$ 39) |
+| Anntarah | Shopify | PEN | 829 | 99 % | 80 % | Sí (gratis desde S/ 399) |
+| Peruvian Link | Shopify | USD | 863 | 82 % | 28 % | No publica |
+| PAKA | Shopify | USD | 326 | 16 % | 17 % | No publica |
+| Pure Alpaca | WooCommerce | PEN | 290 | 97 % | 78 % | Sí |
+| Peruvian Connection | Shopify | USD | 269 | 99 % | 71 % | No publica |
+| Incalpaca Remate (outlet) | Shopify | PEN | 255 | 50 % | 56 % | Sí |
+| Qinti | Shopify | USD | 250 | 81 % | 79 % | No publica |
+| All Alpaca | Shopify | USD | 118 | 100 % | 75 % | Sí (gratis desde S/ 150) |
+| Etno Alpaca | Shopify | USD | 89 | 57 % | 100 % | Sí |
+| Krimson Klover | Shopify | USD | 41 | 85 % | 51 % | No publica |
+| Incalpaca (`incalpacastores.com`) | Shopify | PEN | — | | | Pendiente: su `robots.txt` redirige a `alpaca111.com`, que no está permitido en la red; sin leer sus reglas no descargamos |
+| Baby Alpaca Boutique | — | | — | | | No responde por HTTPS |
+| Mercado Libre Perú / Etsy | API | | — | | | Requieren credenciales de desarrollador |
+
+Notas: Pure Alpaca (WooCommerce) no informa stock por talla, solo si el producto tiene stock; por eso sus prendas aparecen "por confirmar" cuando se filtra por talla. La descarga reintenta hasta 3 veces ante cortes de red.
 
 Aprendizajes de la segunda descarga:
 - **Kuna escribe la composición con palabras** ("elaborado en baby alpaca y seda", "una mezcla de alpaca y lana"). El lector lo entiende: si la frase describe un solo material en español ("elaborado en baby alpaca"), deduce 100 % y lo marca como deducido; si hay dos materiales o dice "mezcla", la marca como mezcla sin porcentaje. En inglés, "crafted with alpaca fiber" no basta para decir 100 %.

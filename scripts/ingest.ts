@@ -10,13 +10,16 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { normalizeShopifyProduct, type ShopifyProduct, type ShopifySource } from "../lib/ingest/shopify.ts";
 import { coverageReport } from "../lib/ingest/coverage.ts";
 import { isAllowed, parseRobots } from "../lib/ingest/robots.ts";
+import { normalizeWooProduct, type WooProduct } from "../lib/ingest/woocommerce.ts";
 import type { Product } from "../lib/types.ts";
 
 const USER_AGENT = "VellonBot/0.1 (catalogo de alpaca; solo lectura)";
 
 interface SourceConfig extends Omit<ShopifySource, "retrievedAt"> {
   key: string;
-  kind: "shopify";
+  kind: "shopify" | "woocommerce";
+  /** WooCommerce: ruta base de la tienda si no está en la raíz (p. ej. "/peru"). */
+  wooPath?: string;
 }
 
 // Para activar una fuente, su dominio debe estar permitido en la red del entorno.
@@ -85,13 +88,91 @@ const SOURCES: SourceConfig[] = [
     alpacaOnly: true,
     shipping: { summary: "Envíos desde EE. UU. desde US$ 20; internacional según peso", costUsd: 20, toPeru: null },
   },
+  {
+    key: "incalpaca",
+    kind: "shopify",
+    site: "Incalpaca",
+    baseUrl: "https://incalpacastores.com",
+    currency: "PEN",
+    alpacaOnly: true,
+    shipping: { summary: "Envíos a todo Perú e internacionales; recojo en tienda", toPeru: true },
+  },
+  {
+    key: "incalpaca-remate",
+    kind: "shopify",
+    site: "Incalpaca Remate",
+    baseUrl: "https://remate.incalpacastores.com",
+    currency: "PEN",
+    alpacaOnly: true,
+    shipping: { summary: "Envíos a todo Perú (outlet de Incalpaca)", toPeru: true },
+  },
+  {
+    key: "kuna-us",
+    kind: "shopify",
+    site: "Kuna USA",
+    baseUrl: "https://us.kunastores.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Envíos dentro de EE. UU.", toPeru: false },
+  },
+  {
+    key: "anntarah",
+    kind: "shopify",
+    site: "Anntarah",
+    baseUrl: "https://anntarah.com",
+    currency: "PEN",
+    alpacaOnly: true,
+    shipping: { summary: "Envío a todo Perú: S/ 20 (gratis desde S/ 399)", days: "hasta 10 días hábiles", toPeru: true },
+  },
+  {
+    key: "etnoalpaca",
+    kind: "shopify",
+    site: "Etno Alpaca",
+    baseUrl: "https://etnoalpaca.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Envío desde Perú al día hábil siguiente; aranceles no incluidos", toPeru: true },
+  },
+  { key: "qinti", kind: "shopify", site: "Qinti", baseUrl: "https://www.qintiperu.com", currency: "USD", alpacaOnly: true },
+  {
+    key: "allalpaca",
+    kind: "shopify",
+    site: "All Alpaca",
+    baseUrl: "https://allalpaca.com.pe",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Envío gratis a todo Perú desde S/ 150 y al mundo desde US$ 150", toPeru: true },
+  },
+  {
+    key: "purealpaca",
+    kind: "woocommerce",
+    site: "Pure Alpaca",
+    baseUrl: "https://purealpacastores.com",
+    wooPath: "/peru",
+    currency: "PEN",
+    alpacaOnly: true,
+    shipping: { summary: "Envío a todo Perú: Lima 3–5 días hábiles, provincias 5–8", toPeru: true },
+  },
 ];
 
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** fetch con hasta 3 reintentos ante cortes de red o errores 5xx (espera 2 s, 4 s, 8 s). */
+async function politeFetch(url: string): Promise<Response> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await fetch(url, { headers: { "user-agent": USER_AGENT } });
+      if (res.status < 500 || attempt >= 3) return res;
+    } catch (err) {
+      if (attempt >= 3) throw err;
+    }
+    await sleep(2000 * 2 ** attempt);
+  }
+}
+
 async function robotsAllows(baseUrl: string, path: string): Promise<boolean> {
-  const res = await fetch(`${baseUrl}/robots.txt`, { headers: { "user-agent": USER_AGENT } });
+  const res = await politeFetch(`${baseUrl}/robots.txt`);
   if (!res.ok) return true;
   return isAllowed(parseRobots(await res.text(), "VellonBot"), path);
 }
@@ -100,7 +181,7 @@ async function fetchShopify(src: SourceConfig): Promise<ShopifyProduct[]> {
   if (!(await robotsAllows(src.baseUrl, "/products.json"))) throw new Error(`robots.txt de ${src.site} no permite /products.json`);
   const all: ShopifyProduct[] = [];
   for (let page = 1; page < 100; page++) {
-    const res = await fetch(`${src.baseUrl}/products.json?limit=250&page=${page}`, { headers: { "user-agent": USER_AGENT } });
+    const res = await politeFetch(`${src.baseUrl}/products.json?limit=250&page=${page}`);
     if (res.status === 429) {
       await sleep(10_000);
       page--;
@@ -115,6 +196,24 @@ async function fetchShopify(src: SourceConfig): Promise<ShopifyProduct[]> {
   return all;
 }
 
+async function fetchWoo(src: SourceConfig): Promise<WooProduct[]> {
+  const base = `${src.baseUrl}${src.wooPath ?? ""}`;
+  const path = `${src.wooPath ?? ""}/wp-json/wc/store/v1/products`;
+  if (!(await robotsAllows(src.baseUrl, path))) throw new Error(`robots.txt de ${src.site} no permite ${path}`);
+  const all: WooProduct[] = [];
+  for (let page = 1; page < 200; page++) {
+    const res = await politeFetch(`${base}/wp-json/wc/store/v1/products?per_page=100&page=${page}`);
+    if (res.status === 400) break; // página fuera de rango
+    if (!res.ok) throw new Error(`${src.site}: HTTP ${res.status}`);
+    const products = (await res.json()) as WooProduct[];
+    all.push(...products);
+    const totalPages = Number(res.headers.get("x-wp-totalpages") ?? page);
+    if (page >= totalPages || !products.length) break;
+    await sleep(1200);
+  }
+  return all;
+}
+
 async function main() {
   const useCache = process.argv.includes("--cache");
   await mkdir("data/raw", { recursive: true });
@@ -122,7 +221,7 @@ async function main() {
 
   for (const src of SOURCES) {
     const rawPath = `data/raw/${src.key}.json`;
-    let raw: ShopifyProduct[] = [];
+    let raw: (ShopifyProduct | WooProduct)[] = [];
     let retrievedAt = "";
     const readCache = async () => {
       const cached = JSON.parse(await readFile(rawPath, "utf8"));
@@ -132,12 +231,13 @@ async function main() {
     try {
       if (useCache) await readCache();
       else {
-        raw = await fetchShopify(src);
+        raw = src.kind === "woocommerce" ? await fetchWoo(src) : await fetchShopify(src);
         retrievedAt = new Date().toISOString();
         await writeFile(rawPath, JSON.stringify({ retrievedAt, products: raw }));
       }
     } catch (err) {
-      const reason = err instanceof Error ? (err.cause as { code?: string })?.code ?? err.message : String(err);
+      const code = err instanceof Error ? (err.cause as { code?: string } | undefined)?.code : undefined;
+      const reason = code ? String(code) : err instanceof Error ? err.message : String(err);
       // HTTP 403 suele ser el proxy del entorno: revisar que el dominio esté permitido.
       try {
         await readCache();
@@ -148,7 +248,11 @@ async function main() {
       }
     }
     // Solo lo que se puede comprar hoy: las fichas agotadas (archivo, temporadas pasadas) son ruido.
-    const all = raw.flatMap((p) => normalizeShopifyProduct(p, { ...src, retrievedAt }));
+    const all = raw.flatMap((p) =>
+      src.kind === "woocommerce"
+        ? normalizeWooProduct(p as WooProduct, { ...src, retrievedAt })
+        : normalizeShopifyProduct(p as ShopifyProduct, { ...src, retrievedAt }),
+    );
     const items = all.filter((p) => p.availability.status !== "agotado");
     console.log(`${src.site}: ${raw.length} productos → ${items.length} ítems con stock (${all.length - items.length} agotados omitidos)`);
     catalog.push(...items);

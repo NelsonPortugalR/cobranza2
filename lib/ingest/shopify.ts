@@ -61,17 +61,18 @@ export function htmlToText(html: string | null): string {
 // --- Tipo de producto -------------------------------------------------------
 
 const TYPE_RULES: [ProductType, RegExp][] = [
-  ["cardigan", /\bc[aá]rdigans?\b/i],
-  ["abrigo", /\b(coats?|jackets?|abrigos?|casacas?|blazers?|kimono|trench|overcoat)\b/i],
+  ["cardigan", /\b(c[aá]rdigans?|sacos?)\b/i],
+  ["abrigo", /\b(coats?|jackets?|abrigos?|casacas?|chaquetas?|sac[oó]n(es)?|blazers?|kimono|trench|overcoat)\b/i],
   ["chaleco", /\b(vests?|chalecos?|gilet)\b/i],
   ["poncho", /\b(ponchos?|capes?|capas?|ruanas?|capelets?)\b/i],
-  ["chal", /\b(shawls?|wraps?|stoles?|chales?|estolas?|ruana)\b/i],
-  ["bufanda", /\b(scarf|scarves|scarfs|bufandas?|chalinas?|pa[nñ]uelos?|neck ?warmer|snood|cowl)\b/i],
+  ["chal", /\b(shawls?|wraps?|stoles?|chal(es)?|estolas?|ruana)\b/i],
+  ["bufanda", /\b(scarf|scarves|scarfs|bufandas?|chalinas?|pa[nñ]uelos?|cuelleras?|neck ?warmer|snood|cowl|tubo)\b/i],
   ["gorro", /\b(beanies?|hats?|chullos?|bucket|berets?|headbands?|gorros?|sombreros?|balaclava|vinchas?)\b/i],
   ["guantes", /\b(gloves?|mittens?|mitts|glittens?|guantes|mitones)\b/i],
-  ["medias", /\b(socks?|medias|legwarmers?|leg warmers?|calentadores)\b/i],
-  ["home", /\b(throws?|blankets?|cushions?|pillows?|mantas?|plaids?)\b/i],
-  ["chompa", /\b(sweaters?|pullovers?|jumpers?|turtlenecks?|crew ?necks?|chompas?|su[eé]ter(es)?|jerseys?|tops?|polos?|hoodies?)\b/i],
+  ["medias", /\b(socks?|medias?|calcetines|legwarmers?|leg warmers?|calentadores)\b/i],
+  ["fibra", /\b(ovillos?|hilos?|madejas?|yarns?|skeins?|roving)\b/i],
+  ["home", /\b(throws?|blankets?|cushions?|pillows?|mantas?|plaids?|coj[ií]n(es)?|frazadas?)\b/i],
+  ["chompa", /\b(sweaters?|pullovers?|jumpers?|turtlenecks?|crew ?necks?|chompas?|su[eé]ter(es)?|jerseys?|troyer|tops?|polos?|hoodies?)\b/i],
   ["otro", /\b(skirts?|dress(es)?|drese?s|pants|trousers|faldas?|vestidos?|bags?)\b/i],
 ];
 
@@ -117,6 +118,14 @@ export function extractComposition(fullText: string): { composition: { material:
     if (composition.reduce((a, c) => a + c.pct, 0) > 101) composition = composition.slice(0, 1);
     return { composition, quote };
   });
+  // Fichas que mezclan formatos ("30% silk" y "baby alpaca 70%"): se unen si suman ≤ 100.
+  const [a, b] = candidates;
+  const names = new Set(a.composition.map((x) => x.material));
+  const merged = [...a.composition, ...b.composition.filter((x) => !names.has(x.material))];
+  const mergedTotal = merged.reduce((t, x) => t + x.pct, 0);
+  if (a.composition.length && b.composition.length && mergedTotal <= 101 && merged.some((x) => isAlpaca(x.material))) {
+    return { composition: merged, quote: a.quote };
+  }
   const withAlpaca = candidates.find((c) => c.composition.some((x) => isAlpaca(x.material)));
   return withAlpaca ?? candidates.find((c) => c.composition.length) ?? { composition: [] };
 }
@@ -186,7 +195,7 @@ const COLOR_RULES: [ColorFamily, RegExp][] = [
   ["marron", /\b(brown|chocolate|coffee|mocha|espresso|chestnut|walnut|marr[oó]n|caf[eé]|brick brown|russet|russed|tobacco|mahogany|umber|cacao|cocoa|pecan|rooibos|earth|bronze|twig|autumnal|timber|truffle|tabacco|walnut|acorn)\b/i],
   ["blanco", /\b(white|ivory|snow|blanco|natural white|pearl white|chalk|pearl|ghost)\b/i],
   ["negro", /\b(black|negro|onyx|jet|ebony|eclipse|outer space)\b/i],
-  ["gris", /\b(gr[ae]y|charcoal|silver|slate|smoke|ash|plomo|gris|graphite|heather|melange|anthracite|fog|mist|rainy|wet weather|oyster|shark|gargoyle|magnet|iron|tornado|char|pebble|granite|fossil|pewter|cloud|marble|smokey|smoky|humo|acero|carb[oó]n|jaspeado)\b/i],
+  ["gris", /\b(gr[ae]y|charcoal|silver|slate|smoke|ash|plomo|gris|graphite|heather|melange|anthracite|fog|mist|rainy|wet weather|oyster|shark|gargoyle|magnet|iron|tornado|char|pebble|granite|fossil|pewter|cloud|marble|smokey|smoky|humo|acero|carb[oó]n)\b/i],
   ["azul", /\b(blue|navy|indigo|denim|azul|turquoise|teal|aqua|cobalt|sky|petrol|ocean|marine|celeste|turquesa|marino|ink|midnight|bluette|azulino)\b/i],
   ["verde", /\b(green|olive|sage|moss|forest|emerald|mint|verde|pistachio|khaki green|bottle|pine|jade|lime|oasis|spruce|cactus|willow|eucalyptus|balsam|forage|oliva|musgo)\b/i],
   ["rojo", /\b(red|rojo|burgundy|wine|bordeaux|maroon|cherry|scarlet|ruby|orange|naranja|rust|terracotta|coral|ketchup|koi|brick|copper|pumpkin|tomato|paprika|henna|pepper|chili|mandarin|tango|apple|guinda|burdeos?|cabernet|cranberry|burg|clay|melon|ladrillo|granate)\b/i],
@@ -375,8 +384,22 @@ export function storeImageUrl(url: string, baseUrl: string): string {
 function titleColor(title: string): string | null {
   const es = title.match(/\bcolor\s+([^|,–-]+)$/i);
   if (es) return es[1].trim();
-  const m = title.match(/\s[-–]\s([^-–]+)$/);
-  return m ? m[1].trim() : null;
+  const m = title.match(/\s[-–|]\s*([^-–|]+)$/);
+  if (m) return m[1].trim();
+  return colorWordsAtEnd(title);
+}
+
+/** "Capa Daniela Larga Beige" → "Beige": palabras de color al final del título. */
+export function colorWordsAtEnd(name: string): string | null {
+  const words = name.trim().split(/\s+/);
+  for (let i = words.length - 1; i >= 1; i--) {
+    if (classifyColor(words[i]).family) {
+      let start = i;
+      while (start - 1 >= 1 && classifyColor(words[start - 1]).family) start--;
+      return words.slice(start).join(" ");
+    }
+  }
+  return null;
 }
 
 function slug(s: string) {
