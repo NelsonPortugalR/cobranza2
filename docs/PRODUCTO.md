@@ -293,7 +293,7 @@ Aprendizajes de la segunda descarga:
 |---|---|
 | Idioma | Portal en **inglés** (interfaz, filtros, fichas, avisos). El intérprete de búsquedas entiende inglés primero y sigue entendiendo español. Una versión en español puede venir después. |
 | Moneda | Todo en **USD**. Si la tienda publica en soles, se convierte con el tipo de cambio del día de la descarga y se muestra el precio original como referencia ("Listed at S/ 324.50 by the store"). |
-| Tipo de cambio | `npm run ingest` lo obtiene del **BCRP** (serie PD04640PD, oficial) y, si falla, de open.er-api.com; guarda fecha y fuente en `data/fx.json`. Si ninguna responde usa el último conocido y el portal lo indica. **Hoy ambas fuentes están bloqueadas en la red del entorno**, así que se usa la referencia de S/ 3.75: hay que permitir `estadisticas.bcrp.gob.pe` (y opcionalmente `open.er-api.com`). |
+| Tipo de cambio | `npm run ingest` lo obtiene del **BCRP** (serie PD04640PD, oficial) y, si falla, de open.er-api.com; guarda fecha y fuente en `data/fx.json`. Si ninguna responde usa el último conocido y el portal lo indica. **Activo:** la última descarga usó S/ 3.385 por USD (BCRP, 23 sep 2026). |
 | Envío | Filtro **"Ships to the US" activo por defecto**, según la política publicada por cada tienda. Las tiendas que solo envían dentro de Perú (Kuna Perú, Anntarah, Pure Alpaca, Incalpaca Remate) no aparecen salvo que el usuario desactive el filtro. |
 | Títulos en español | Se traducen prenda, material y color ("SUÉTER LANGUI \| GRIS" → "Langui Sweater — Gray"); el título original queda en la ficha. |
 | Portada | Accesos directos a Sweaters, Cardigans, Scarves, Shawls & wraps, Hats & beanies y Gloves; ejemplos de búsqueda en inglés; sección "Makers that ship to the US". |
