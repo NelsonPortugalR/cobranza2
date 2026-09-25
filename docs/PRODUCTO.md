@@ -226,3 +226,38 @@ Ver el [README](../README.md). Piezas principales:
 | **Conversión de moneda.** | Precios USD aproximados | Tasa diaria del BCRP y rótulo "conversión aprox.". |
 | **Sesgo hacia quien tiene web.** Los talleres pequeños son justamente el producto más auténtico. | Catálogo dominado por marcas | Carga manual asistida desde catálogos públicos de WhatsApp/Instagram. En v2, formulario de auto-registro para talleres. |
 | **Monetización no validada.** | Sostenibilidad | v1 sin monetizar. Medir clics salientes por tienda. v2: afiliados (Etsy y Mercado Libre tienen programas) y fichas destacadas marcadas como tales. |
+
+---
+
+## 8. Primera validación con datos reales (25 sep 2026)
+
+Leímos el catálogo público de **Sol Alpaca** (tienda Shopify, `/products.json`, permitido por su `robots.txt`): **608 productos → 1.038 ítems** (un ítem por producto × color, porque color y stock por talla cambian por color). La extracción usa reglas; la capa con Claude se agrega cuando haya `ANTHROPIC_API_KEY` en el entorno.
+
+| Dato | Ítems con el dato | Lectura |
+|---|---|---|
+| Composición (% de alpaca) | **89 %** | Casi siempre dicen "100% Baby Alpaca" o "70% baby alpaca 30% silk". |
+| Calidad (baby, super baby…) | **94 %** | Se declara como *nombre* comercial, no como medición. |
+| Micronaje (µm) | **0 %** | Ninguna ficha publica micras. |
+| Raza (Huacaya / Suri) | **1 %** | Solo 6 ítems mencionan Suri. |
+| Color clasificable | **88 %** | Nombres de fantasía ("koi orange", "rainy day"); el resto va a "por confirmar". |
+| Natural vs. teñido | **58 %** | Se deduce sobre todo porque azul, verde o rojo no son colores naturales de alpaca. |
+| Región de origen | **0 %** | Solo "Made in Peru". |
+| Tallas con stock | **89 %** | Stock por talla y color, directo del feed. |
+| Envío | **100 %** | Política pública: mundial desde Perú (DHL), US$ 25 en América/UE, aranceles incluidos. |
+
+**Qué significa para el producto:**
+1. La consulta del usuario ("suéter marrón, 100% baby alpaca, talla M, menos de US$180") **sí se puede responder bien** con datos públicos: composición, calidad declarada, color, talla con stock, precio y envío están casi siempre. Resultado real: 3 coincidencias exactas y 3 por confirmar.
+2. **Micronaje, raza y región de origen no existen en los datos públicos** de esta tienda. Los filtros siguen, pero su valor está en decir la verdad ("no declarado") y no en filtrar. Para que esos filtros sean útiles hará falta, en v2, un sello "verificado" para tiendas que compartan certificados de laboratorio o de origen.
+3. El valor diferencial frente a un buscador está confirmado en lo que sí hay: stock **por talla y color**, composición real, precio de oferta y envío, todo en un mismo filtro.
+
+**Estado de las fuentes:**
+
+| Fuente | Estado | Qué falta |
+|---|---|---|
+| Sol Alpaca | ✅ Conectada (feed público Shopify) | Programar la ingesta diaria |
+| Kuna | ⛔ No accesible desde el entorno | Revisar dominio y acceso de red |
+| Mercado Libre Perú | 🔑 La API respondió 403 sin autenticación | Registrar una app de desarrollador (OAuth) |
+| Etsy | 🔑 Requiere API key | Crear la key en Etsy Developers |
+| Tiendas de Cusco/Arequipa, All Alpaca | ⏳ Pendiente | Dominios y permiso de red |
+
+Las fuentes no conectadas se muestran solo si el usuario activa "Mostrar ejemplos", y cada tarjeta dice **Ejemplo**.

@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
-import { BREEDS, COLOR_FAMILIES, PRODUCT_TYPES, QUALITIES, QUALITY_RANGES, REGIONS } from "@/lib/taxonomy.ts";
+import { BREEDS, COLOR_FAMILIES, PRODUCT_TYPES, QUALITIES, QUALITY_RANGES, REGIONS, USD_PEN } from "@/lib/taxonomy.ts";
 import type { ParsedQuery } from "@/lib/types.ts";
 
 // Convierte una consulta en lenguaje natural en filtros estructurados.
@@ -18,8 +18,10 @@ const ParsedSchema = z.object({
     dye: z.enum(["cualquiera", "natural", "tenido"]),
     origins: z.array(z.enum(REGIONS)),
     composition: z.enum(["cualquiera", "100", "mezcla"]),
+    sizes: z.array(z.enum(["XXS", "XS", "S", "M", "L", "XL", "XXL", "Única"])),
     priceMin: z.number().nullable(),
     priceMax: z.number().nullable(),
+    priceCurrency: z.enum(["PEN", "USD"]),
     inStockOnly: z.boolean(),
   }),
   sort: z.enum(["relevancia", "micras_asc", "precio_asc", "precio_desc"]),
@@ -42,7 +44,8 @@ Reglas:
 - "lo más fino/suave posible" → sort = "micras_asc" (no restringe calidades por sí solo).
 - Colores comerciales se mapean a familias: oatmeal/hueso/arena → beige; vicuña/fawn → camel; café/chocolate → marron; crudo/marfil → blanco.
 - "natural" referido al color significa sin teñir (dye = "natural"). "tintes naturales" significa teñido.
-- Precios en soles (PEN). Si el usuario da dólares, conviértelos a soles con 3.75.
+- priceMin/priceMax van SIEMPRE en soles. Si el usuario da dólares ("US$", "$", "usd", "dólares"), multiplica por ${USD_PEN} y pon priceCurrency = "USD"; si no, "PEN".
+- sizes: tallas pedidas ("talla M" → ["M"]). Suéter/sweater/jersey = chompa.
 - Solo filtra lo que el usuario pidió; no inventes restricciones. Lo que no encaje en ningún filtro va en "text".
 - chips: una entrada por cada filtro aplicado, con una etiqueta corta en español y el fragmento literal del usuario en "from".`;
 
@@ -68,7 +71,7 @@ export async function POST(req: Request) {
 
     const parsed = response.parsed_output;
     const result: ParsedQuery = {
-      filters: { ...parsed.filters, sources: [] },
+      filters: { ...parsed.filters, sources: [], includeDemo: false },
       sort: parsed.sort,
       chips: parsed.chips as ParsedQuery["chips"],
       engine: "claude",

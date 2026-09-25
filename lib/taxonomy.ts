@@ -41,8 +41,12 @@ export const TYPE_LABEL: Record<ProductType, string> = {
   gorro: "Gorro / chullo",
   bufanda: "Bufanda",
   guantes: "Guantes",
+  abrigo: "Abrigo / casaca",
+  chaleco: "Chaleco",
+  medias: "Medias",
   fibra: "Fibra e hilo",
   home: "Home / mantas",
+  otro: "Otros",
 };
 
 export const BREED_LABEL: Record<Breed, string> = { huacaya: "Huacaya", suri: "Suri" };
@@ -56,7 +60,9 @@ export const COLOR_LABEL: Record<ColorFamily, string> = {
   negro: "Negro",
   azul: "Azul",
   verde: "Verde",
-  rojo: "Rojo / terracota",
+  rojo: "Rojo / naranja",
+  rosa: "Rosa / morado",
+  amarillo: "Amarillo / mostaza",
   multicolor: "Multicolor",
 };
 
@@ -70,6 +76,8 @@ export const COLOR_SWATCH: Record<ColorFamily, string> = {
   azul: "#3E5570",
   verde: "#5B6B4E",
   rojo: "#9C4A35",
+  rosa: "#B77A8C",
+  amarillo: "#C9A23F",
   multicolor: "conic-gradient(#9C4A35, #D9C7A7, #3E5570, #5B6B4E, #9C4A35)",
 };
 
@@ -95,3 +103,8 @@ export const BREEDS = Object.keys(BREED_LABEL) as Breed[];
 export const COLOR_FAMILIES = Object.keys(COLOR_LABEL) as ColorFamily[];
 export const REGIONS = Object.keys(REGION_LABEL) as Region[];
 export const QUALITIES = QUALITY_RANGES.map((q) => q.id);
+
+/** Tipo de cambio referencial PEN por USD. En producción: tipo de cambio diario del BCRP. */
+export const USD_PEN = 3.75;
+
+export const SIZE_ORDER = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "XXXL"];

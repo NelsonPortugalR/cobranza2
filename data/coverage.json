@@ -1,0 +1,66 @@
+{
+  "generatedAt": "2026-09-25T12:06:32.438Z",
+  "items": 1038,
+  "sources": [
+    {
+      "site": "Sol Alpaca",
+      "items": 1038
+    }
+  ],
+  "fields": [
+    {
+      "key": "composition",
+      "label": "Composición (% de alpaca)",
+      "count": 926,
+      "pct": 89
+    },
+    {
+      "key": "quality",
+      "label": "Calidad (baby, super baby…)",
+      "count": 971,
+      "pct": 94
+    },
+    {
+      "key": "micron",
+      "label": "Micronaje (µm)",
+      "count": 0,
+      "pct": 0
+    },
+    {
+      "key": "breed",
+      "label": "Raza (Huacaya / Suri)",
+      "count": 6,
+      "pct": 1
+    },
+    {
+      "key": "color",
+      "label": "Color clasificable",
+      "count": 909,
+      "pct": 88
+    },
+    {
+      "key": "natural",
+      "label": "Natural vs. teñido",
+      "count": 607,
+      "pct": 58
+    },
+    {
+      "key": "origin",
+      "label": "Región de origen",
+      "count": 0,
+      "pct": 0
+    },
+    {
+      "key": "sizes",
+      "label": "Tallas con stock",
+      "count": 924,
+      "pct": 89
+    },
+    {
+      "key": "shipping",
+      "label": "Envío",
+      "count": 1038,
+      "pct": 100
+    }
+  ]
+}

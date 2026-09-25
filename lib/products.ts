@@ -414,8 +414,3 @@ export const PRODUCTS: Product[] = [
   },
 ];
 
-export function getProduct(id: string): Product | undefined {
-  return PRODUCTS.find((p) => p.id === id);
-}
-
-export const SOURCES = [...new Set(PRODUCTS.map((p) => p.source.site))];

@@ -1,5 +1,5 @@
 import type { Filters, SortKey } from "./types.ts";
-import { BREED_LABEL, COLOR_LABEL, QUALITY_LABEL, QUALITY_RANGES, REGION_LABEL, TYPE_LABEL, qualitiesAtLeast } from "./taxonomy.ts";
+import { BREED_LABEL, COLOR_LABEL, QUALITY_LABEL, QUALITY_RANGES, REGION_LABEL, TYPE_LABEL, USD_PEN, qualitiesAtLeast } from "./taxonomy.ts";
 
 export interface ActiveChip {
   key: string;
@@ -32,8 +32,10 @@ export function chipsFromFilters(f: Filters): ActiveChip[] {
     chips.push({ key: `o-${r}`, label: `Origen: ${REGION_LABEL[r]}`, remove: { origins: f.origins.filter((x) => x !== r) } });
   if (f.composition !== "cualquiera")
     chips.push({ key: "comp", label: f.composition === "100" ? "100% alpaca" : "Mezcla", remove: { composition: "cualquiera" } });
-  if (f.priceMin != null) chips.push({ key: "pmin", label: `Desde S/ ${f.priceMin}`, remove: { priceMin: null } });
-  if (f.priceMax != null) chips.push({ key: "pmax", label: `Hasta S/ ${f.priceMax}`, remove: { priceMax: null } });
+  const money = (pen: number) => (f.priceCurrency === "USD" ? `US$ ${Math.round(pen / USD_PEN)}` : `S/ ${pen}`);
+  if (f.sizes.length) chips.push({ key: "sizes", label: `Talla ${f.sizes.join(", ")}`, remove: { sizes: [] } });
+  if (f.priceMin != null) chips.push({ key: "pmin", label: `Desde ${money(f.priceMin)}`, remove: { priceMin: null } });
+  if (f.priceMax != null) chips.push({ key: "pmax", label: `Hasta ${money(f.priceMax)}`, remove: { priceMax: null } });
   if (f.inStockOnly) chips.push({ key: "stock", label: "En stock", remove: { inStockOnly: false } });
   for (const s of f.sources) chips.push({ key: `s-${s}`, label: s, remove: { sources: f.sources.filter((x) => x !== s) } });
   if (f.text) chips.push({ key: "text", label: `“${f.text}”`, remove: { text: "" } });

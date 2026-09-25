@@ -28,8 +28,16 @@ function check<T>(selected: T[], value: T | null | undefined): Verdict {
   return selected.includes(value) ? "pass" : "fail";
 }
 
+function sizeCheck(p: Product, sizes: string[]): Verdict {
+  if (sizes.length === 0) return "pass";
+  if (!p.sizesAvailable) return p.sizes?.some((s) => sizes.includes(s)) ? "unknown" : p.sizes ? "fail" : "unknown";
+  return p.sizesAvailable.some((s) => sizes.includes(s)) ? "pass" : "fail";
+}
+
 export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: string[] } {
+  if (p.demo && !f.includeDemo) return { verdict: "fail", unknown: [] };
   const checks: [string, Verdict][] = [
+    ["talla", sizeCheck(p, f.sizes)],
     ["tipo", check(f.types, p.productType)],
     ["calidad", check(f.qualities, p.fiber.quality)],
     ["raza", check(f.breeds, p.fiber.breed)],
@@ -133,6 +141,20 @@ export function activeFilterCount(f: Filters): number {
     (f.composition !== "cualquiera" ? 1 : 0) +
     (f.priceMin != null ? 1 : 0) +
     (f.priceMax != null ? 1 : 0) +
-    (f.inStockOnly ? 1 : 0)
+    (f.inStockOnly ? 1 : 0) +
+    f.sizes.length
   );
+}
+
+/** Conteos para facetas, sin ordenar: exactos y total (exactos + por confirmar). */
+export function countMatches(products: Product[], f: Filters): { exact: number; total: number } {
+  let exact = 0;
+  let total = 0;
+  for (const p of products) {
+    const v = evaluate(p, f).verdict;
+    if (v === "fail") continue;
+    total++;
+    if (v === "pass") exact++;
+  }
+  return { exact, total };
 }

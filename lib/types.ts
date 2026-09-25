@@ -8,8 +8,12 @@ export type ProductType =
   | "gorro"
   | "bufanda"
   | "guantes"
+  | "abrigo"
+  | "chaleco"
+  | "medias"
   | "fibra"
-  | "home";
+  | "home"
+  | "otro";
 
 /** Categorías de finura según NTP 231.301 (rangos en micras). */
 export type Quality =
@@ -33,6 +37,8 @@ export type ColorFamily =
   | "azul"
   | "verde"
   | "rojo"
+  | "rosa"
+  | "amarillo"
   | "multicolor";
 
 export type Region =
@@ -61,6 +67,8 @@ export interface FieldEvidence {
 
 export interface Product {
   id: string;
+  /** true = producto inventado para la demo (no es un listado real). */
+  demo?: boolean;
   title: string;
   source: {
     site: string;
@@ -81,7 +89,8 @@ export interface Product {
   };
   color: {
     name: string;
-    family: ColorFamily;
+    /** null = el nombre comercial no permite clasificarlo (p. ej. "rainy day"). */
+    family: ColorFamily | null;
     hex: string;
     /** true = color natural de la fibra (sin teñir); null = no se sabe. */
     natural: boolean | null;
@@ -90,7 +99,10 @@ export interface Product {
   construction?: "tejido_a_mano" | "tejido_a_maquina" | "telar" | null;
   weightGrams?: number | null;
   sizes?: string[];
-  price: { amount: number; currency: "PEN" | "USD"; amountPen: number };
+  /** Tallas con stock según la tienda. Si falta, no se sabe. */
+  sizesAvailable?: string[];
+  price: { amount: number; currency: "PEN" | "USD"; amountPen: number; compareAt?: number | null };
+  shipping?: { summary: string; costUsd?: number | null; days?: string };
   availability: { status: Availability; checkedAt: string };
   images: string[];
   rawDescription: string;
@@ -116,10 +128,16 @@ export interface Filters {
   dye: "cualquiera" | "natural" | "tenido";
   origins: Region[];
   composition: "cualquiera" | "100" | "mezcla";
+  /** Tallas pedidas (S, M, L…). Se exige stock en esa talla. */
+  sizes: string[];
+  /** Límites de precio siempre en soles; la moneda indica cómo lo pidió el usuario. */
   priceMin: number | null;
   priceMax: number | null;
+  priceCurrency: "PEN" | "USD";
   inStockOnly: boolean;
   sources: string[];
+  /** Mostrar también productos de ejemplo de tiendas aún no conectadas. */
+  includeDemo: boolean;
 }
 
 export interface InterpretationChip {
@@ -145,8 +163,11 @@ export const EMPTY_FILTERS: Filters = {
   dye: "cualquiera",
   origins: [],
   composition: "cualquiera",
+  sizes: [],
   priceMin: null,
   priceMax: null,
+  priceCurrency: "PEN",
   inStockOnly: false,
   sources: [],
+  includeDemo: false,
 };

@@ -1,17 +1,28 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PRODUCTS, SOURCES } from "@/lib/products.ts";
-import { activeFilterCount, applyFilters } from "@/lib/filter.ts";
+import { activeFilterCount, applyFilters, countMatches } from "@/lib/filter.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
 import { SORT_LABEL, chipsFromFilters } from "@/lib/chips.ts";
 import { EMPTY_FILTERS } from "@/lib/types.ts";
-import type { Filters, ParsedQuery, SortKey } from "@/lib/types.ts";
+import type { Filters, ParsedQuery, Product, SortKey } from "@/lib/types.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
 import { FilterPanel } from "./FilterPanel.tsx";
 import { ProductCard } from "./ProductCard.tsx";
 
-export function Catalog({ initialQuery }: { initialQuery: string }) {
+const PAGE = 24;
+
+export function Catalog({
+  initialQuery,
+  products: PRODUCTS,
+  sources: SOURCES,
+  realSources,
+}: {
+  initialQuery: string;
+  products: Product[];
+  sources: string[];
+  realSources: string[];
+}) {
   const initial = useMemo(() => (initialQuery ? parseQueryLocal(initialQuery) : null), [initialQuery]);
   const [query, setQuery] = useState(initialQuery);
   const [filters, setFilters] = useState<Filters>(initial?.filters ?? EMPTY_FILTERS);
@@ -19,6 +30,7 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
   const [engine, setEngine] = useState<ParsedQuery["engine"] | null>(initial ? "local" : null);
   const [loading, setLoading] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [shown, setShown] = useState(PAGE);
   const resultsRef = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
 
@@ -27,7 +39,8 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
     setQuery(q);
     // 1) Respuesta instantánea con el parser local.
     const local = parseQueryLocal(q);
-    setFilters(local.filters);
+    setShown(PAGE);
+    setFilters((prev) => ({ ...local.filters, includeDemo: prev.includeDemo }));
     setSort(local.sort);
     setEngine("local");
     const url = new URL(window.location.href);
@@ -46,7 +59,7 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
       if (!res.ok) return;
       const parsed = (await res.json()) as ParsedQuery;
       if (id !== requestId.current || parsed.engine !== "claude") return;
-      setFilters(parsed.filters);
+      setFilters((prev) => ({ ...EMPTY_FILTERS, ...parsed.filters, includeDemo: prev.includeDemo }));
       setSort(parsed.sort);
       setEngine("claude");
     } catch {
@@ -60,7 +73,10 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
     if (initialQuery) void runQuery(initialQuery, false);
   }, [initialQuery, runQuery]);
 
-  const patch = (p: Partial<Filters>) => setFilters((f) => ({ ...f, ...p }));
+  const patch = (p: Partial<Filters>) => {
+    setShown(PAGE);
+    setFilters((f) => ({ ...f, ...p }));
+  };
   const reset = () => {
     requestId.current++;
     setFilters(EMPTY_FILTERS);
@@ -71,14 +87,17 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
     window.history.replaceState(null, "", window.location.pathname);
   };
 
-  const { exact, partial } = useMemo(() => applyFilters(PRODUCTS, filters, sort), [filters, sort]);
+  const { exact, partial } = useMemo(() => applyFilters(PRODUCTS, filters, sort), [PRODUCTS, filters, sort]);
   const count = useCallback(
     (p: Partial<Filters>) => {
-      const r = applyFilters(PRODUCTS, { ...filters, ...p }, sort);
-      return r.exact.length + r.partial.length;
+      return countMatches(PRODUCTS, { ...filters, ...p });
     },
-    [filters, sort],
+    [PRODUCTS, filters],
   );
+  const realCount = useMemo(() => PRODUCTS.filter((p) => !p.demo).length, [PRODUCTS]);
+  const visibleExact = exact.slice(0, shown);
+  const visiblePartial = partial.slice(0, Math.max(0, shown - exact.length));
+  const hasMore = shown < exact.length + partial.length;
   const chips = chipsFromFilters(filters);
   const nActive = activeFilterCount(filters);
   const total = exact.length + partial.length;
@@ -89,14 +108,14 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
       <section className="relative overflow-hidden border-b border-arena-oscura/70 bg-arena">
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-20">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-tierra">
-            Alpaca peruana · {PRODUCTS.length} piezas de {SOURCES.length} tiendas
+            Alpaca peruana · {realCount.toLocaleString("es-PE")} piezas reales de {realSources.join(", ")}
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-[1.05] tracking-tight text-carbon sm:text-6xl">
             Describe la prenda. <span className="text-tierra">Nosotros leemos cada ficha.</span>
           </h1>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-piedra">
-            Un agente revisa tiendas de Arequipa, Cusco, Puno y marketplaces, y traduce descripciones desordenadas a
-            micronaje, raza, color natural y origen. Tú filtras; la compra la haces en la tienda original.
+            Un agente lee las fichas públicas de las tiendas y traduce descripciones desordenadas a composición, calidad,
+            color, talla con stock, precio y envío. Tú filtras; la compra la haces en la tienda original.
           </p>
           <div className="mt-8 max-w-2xl">
             <SearchBox initial={query} loading={loading} onSubmit={(q) => void runQuery(q)} />
@@ -167,7 +186,7 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:pt-6">
           <aside className="hidden lg:block">
             <div className="sticky top-6 max-h-[calc(100dvh-3rem)] overflow-y-auto pb-10 pr-2">
-              <FilterPanel filters={filters} onChange={patch} count={count} sources={SOURCES} />
+              <FilterPanel filters={filters} onChange={patch} count={count} sources={SOURCES} realSources={realSources} />
             </div>
           </aside>
 
@@ -205,12 +224,12 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
             )}
 
             <Grid>
-              {exact.map((m) => (
+              {visibleExact.map((m) => (
                 <ProductCard key={m.product.id} product={m.product} />
               ))}
             </Grid>
 
-            {partial.length > 0 && (
+            {visiblePartial.length > 0 && (
               <section className="mt-12">
                 <div className="mb-4 border-t border-arena-oscura pt-6">
                   <h2 className="font-serif text-xl">Posibles coincidencias</h2>
@@ -220,11 +239,26 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
                   </p>
                 </div>
                 <Grid>
-                  {partial.map((m) => (
+                  {visiblePartial.map((m) => (
                     <ProductCard key={m.product.id} product={m.product} unknownFields={m.unknownFields} />
                   ))}
                 </Grid>
               </section>
+            )}
+
+            {hasMore && (
+              <div className="mt-10 flex flex-col items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShown((n) => n + PAGE * 2)}
+                  className="rounded-full border border-carbon px-6 py-3 text-sm font-medium transition hover:bg-carbon hover:text-lana"
+                >
+                  Ver más
+                </button>
+                <p className="text-xs text-piedra">
+                  Mostrando {Math.min(shown, total)} de {total.toLocaleString("es-PE")}
+                </p>
+              </div>
             )}
           </main>
         </div>
@@ -242,7 +276,7 @@ export function Catalog({ initialQuery }: { initialQuery: string }) {
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-5">
-              <FilterPanel filters={filters} onChange={patch} count={count} sources={SOURCES} />
+              <FilterPanel filters={filters} onChange={patch} count={count} sources={SOURCES} realSources={realSources} />
             </div>
             <div className="border-t border-arena-oscura p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <button

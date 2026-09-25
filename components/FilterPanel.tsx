@@ -11,31 +11,42 @@ import {
   QUALITY_RANGES,
   REGIONS,
   REGION_LABEL,
+  SIZE_ORDER,
   TYPE_LABEL,
+  USD_PEN,
   micronRangeLabel,
 } from "@/lib/taxonomy.ts";
 
-export type FacetCounter = (patch: Partial<Filters>) => number;
+/** Devuelve coincidencias exactas y total (incluidas las "por confirmar"). */
+export type FacetCounter = (patch: Partial<Filters>) => { exact: number; total: number };
 
-type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources";
+type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes";
+
+const SIZES = [...SIZE_ORDER.slice(1, 7), "Única"];
 
 export function FilterPanel({
   filters,
   onChange,
   count,
   sources,
+  realSources,
 }: {
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
   count: FacetCounter;
   sources: string[];
+  realSources: string[];
 }) {
+  const usd = filters.priceCurrency === "USD";
+  const toShown = (pen: number | null) => (pen == null ? null : usd ? Math.round(pen / USD_PEN) : pen);
+  const toPen = (v: number | null) => (v == null ? null : usd ? Math.round(v * USD_PEN) : v);
   function toggle<K extends ArrayKey>(key: K, value: Filters[K][number]) {
     const list = filters[key] as string[];
     const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
     onChange({ [key]: next } as Partial<Filters>);
   }
   const optionCount = (key: ArrayKey, value: string) => count({ [key]: [value] } as Partial<Filters>);
+  // Nota: el número mostrado son coincidencias exactas; la opción se desactiva solo si no hay ni por confirmar.
 
   return (
     <div className="space-y-7 text-sm">
@@ -48,6 +59,21 @@ export function FilterPanel({
               onClick={() => toggle("types", t)}
               label={TYPE_LABEL[t]}
               n={optionCount("types", t)}
+            />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="Talla con stock" hint="Solo muestra piezas con stock en esa talla.">
+        <div className="grid grid-cols-4 gap-1.5">
+          {SIZES.map((sz) => (
+            <Pill
+              key={sz}
+              active={filters.sizes.includes(sz)}
+              onClick={() => toggle("sizes", sz)}
+              label={sz}
+              n={optionCount("sizes", sz)}
+              block
             />
           ))}
         </div>
@@ -93,7 +119,7 @@ export function FilterPanel({
           ]}
           onChange={(dye) => onChange({ dye })}
         />
-        <div className="mt-3 grid grid-cols-5 gap-2">
+        <div className="mt-3 grid max-w-xs grid-cols-6 gap-2">
           {COLOR_FAMILIES.map((c) => {
             const active = filters.colorFamilies.includes(c);
             return (
@@ -143,12 +169,21 @@ export function FilterPanel({
         </ul>
       </Section>
 
-      <Section title="Precio (S/)">
-        <div className="flex items-center gap-2">
-          <NumberInput placeholder="Mín." value={filters.priceMin} onChange={(priceMin) => onChange({ priceMin })} />
+      <Section title="Precio">
+        <Segmented
+          value={filters.priceCurrency}
+          options={[
+            ["PEN", "Soles (S/)"],
+            ["USD", "Dólares (US$)"],
+          ]}
+          onChange={(priceCurrency) => onChange({ priceCurrency })}
+        />
+        <div className="mt-3 flex items-center gap-2">
+          <NumberInput placeholder="Mín." value={toShown(filters.priceMin)} onChange={(v) => onChange({ priceMin: toPen(v) })} />
           <span className="text-piedra">–</span>
-          <NumberInput placeholder="Máx." value={filters.priceMax} onChange={(priceMax) => onChange({ priceMax })} />
+          <NumberInput placeholder="Máx." value={toShown(filters.priceMax)} onChange={(v) => onChange({ priceMax: toPen(v) })} />
         </div>
+        {usd && <p className="mt-2 text-xs text-piedra">Referencial: US$ 1 = S/ {USD_PEN}</p>}
       </Section>
 
       <Section title="Disponibilidad">
@@ -165,16 +200,30 @@ export function FilterPanel({
 
       <Section title="Tienda">
         <ul className="space-y-1">
-          {sources.map((s) => (
-            <CheckRow
-              key={s}
-              checked={filters.sources.includes(s)}
-              onChange={() => toggle("sources", s)}
-              label={s}
-              n={optionCount("sources", s)}
-            />
-          ))}
+          {sources
+            .filter((s) => filters.includeDemo || realSources.includes(s))
+            .map((s) => (
+              <CheckRow
+                key={s}
+                checked={filters.sources.includes(s)}
+                onChange={() => toggle("sources", s)}
+                label={s}
+                detail={realSources.includes(s) ? "datos reales" : "ejemplo"}
+                n={optionCount("sources", s)}
+              />
+            ))}
         </ul>
+        <label className="mt-4 flex cursor-pointer items-start gap-2.5 rounded-sm bg-arena p-3 text-xs leading-snug text-tierra">
+          <input
+            type="checkbox"
+            className="mt-0.5 h-4 w-4 accent-tierra"
+            checked={filters.includeDemo}
+            onChange={(e) => onChange({ includeDemo: e.target.checked, sources: [] })}
+          />
+          <span>
+            Mostrar ejemplos de tiendas aún no conectadas (Kuna, Mercado Libre, Etsy…). No son listados reales.
+          </span>
+        </label>
       </Section>
     </div>
   );
@@ -200,7 +249,7 @@ function Pill({
   active: boolean;
   onClick: () => void;
   label: string;
-  n: number;
+  n: { exact: number; total: number };
   block?: boolean;
 }) {
   return (
@@ -208,12 +257,13 @@ function Pill({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      disabled={!active && n === 0}
+      disabled={!active && n.total === 0}
+      title={n.total > n.exact ? `${n.exact} exactas · ${n.total - n.exact} por confirmar` : undefined}
       className={`rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-35 ${block ? "w-full" : ""} ${
         active ? "border-carbon bg-carbon text-lana" : "border-arena-oscura bg-white hover:border-tierra/60"
       }`}
     >
-      {label} <span className={active ? "text-lana/60" : "text-piedra"}>{n}</span>
+      {label} <span className={active ? "text-lana/60" : "text-piedra"}>{n.exact}</span>
     </button>
   );
 }
@@ -229,17 +279,23 @@ function CheckRow({
   onChange: () => void;
   label: string;
   detail?: string;
-  n: number;
+  n: { exact: number; total: number };
 }) {
   return (
     <li>
-      <label className={`flex cursor-pointer items-center gap-2.5 py-1 ${!checked && n === 0 ? "opacity-40" : ""}`}>
+      <label
+        className={`flex cursor-pointer items-center gap-2.5 py-1 ${!checked && n.total === 0 ? "opacity-40" : ""}`}
+        title={n.total > n.exact ? `${n.exact} exactas · ${n.total - n.exact} por confirmar` : undefined}
+      >
         <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-tierra" />
         <span className="flex-1">
           {label}
           {detail && <span className="ml-1.5 text-xs text-piedra">{detail}</span>}
         </span>
-        <span className="text-xs tabular-nums text-piedra">{n}</span>
+        <span className="text-xs tabular-nums text-piedra">
+          {n.exact}
+          {n.total > n.exact && <span className="text-piedra/60"> +{n.total - n.exact}</span>}
+        </span>
       </label>
     </li>
   );

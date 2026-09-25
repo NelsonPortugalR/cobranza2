@@ -1,6 +1,6 @@
 import { EMPTY_FILTERS } from "./types.ts";
 import type { ColorFamily, Filters, InterpretationChip, ParsedQuery, ProductType, Quality, Region, SortKey } from "./types.ts";
-import { COLOR_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL, qualitiesAtLeast } from "./taxonomy.ts";
+import { COLOR_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL, USD_PEN, qualitiesAtLeast } from "./taxonomy.ts";
 
 // Parser determinístico (sin LLM). Sirve como respuesta instantánea en el cliente
 // y como respaldo si la API de Claude no está configurada o falla.
@@ -14,6 +14,9 @@ const norm = (s: string) =>
 const TYPE_SYNONYMS: [ProductType, RegExp][] = [
   ["cardigan", /\b(cardigan|cardigans|saco|sacos|chaqueta tejida)\b/],
   ["chompa", /\b(chompas?|sueter|sueteres|sweaters?|jerseys?|pull ?overs?|jumpers?)\b/],
+  ["abrigo", /\b(abrigos?|casacas?|chaquetas?|coats?|jackets?|sacos? largos?)\b/],
+  ["chaleco", /\b(chalecos?|vests?)\b/],
+  ["medias", /\b(medias|calcetines|socks?)\b/],
   ["chal", /\b(chal|chales|pashminas?|estolas?|shawls?|wraps?)\b/],
   ["poncho", /\b(ponchos?|ruanas?|capas?)\b/],
   ["gorro", /\b(gorros?|chullos?|beanies?|hats?)\b/],
@@ -32,7 +35,9 @@ const COLOR_SYNONYMS: [ColorFamily, RegExp][] = [
   ["negro", /\b(negro|negra|black|carbon)\b/],
   ["azul", /\b(azul|navy|indigo|celeste)\b/],
   ["verde", /\b(verde|oliva|musgo|green)\b/],
-  ["rojo", /\b(rojo|roja|terracota|grana|burdeos|vino|red)\b/],
+  ["rojo", /\b(rojo|roja|terracota|grana|burdeos|vino|red|naranja|anaranjado)\b/],
+  ["rosa", /\b(rosado|rosada|rosa|fucsia|lila|morado|morada|purpura|pink|purple)\b/],
+  ["amarillo", /\b(amarillo|amarilla|mostaza|dorado|yellow)\b/],
   ["multicolor", /\b(multicolor|colores|rayas|jacquard)\b/],
 ];
 
@@ -142,22 +147,43 @@ export function parseQueryLocal(query: string): ParsedQuery {
     chips.push({ field: "composition", label: "Mezcla", from: consume(blend) });
   }
 
-  const between = rest.match(/\bentre (?:s\/\.? ?)?(\d+) y (?:s\/\.? ?)?(\d+)( soles)?\b/);
-  const max = rest.match(/\b(?:menos de|hasta|maximo|max|bajo|<)\s*(?:s\/\.? ?)?(\d{2,5})( soles)?\b/);
-  const min = rest.match(/\b(?:mas de|desde|minimo|>)\s*(?:s\/\.? ?)?(\d{2,5})( soles)?\b/);
+  // Precio: soles por defecto; "US$", "$", "usd" o "dólares" lo pasan a dólares.
+  const CUR = String.raw`(us\$|usd|u\$s|\$|s\/\.?)?\s*`;
+  const CUR_AFTER = String.raw`\s*(usd|dolares|soles|s\/)?`;
+  const isUsd = (...tokens: (string | undefined)[]) => tokens.some((t) => t && /us|\$|dolar/.test(t) && !/s\//.test(t));
+  const toPen = (n: number, usd: boolean) => (usd ? Math.round(n * USD_PEN) : n);
+  const between = rest.match(new RegExp(String.raw`\bentre ${CUR}(\d+)${CUR_AFTER} y ${CUR}(\d+)${CUR_AFTER}`));
+  const max = rest.match(new RegExp(String.raw`(?:\bmenos de|\bhasta|\bmaximo|\bmax|\bbajo|\bunder|<)\s*${CUR}(\d{2,5})${CUR_AFTER}`));
+  const min = rest.match(new RegExp(String.raw`(?:\bmas de|\bdesde|\bminimo|>)\s*${CUR}(\d{2,5})${CUR_AFTER}`));
+  const fmt = (n: number, usd: boolean) => (usd ? `US$ ${n}` : `S/ ${n}`);
   if (between) {
-    f.priceMin = +between[1];
-    f.priceMax = +between[2];
-    chips.push({ field: "priceMax", label: `S/ ${f.priceMin}–${f.priceMax}`, from: consume(between) });
+    const usd = isUsd(between[1], between[3], between[4], between[6]);
+    f.priceCurrency = usd ? "USD" : "PEN";
+    f.priceMin = toPen(+between[2], usd);
+    f.priceMax = toPen(+between[5], usd);
+    chips.push({ field: "priceMax", label: `${fmt(+between[2], usd)}–${+between[5]}`, from: consume(between) });
   } else {
     if (max) {
-      f.priceMax = +max[1];
-      chips.push({ field: "priceMax", label: `Hasta S/ ${f.priceMax}`, from: consume(max) });
+      const usd = isUsd(max[1], max[3]);
+      f.priceCurrency = usd ? "USD" : "PEN";
+      f.priceMax = toPen(+max[2], usd);
+      chips.push({ field: "priceMax", label: `Hasta ${fmt(+max[2], usd)}`, from: consume(max) });
     }
     if (min) {
-      f.priceMin = +min[1];
-      chips.push({ field: "priceMin", label: `Desde S/ ${f.priceMin}`, from: consume(min) });
+      const usd = isUsd(min[1], min[3]);
+      f.priceCurrency = usd ? "USD" : "PEN";
+      f.priceMin = toPen(+min[2], usd);
+      chips.push({ field: "priceMin", label: `Desde ${fmt(+min[2], usd)}`, from: consume(min) });
     }
+  }
+
+  const size = rest.match(/\b(?:talla|size|talle)s?\s+((?:xxs|xs|s|m|l|xl|xxl|unica)(?:\s*(?:,|y|o|\/)\s*(?:xxs|xs|s|m|l|xl|xxl))*)\b/);
+  if (size) {
+    f.sizes = size[1]
+      .split(/\s*(?:,|\by\b|\bo\b|\/)\s*/)
+      .filter(Boolean)
+      .map((t) => (t === "unica" ? "Única" : t.toUpperCase()));
+    chips.push({ field: "sizes", label: `Talla ${f.sizes.join(", ")}`, from: consume(size) });
   }
   if (/\bbarat[ao]s?\b|\beconomic[ao]s?\b/.test(rest)) sort = "precio_asc";
 

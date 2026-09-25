@@ -1,18 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PRODUCTS, getProduct } from "@/lib/products.ts";
+import { ALL_PRODUCTS, getProduct } from "@/lib/catalog.ts";
 import type { FieldEvidence, Product } from "@/lib/types.ts";
 import { AVAILABILITY_LABEL, BREED_LABEL, QUALITY_LABEL, REGION_LABEL, TYPE_LABEL, micronRangeLabel } from "@/lib/taxonomy.ts";
 import { compositionLabel, finenessLabel, formatDate, formatPen, formatUsd } from "@/lib/format.ts";
-import { Swatch } from "@/components/Swatch.tsx";
+import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
 
 type Params = { params: Promise<{ id: string }> };
-
-export function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ id: p.id }));
-}
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const p = getProduct((await params).id);
@@ -32,12 +28,19 @@ export default async function ProductPage({ params }: Params) {
   const p = getProduct((await params).id);
   if (!p) notFound();
 
-  const similar = PRODUCTS.filter((x) => x.id !== p.id && x.productType === p.productType).slice(0, 3);
+  // Similares: mismo tipo, priorizando otras tiendas y datos reales.
+  const similar = ALL_PRODUCTS.filter((x) => x.id !== p.id && x.productType === p.productType && x.demo === p.demo)
+    .sort((a, b) => Number(a.source.site === p.source.site) - Number(b.source.site === p.source.site))
+    .slice(0, 3);
   const rows: { label: string; value: string | null; ev?: FieldEvidence; hint?: string }[] = [
     {
       label: "Calidad (NTP 231.301)",
-      value: p.fiber.quality ? `${QUALITY_LABEL[p.fiber.quality]} (${micronRangeLabel(p.fiber.quality)})` : null,
+      value: p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null,
       ev: p.evidence.quality,
+      hint:
+        p.fiber.quality && p.fiber.micron == null
+          ? `Rango de la norma: ${micronRangeLabel(p.fiber.quality)}. La tienda no informa una medición.`
+          : undefined,
     },
     { label: "Micronaje", value: p.fiber.micron != null ? `${p.fiber.micron} µm` : null, ev: p.evidence.micron },
     { label: "Raza", value: p.fiber.breed ? BREED_LABEL[p.fiber.breed] : null, ev: p.evidence.breed },
@@ -45,6 +48,7 @@ export default async function ProductPage({ params }: Params) {
       label: "Color",
       value: `${p.color.name}${p.color.natural === true ? " — natural, sin teñir" : p.color.natural === false ? " — teñido" : ""}`,
       ev: p.evidence.natural,
+      hint: p.color.natural == null ? "No se sabe si es color natural o teñido." : undefined,
     },
     {
       label: "Origen",
@@ -55,7 +59,15 @@ export default async function ProductPage({ params }: Params) {
     { label: "Composición", value: compositionLabel(p), ev: p.evidence.alpacaPct },
     { label: "Construcción", value: p.construction ? CONSTRUCTION_LABEL[p.construction] : null },
     { label: "Peso", value: p.weightGrams ? `${p.weightGrams} g` : null },
-    { label: "Tallas / medidas", value: p.sizes?.length ? p.sizes.join(" · ") : null },
+    {
+      label: "Tallas / medidas",
+      value: p.sizes?.length ? p.sizes.join(" · ") : null,
+      hint: p.sizesAvailable
+        ? p.sizesAvailable.length
+          ? `Con stock: ${p.sizesAvailable.join(", ")}`
+          : "Sin stock en ninguna talla"
+        : undefined,
+    },
   ];
 
   return (
@@ -70,10 +82,11 @@ export default async function ProductPage({ params }: Params) {
       <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
         <div className="lg:sticky lg:top-6 lg:self-start">
           <div className="-mx-4 overflow-hidden bg-arena sm:mx-0 sm:rounded-sm">
-            <Swatch id={p.id} hex={p.color.hex} type={p.productType} className="aspect-[4/5] w-full" />
+            <ProductImage product={p} className="aspect-[4/5] w-full" sizes="(max-width: 1024px) 100vw, 55vw" />
           </div>
           <p className="mt-2 text-[11px] text-piedra">
-            Imagen ilustrativa en el color del producto. La foto real está en la tienda.
+            {p.images.length ? `Foto: ${p.source.site}.` : "Imagen ilustrativa en el color del producto."}
+            {p.demo && " Producto de ejemplo: no es un listado real."}
           </p>
         </div>
 
@@ -95,16 +108,28 @@ export default async function ProductPage({ params }: Params) {
               ))}
           </div>
 
-          <div className="mt-6 flex items-baseline gap-3">
-            <span className="font-serif text-3xl">{formatPen(p.price.amountPen)}</span>
-            {p.price.currency === "USD" && (
-              <span className="text-sm text-piedra">{formatUsd(p.price.amount)} en la tienda · conversión aprox.</span>
+          <div className="mt-6 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="font-serif text-3xl">
+              {p.price.currency === "USD" ? formatUsd(p.price.amount) : formatPen(p.price.amount)}
+            </span>
+            {p.price.compareAt && (
+              <span className="text-sm text-piedra line-through">
+                {p.price.currency === "USD" ? formatUsd(p.price.compareAt) : formatPen(p.price.compareAt)}
+              </span>
             )}
+            {p.price.currency === "USD" && <span className="text-sm text-piedra">≈ {formatPen(p.price.amountPen)} (referencial)</span>}
           </div>
           <p className="mt-1 text-sm text-piedra">
             <AvailabilityDot status={p.availability.status} /> {AVAILABILITY_LABEL[p.availability.status]} · verificado el{" "}
             {formatDate(p.availability.checkedAt)}
           </p>
+          {p.shipping && (
+            <p className="mt-1 text-sm text-piedra">
+              {p.shipping.summary}
+              {p.shipping.costUsd != null && ` · desde ${formatUsd(p.shipping.costUsd)}`}
+              {p.shipping.days && ` · ${p.shipping.days}`}
+            </p>
+          )}
 
           <a
             href={p.source.url}
@@ -124,7 +149,7 @@ export default async function ProductPage({ params }: Params) {
                   <dd>
                     <div className="flex flex-wrap items-center gap-2">
                       <span className={r.value ? "" : "italic text-piedra"}>{r.value ?? "No declarado por la tienda"}</span>
-                      {r.ev && r.value && <ProvenanceBadge ev={r.ev} />}
+                      {r.ev && r.value && r.ev.provenance !== "desconocido" && <ProvenanceBadge ev={r.ev} />}
                     </div>
                     {r.hint && <p className="mt-0.5 text-xs text-piedra">{r.hint}</p>}
                     {r.ev?.quote && <p className="mt-1 text-xs italic text-piedra">“{r.ev.quote}”</p>}
@@ -158,7 +183,7 @@ export default async function ProductPage({ params }: Params) {
               {p.extraction.version}
             </p>
             <div className="mt-2 flex items-center gap-2">
-              <span>Confianza de la ficha</span>
+              <span>Confianza de la extracción</span>
               <span className="h-1.5 w-28 overflow-hidden rounded-full bg-arena-oscura">
                 <span className="block h-full bg-musgo" style={{ width: `${Math.round(p.extraction.confidence * 100)}%` }} />
               </span>
@@ -170,7 +195,7 @@ export default async function ProductPage({ params }: Params) {
 
       {similar.length > 0 && (
         <section className="mt-20">
-          <h2 className="font-serif text-2xl">Más {TYPE_LABEL[p.productType].toLowerCase()} en otras tiendas</h2>
+          <h2 className="font-serif text-2xl">Más en {TYPE_LABEL[p.productType].toLowerCase()}</h2>
           <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3">
             {similar.map((s) => (
               <ProductCard key={s.id} product={s} />
