@@ -327,6 +327,8 @@ Tiendas que envían a EE. UU. (4.584 prendas con stock): Sol Alpaca, Kuna USA, I
 
 ### Lista para el lanzamiento público
 
+**Estado:** lanzado el 2026-09-25 en `https://alpacaatlas.com` (`SITE_INDEXABLE=true`, dominio verificado en Search Console).
+
 1. Comprar el dominio y conectarlo en Netlify como **dominio principal** (`alpacaatlas.com`; `www` redirige al dominio sin www). El HTTPS es automático y `vellon-alpaca.netlify.app` redirige solo.
 2. Variables de entorno en Netlify (Site configuration → Environment variables), y volver a desplegar:
    - `NEXT_PUBLIC_SITE_URL=https://alpacaatlas.com`
