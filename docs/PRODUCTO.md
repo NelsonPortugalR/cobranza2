@@ -252,7 +252,7 @@ Leímos el catálogo público de **Sol Alpaca** (tienda Shopify, `/products.json
 
 **Decisión de producto (25 sep):** comparamos solo lo que las tiendas publican de forma consistente: tipo de prenda, composición, calidad declarada (baby, super baby, royal), color, tallas con stock, precio (soles o dólares), oferta y envío. Micronaje, raza, región de origen y natural/teñido no se muestran como filtros. Si el usuario los pide, el catálogo avisa: "No filtramos por origen (Puno): las tiendas no lo publican".
 
-**Estado de las fuentes (25 sep, tercera descarga):** 14 tiendas, **6.631 ítems con stock** (se omiten los agotados). 13 usan el conector Shopify y 1 el conector WooCommerce (Store API pública).
+**Estado de las fuentes (25 sep, cuarta descarga):** 15 tiendas, **6.956 ítems con stock** (se omiten los agotados). 14 usan el conector Shopify y 1 el conector WooCommerce (Store API pública).
 
 | Fuente | Plataforma | Moneda | Ítems | Composición | Calidad | Envía a Perú |
 |---|---|---|---|---|---|---|
@@ -270,7 +270,7 @@ Leímos el catálogo público de **Sol Alpaca** (tienda Shopify, `/products.json
 | All Alpaca | Shopify | USD | 118 | 100 % | 75 % | Sí (gratis desde S/ 150) |
 | Etno Alpaca | Shopify | USD | 89 | 57 % | 100 % | Sí |
 | Krimson Klover | Shopify | USD | 41 | 85 % | 51 % | No publica |
-| Incalpaca (`incalpacastores.com`) | Shopify | PEN | — | | | Pendiente: su `robots.txt` redirige a `alpaca111.com`, que no está permitido en la red; sin leer sus reglas no descargamos |
+| Incalpaca (`incalpacastores.com` = `alpaca111.com`, misma tienda) | Shopify | PEN | 325 | 87 % | 71 % | Sí |
 | Baby Alpaca Boutique | — | | — | | | No responde por HTTPS |
 | Mercado Libre Perú / Etsy | API | | — | | | Requieren credenciales de desarrollador |
 

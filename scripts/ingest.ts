@@ -91,6 +91,7 @@ const SOURCES: SourceConfig[] = [
   {
     key: "incalpaca",
     kind: "shopify",
+    // incalpacastores.com y alpaca111.com son la misma tienda: se conecta una sola vez.
     site: "Incalpaca",
     baseUrl: "https://incalpacastores.com",
     currency: "PEN",

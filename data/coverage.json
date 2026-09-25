@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-25T12:53:50.223Z",
-  "items": 6631,
+  "generatedAt": "2026-09-25T13:45:47.463Z",
+  "items": 6956,
   "sources": [
     {
       "site": "Sol Alpaca",
@@ -12,7 +12,7 @@
     },
     {
       "site": "Alpaca Collections",
-      "items": 987
+      "items": 988
     },
     {
       "site": "PAKA",
@@ -31,8 +31,12 @@
       "items": 863
     },
     {
+      "site": "Incalpaca",
+      "items": 325
+    },
+    {
       "site": "Incalpaca Remate",
-      "items": 255
+      "items": 254
     },
     {
       "site": "Kuna USA",
@@ -63,13 +67,13 @@
     {
       "key": "composition",
       "label": "Composición (100% o mezcla)",
-      "count": 5051,
-      "pct": 76
+      "count": 5332,
+      "pct": 77
     },
     {
       "key": "quality",
       "label": "Calidad (baby, super baby…)",
-      "count": 4417,
+      "count": 4648,
       "pct": 67
     },
     {
@@ -81,19 +85,19 @@
     {
       "key": "breed",
       "label": "Raza (Huacaya / Suri)",
-      "count": 195,
+      "count": 201,
       "pct": 3
     },
     {
       "key": "color",
       "label": "Color clasificable",
-      "count": 5861,
-      "pct": 88
+      "count": 6182,
+      "pct": 89
     },
     {
       "key": "natural",
       "label": "Natural vs. teñido",
-      "count": 3039,
+      "count": 3172,
       "pct": 46
     },
     {
@@ -105,13 +109,13 @@
     {
       "key": "sizes",
       "label": "Tallas con stock",
-      "count": 6341,
+      "count": 6666,
       "pct": 96
     },
     {
       "key": "shipping",
       "label": "Envío",
-      "count": 6014,
+      "count": 6339,
       "pct": 91
     }
   ]

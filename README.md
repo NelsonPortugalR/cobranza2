@@ -5,7 +5,7 @@ Un agente lee listados públicos de tiendas peruanas y marketplaces (Sol Alpaca,
 📄 **Documento de producto** (visión, arquitectura, schema, pantallas, flujo del agente y limitaciones): [`docs/PRODUCTO.md`](docs/PRODUCTO.md)
 🧩 **JSON Schema del producto**: [`schema/product.schema.json`](schema/product.schema.json)
 
-> **Datos reales:** 6.631 prendas con stock de 14 tiendas (Sol Alpaca, Kuna Perú y USA, Alpaca Collections, Anntarah, Peruvian Link, PAKA, Pure Alpaca, Peruvian Connection, Incalpaca Remate, Qinti, All Alpaca, Etno Alpaca, Krimson Klover), leídas de sus catálogos públicos con `npm run ingest`. Comparamos solo lo que publican: tipo, composición, calidad, color, tallas con stock, precio y envío. Detalle en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
+> **Datos reales:** 6.956 prendas con stock de 15 tiendas (Sol Alpaca, Kuna Perú y USA, Incalpaca, Alpaca Collections, Anntarah, Peruvian Link, PAKA, Pure Alpaca, Peruvian Connection, Incalpaca Remate, Qinti, All Alpaca, Etno Alpaca, Krimson Klover), leídas de sus catálogos públicos con `npm run ingest`. Comparamos solo lo que publican: tipo, composición, calidad, color, tallas con stock, precio y envío. Detalle en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
 
 ## Correr en local
 
