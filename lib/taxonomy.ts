@@ -2,7 +2,7 @@ import type { Availability, Breed, ColorFamily, ProductType, Quality, Region } f
 
 /** Rangos de finura (µm) usados para clasificar. Orden: de más fino a más grueso. */
 export const QUALITY_RANGES: { id: Quality; label: string; min: number; max: number }[] = [
-  { id: "ultrafina", label: "Ultrafina", min: 0, max: 18 },
+  { id: "ultrafina", label: "Royal / ultrafina", min: 0, max: 18 },
   { id: "super_baby", label: "Super Baby", min: 18.1, max: 20 },
   { id: "baby", label: "Baby", min: 20.1, max: 23 },
   { id: "fleece", label: "Fleece", min: 23.1, max: 26.5 },

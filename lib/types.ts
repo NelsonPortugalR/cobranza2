@@ -82,6 +82,10 @@ export interface Product {
     /** % de alpaca en la composición total (0–100). */
     alpacaPct: number | null;
     composition: { material: string; pct: number }[];
+    /** Materiales nombrados sin porcentaje ("baby alpaca y seda"). */
+    materials?: string[];
+    /** true = la tienda dice que es mezcla aunque no dé porcentajes. */
+    blend?: boolean;
     quality: Quality | null;
     /** Diámetro medio de fibra en micras, si se declara o puede inferirse. */
     micron: number | null;
@@ -102,7 +106,13 @@ export interface Product {
   /** Tallas con stock según la tienda. Si falta, no se sabe. */
   sizesAvailable?: string[];
   price: { amount: number; currency: "PEN" | "USD"; amountPen: number; compareAt?: number | null };
-  shipping?: { summary: string; costUsd?: number | null; days?: string };
+  shipping?: {
+    summary: string;
+    costUsd?: number | null;
+    days?: string;
+    /** true = la política de la tienda incluye envíos a Perú; null = no lo publica. */
+    toPeru: boolean | null;
+  };
   availability: { status: Availability; checkedAt: string };
   images: string[];
   rawDescription: string;
@@ -135,6 +145,8 @@ export interface Filters {
   priceMax: number | null;
   priceCurrency: "PEN" | "USD";
   inStockOnly: boolean;
+  /** Solo tiendas cuya política de envío incluye Perú. */
+  shipsToPeru: boolean;
   sources: string[];
   /** Mostrar también productos de ejemplo de tiendas aún no conectadas. */
   includeDemo: boolean;
@@ -168,6 +180,7 @@ export const EMPTY_FILTERS: Filters = {
   priceMax: null,
   priceCurrency: "PEN",
   inStockOnly: false,
+  shipsToPeru: false,
   sources: [],
   includeDemo: false,
 };

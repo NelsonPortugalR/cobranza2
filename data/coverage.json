@@ -1,24 +1,48 @@
 {
-  "generatedAt": "2026-09-25T12:16:15.904Z",
-  "items": 1038,
+  "generatedAt": "2026-09-25T12:27:57.169Z",
+  "items": 4160,
   "sources": [
     {
       "site": "Sol Alpaca",
-      "items": 1038
+      "items": 924
+    },
+    {
+      "site": "Kuna",
+      "items": 749
+    },
+    {
+      "site": "Alpaca Collections",
+      "items": 988
+    },
+    {
+      "site": "PAKA",
+      "items": 326
+    },
+    {
+      "site": "Peruvian Connection",
+      "items": 269
+    },
+    {
+      "site": "Krimson Klover",
+      "items": 41
+    },
+    {
+      "site": "Peruvian Link",
+      "items": 863
     }
   ],
   "fields": [
     {
       "key": "composition",
-      "label": "Composición (% de alpaca)",
-      "count": 926,
-      "pct": 89
+      "label": "Composición (100% o mezcla)",
+      "count": 3081,
+      "pct": 74
     },
     {
       "key": "quality",
       "label": "Calidad (baby, super baby…)",
-      "count": 971,
-      "pct": 94
+      "count": 2484,
+      "pct": 60
     },
     {
       "key": "micron",
@@ -29,20 +53,20 @@
     {
       "key": "breed",
       "label": "Raza (Huacaya / Suri)",
-      "count": 6,
-      "pct": 1
+      "count": 103,
+      "pct": 2
     },
     {
       "key": "color",
       "label": "Color clasificable",
-      "count": 909,
-      "pct": 88
+      "count": 3612,
+      "pct": 87
     },
     {
       "key": "natural",
       "label": "Natural vs. teñido",
-      "count": 629,
-      "pct": 61
+      "count": 1857,
+      "pct": 45
     },
     {
       "key": "origin",
@@ -53,14 +77,14 @@
     {
       "key": "sizes",
       "label": "Tallas con stock",
-      "count": 924,
-      "pct": 89
+      "count": 4160,
+      "pct": 100
     },
     {
       "key": "shipping",
       "label": "Envío",
-      "count": 1038,
-      "pct": 100
+      "count": 3793,
+      "pct": 91
     }
   ]
 }

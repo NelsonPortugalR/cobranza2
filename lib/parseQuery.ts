@@ -187,6 +187,12 @@ export function parseQueryLocal(query: string): ParsedQuery {
   }
   if (/\bbarat[ao]s?\b|\beconomic[ao]s?\b/.test(rest)) sort = "precio_asc";
 
+  const peru = rest.match(/\b(envio|envie|envian|envien|envios|llegue|delivery|despacho)s?( a| hasta| en)? (peru|lima|arequipa|cusco|trujillo|piura)\b|\bque (envie|llegue|despache)n? a (peru|lima)\b/);
+  if (peru) {
+    f.shipsToPeru = true;
+    chips.push({ field: "shipsToPeru", label: "Envía a Perú", from: consume(peru) });
+  }
+
   const stock = rest.match(/\b(en stock|disponibles?|con stock|entrega inmediata)\b/);
   if (stock) {
     f.inStockOnly = true;

@@ -11,7 +11,7 @@ export interface Coverage {
 export function coverageReport(items: Product[]): Coverage {
   const real = items.filter((p) => !p.demo);
   const has: [string, string, (p: Product) => boolean][] = [
-    ["composition", "Composición (% de alpaca)", (p) => p.fiber.alpacaPct != null],
+    ["composition", "Composición (100% o mezcla)", (p) => p.fiber.alpacaPct != null || p.fiber.blend === true],
     ["quality", "Calidad (baby, super baby…)", (p) => p.fiber.quality != null],
     ["micron", "Micronaje (µm)", (p) => p.fiber.micron != null],
     ["breed", "Raza (Huacaya / Suri)", (p) => p.fiber.breed != null],

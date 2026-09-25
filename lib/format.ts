@@ -20,7 +20,7 @@ export function finenessLabel(p: Product): string | null {
 }
 
 export function compositionLabel(p: Product): string | null {
-  if (p.fiber.alpacaPct == null) return null;
+  if (p.fiber.alpacaPct == null) return p.fiber.materials?.length ? `${p.fiber.materials.join(" + ")} (sin %)` : null;
   if (p.fiber.alpacaPct === 100) return "100% alpaca";
   return p.fiber.composition.map((c) => `${c.pct}% ${c.material.toLowerCase()}`).join(" · ");
 }

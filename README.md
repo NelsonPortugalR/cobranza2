@@ -5,7 +5,7 @@ Un agente lee listados públicos de tiendas peruanas y marketplaces (Sol Alpaca,
 📄 **Documento de producto** (visión, arquitectura, schema, pantallas, flujo del agente y limitaciones): [`docs/PRODUCTO.md`](docs/PRODUCTO.md)
 🧩 **JSON Schema del producto**: [`schema/product.schema.json`](schema/product.schema.json)
 
-> **Datos reales:** 1.038 ítems de Sol Alpaca leídos de su catálogo público (`npm run ingest`). Kuna, Alpaca Collections, PAKA, Peruvian Connection, Krimson Klover y Peruvian Link ya están configuradas y entran en cuanto su dominio esté permitido en la red (lista en `docs/PRODUCTO.md` §8). Las tiendas sin conectar no aparecen; sus 12 productos de ejemplo (`lib/products.ts`) solo aparecen si se activa "Mostrar ejemplos" y van marcados como **Ejemplo**. Resultados de cobertura en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
+> **Datos reales:** 4.160 prendas con stock de 7 tiendas (Sol Alpaca, Kuna, Alpaca Collections, PAKA, Peruvian Connection, Krimson Klover, Peruvian Link), leídas de sus catálogos públicos con `npm run ingest`. Comparamos solo lo que publican: tipo, composición, calidad, color, tallas con stock, precio y envío. Detalle en [`docs/PRODUCTO.md` §8](docs/PRODUCTO.md#8-primera-validación-con-datos-reales-25-sep-2026).
 
 ## Correr en local
 
@@ -27,6 +27,7 @@ app/
   page.tsx                 Home: hero + buscador + catálogo + "cómo leemos las fichas"
   producto/[id]/page.tsx   Ficha técnica con evidencia (declarado / inferido) por campo
   api/parse/route.ts       Consulta → filtros (Claude + structured outputs, respaldo local)
+  api/search/route.ts      Búsqueda y conteos de facetas en el servidor (página de 24–48 resultados)
 components/
   Catalog.tsx              Estado de búsqueda, chips editables, grid, bottom sheet móvil
   SearchBox.tsx            Consulta en lenguaje natural

@@ -58,11 +58,15 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
       "composición",
       f.composition === "cualquiera"
         ? "pass"
-        : p.fiber.alpacaPct == null
-          ? "unknown"
-          : (p.fiber.alpacaPct === 100) === (f.composition === "100")
+        : p.fiber.alpacaPct != null
+          ? (p.fiber.alpacaPct === 100) === (f.composition === "100")
             ? "pass"
-            : "fail",
+            : "fail"
+          : p.fiber.blend
+            ? f.composition === "mezcla"
+              ? "pass"
+              : "fail"
+            : "unknown",
     ],
     ["precio", (f.priceMax == null || p.price.amountPen <= f.priceMax) && (f.priceMin == null || p.price.amountPen >= f.priceMin) ? "pass" : "fail"],
     [
@@ -75,6 +79,7 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             ? "unknown"
             : "pass",
     ],
+    ["envío a Perú", !f.shipsToPeru ? "pass" : p.shipping?.toPeru == null ? "unknown" : p.shipping.toPeru ? "pass" : "fail"],
     ["texto", textMatch(p, f.text)],
   ];
   if (checks.some(([, v]) => v === "fail")) return { verdict: "fail", unknown: [] };
@@ -111,7 +116,26 @@ export function applyFilters(products: Product[], f: Filters, sort: SortKey): Fi
   const cmp = comparator(sort);
   exact.sort(cmp);
   partial.sort(cmp);
+  // En "relevancia" intercalamos tiendas: el valor está en comparar entre ellas.
+  if (sort === "relevancia") return { exact: interleaveBySource(exact), partial: interleaveBySource(partial) };
   return { exact, partial };
+}
+
+function interleaveBySource(list: Match[]): Match[] {
+  const queues = new Map<string, Match[]>();
+  for (const m of list) {
+    const k = m.product.source.site;
+    if (!queues.has(k)) queues.set(k, []);
+    queues.get(k)!.push(m);
+  }
+  const out: Match[] = [];
+  while (out.length < list.length) {
+    for (const q of queues.values()) {
+      const next = q.shift();
+      if (next) out.push(next);
+    }
+  }
+  return out;
 }
 
 function comparator(sort: SortKey) {
@@ -142,6 +166,7 @@ export function activeFilterCount(f: Filters): number {
     (f.priceMin != null ? 1 : 0) +
     (f.priceMax != null ? 1 : 0) +
     (f.inStockOnly ? 1 : 0) +
+    (f.shipsToPeru ? 1 : 0) +
     f.sizes.length
   );
 }
@@ -157,4 +182,48 @@ export function countMatches(products: Product[], f: Filters): { exact: number; 
     if (v === "pass") exact++;
   }
   return { exact, total };
+}
+
+export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources";
+export type FacetCounts = Record<FacetKey, Record<string, { exact: number; total: number }>>;
+
+/** Verdicto de un producto para una sola opción de una faceta. */
+function optionVerdict(p: Product, key: FacetKey, option: string): Verdict {
+  switch (key) {
+    case "types":
+      return p.productType === option ? "pass" : "fail";
+    case "sources":
+      return p.source.site === option ? "pass" : "fail";
+    case "qualities":
+      return p.fiber.quality == null ? "unknown" : p.fiber.quality === option ? "pass" : "fail";
+    case "colorFamilies":
+      return p.color.family == null ? "unknown" : p.color.family === option ? "pass" : "fail";
+    case "sizes":
+      return sizeCheck(p, [option]);
+  }
+}
+
+/**
+ * Conteos por opción: cuántos resultados habría al elegir esa opción, dados los
+ * demás filtros. Una pasada por faceta en vez de una por opción.
+ */
+export function facetCounts(products: Product[], f: Filters, options: Record<FacetKey, string[]>): FacetCounts {
+  const out = {} as FacetCounts;
+  for (const key of Object.keys(options) as FacetKey[]) {
+    const counts: Record<string, { exact: number; total: number }> = {};
+    for (const o of options[key]) counts[o] = { exact: 0, total: 0 };
+    const base = { ...f, [key]: [] } as Filters;
+    for (const p of products) {
+      const b = evaluate(p, base).verdict;
+      if (b === "fail") continue;
+      for (const o of options[key]) {
+        const v = optionVerdict(p, key, o);
+        if (v === "fail") continue;
+        counts[o].total++;
+        if (v === "pass" && b === "pass") counts[o].exact++;
+      }
+    }
+    out[key] = counts;
+  }
+  return out;
 }

@@ -27,7 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <div className="bg-carbon px-4 py-1.5 text-center text-[11px] tracking-wide text-arena">
-          Prototipo · datos reales de Sol Alpaca · otras tiendas aparecen solo como ejemplo, marcadas así
+          Prototipo · datos públicos leídos de las tiendas · la compra se hace en cada tienda
         </div>
         <header className="border-b border-arena-oscura/70">
           <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">

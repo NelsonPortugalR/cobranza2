@@ -27,29 +27,5 @@ export function getProduct(id: string): Product | undefined {
   return ALL_PRODUCTS.find((p) => p.id === id);
 }
 
-/** Versión liviana para el cliente (móvil): solo lo que usan las tarjetas y los filtros. */
-export function compactProducts(): Product[] {
-  return ALL_PRODUCTS.map((p) => ({
-    id: p.id,
-    demo: p.demo,
-    title: p.title,
-    source: { site: p.source.site, url: "", method: p.source.method, retrievedAt: "" },
-    seller: { name: p.seller.name },
-    productType: p.productType,
-    fiber: p.fiber,
-    color: p.color,
-    origin: { region: p.origin.region },
-    sizes: p.sizes,
-    sizesAvailable: p.sizesAvailable,
-    price: p.price,
-    availability: { status: p.availability.status, checkedAt: "" },
-    images: p.images.slice(0, 1),
-    // Recorte usado solo por la búsqueda de texto libre.
-    rawDescription: p.rawDescription.slice(0, 160),
-    evidence: p.evidence.micron ? { micron: { provenance: p.evidence.micron.provenance, confidence: 0 } } : {},
-    extraction: { engine: "", version: "", confidence: p.extraction.confidence, warnings: [] },
-  }));
-}
-
 export const SOURCES = [...new Set(ALL_PRODUCTS.map((p) => p.source.site))];
 export const REAL_SOURCES = [...REAL_SITES];

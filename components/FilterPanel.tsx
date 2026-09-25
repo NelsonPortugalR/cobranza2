@@ -12,8 +12,7 @@ import {
   USD_PEN,
 } from "@/lib/taxonomy.ts";
 
-/** Devuelve coincidencias exactas y total (incluidas las "por confirmar"). */
-export type FacetCounter = (patch: Partial<Filters>) => { exact: number; total: number };
+import type { FacetCounts, FacetKey } from "@/lib/filter.ts";
 
 type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes";
 
@@ -22,13 +21,13 @@ const SIZES = [...SIZE_ORDER.slice(1, 7), "Única"];
 export function FilterPanel({
   filters,
   onChange,
-  count,
+  facets,
   sources,
   realSources,
 }: {
   filters: Filters;
   onChange: (patch: Partial<Filters>) => void;
-  count: FacetCounter;
+  facets: FacetCounts;
   sources: string[];
   realSources: string[];
 }) {
@@ -40,7 +39,7 @@ export function FilterPanel({
     const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
     onChange({ [key]: next } as Partial<Filters>);
   }
-  const optionCount = (key: ArrayKey, value: string) => count({ [key]: [value] } as Partial<Filters>);
+  const optionCount = (key: ArrayKey, value: string) => facets[key as FacetKey]?.[value] ?? { exact: 0, total: 0 };
   // Nota: el número mostrado son coincidencias exactas; la opción se desactiva solo si no hay ni por confirmar.
 
   return (
@@ -81,7 +80,7 @@ export function FilterPanel({
               key={q.id}
               checked={filters.qualities.includes(q.id)}
               onChange={() => toggle("qualities", q.id)}
-              label={q.id === "ultrafina" ? "Royal / ultrafina" : q.label}
+              label={q.label}
               n={optionCount("qualities", q.id)}
             />
           ))}
@@ -142,16 +141,17 @@ export function FilterPanel({
         {usd && <p className="mt-2 text-xs text-piedra">Referencial: US$ 1 = S/ {USD_PEN}</p>}
       </Section>
 
-      <Section title="Disponibilidad">
+      <Section title="Envío">
         <label className="flex cursor-pointer items-center justify-between gap-3">
-          <span>Solo en stock</span>
+          <span>Envía a Perú</span>
           <input
             type="checkbox"
             className="h-4 w-4 accent-tierra"
-            checked={filters.inStockOnly}
-            onChange={(e) => onChange({ inStockOnly: e.target.checked })}
+            checked={filters.shipsToPeru}
+            onChange={(e) => onChange({ shipsToPeru: e.target.checked })}
           />
         </label>
+        <p className="mt-1 text-xs text-piedra">Según la política de envío que publica cada tienda.</p>
       </Section>
 
       <Section title="Tienda">

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { classifyColor, extractComposition, inferType, normalizeShopifyProduct, storeImageUrl, type ShopifyProduct } from "./shopify.ts";
+import { classifyColor, extractComposition, extractMaterialsFromWords, inferType, normalizeShopifyProduct, storeImageUrl, type ShopifyProduct } from "./shopify.ts";
 import { isAllowed, parseRobots } from "./robots.ts";
 
 // Casos tomados de descripciones reales de tiendas Shopify de alpaca.
@@ -14,6 +14,14 @@ test("composición: formatos reales", () => {
   assert.deepEqual(extractComposition("56% Baby Alpaca 42% Nylon 2% Elastano").composition.map((c) => c.pct), [56, 42, 2]);
   assert.deepEqual(extractComposition("Made of 100% Super Baby Alpaca.").composition, [{ material: "Super Baby Alpaca", pct: 100 }]);
   assert.deepEqual(extractComposition("Soft knit mitts in a natural tone.").composition, []);
+  assert.deepEqual(
+    extractComposition("Crafted of plush baby alpaca (72%), wool (26%) and nylon (2%). Lining: 100% polyester.").composition,
+    [
+      { material: "Baby Alpaca", pct: 72 },
+      { material: "Wool", pct: 26 },
+      { material: "Nylon", pct: 2 },
+    ],
+  );
 });
 
 test("color: familia y natural vs teñido", () => {
@@ -54,12 +62,15 @@ test("normaliza un producto Shopify en un ítem por color", () => {
     site: "Tienda",
     baseUrl: "https://tienda.example",
     currency: "USD",
-    shipping: { summary: "Envío" },
+    shipping: { summary: "Envío", toPeru: null },
     retrievedAt: "2026-09-25T00:00:00Z",
   });
   assert.equal(items.length, 2);
   const [gray, brown] = items;
   assert.equal(inferType(base), "chompa", "el título manda aunque product_type sea 'Outlet'");
+  assert.equal(inferType({ ...base, title: "Suéter Belen De Vicuña Color Negro" }), "chompa");
+  assert.equal(inferType({ ...base, title: "Cárdigan Alma De Baby Alpaca" }), "cardigan");
+  assert.equal(inferType({ ...base, title: "Chalina Andes De Baby Alpaca" }), "bufanda");
   assert.equal(gray.fiber.quality, "baby");
   assert.equal(gray.fiber.alpacaPct, 100);
   assert.deepEqual(gray.sizes, ["S", "M"]);
@@ -85,4 +96,21 @@ test("imágenes desde el dominio de la tienda", () => {
     storeImageUrl("https://cdn.shopify.com/s/files/1/0489/0142/3260/files/20123-C001_2.jpg?v=1", "https://tienda.example"),
     "https://tienda.example/cdn/shop/files/20123-C001_2.jpg?v=1",
   );
+});
+
+test("composición escrita con palabras (Kuna y otras)", () => {
+  assert.deepEqual(extractMaterialsFromWords("Suéter elaborado en baby alpaca y seda, ideal para el invierno."), {
+    materials: ["Baby alpaca", "Seda"],
+    blend: true,
+    pure: false,
+    quote: "elaborado en baby alpaca y seda",
+  });
+  assert.equal(extractMaterialsFromWords("Chal confeccionado en baby alpaca. Suave.")?.pure, true);
+  assert.equal(extractMaterialsFromWords("Hecho con una mezcla de alpaca y lana")?.blend, true);
+  assert.equal(extractMaterialsFromWords("Cartera de cuero"), null);
+  assert.equal(extractMaterialsFromWords("Crafted with lightweight Royal Alpaca fiber.")?.pure, false, "marketing en inglés no implica 100%");
+  assert.equal(extractMaterialsFromWords("Made from pure baby alpaca.")?.pure, true);
+  assert.equal(classifyColor("Guinda").family, "rojo");
+  assert.equal(classifyColor("Celeste").family, "azul");
+  assert.equal(classifyColor("Rosado").family, "rosa");
 });

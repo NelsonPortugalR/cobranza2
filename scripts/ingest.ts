@@ -32,16 +32,59 @@ const SOURCES: SourceConfig[] = [
       summary: "Envío mundial desde Perú (DHL), aranceles incluidos",
       costUsd: 25,
       days: "3–10 días hábiles",
+      toPeru: true,
     },
   },
   // Kuna (Grupo Inca) migró de kuna.com.pe a kunastores.com; la tienda de Perú vende en soles.
-  { key: "kuna-pe", kind: "shopify", site: "Kuna", baseUrl: "https://pe.kunastores.com", currency: "PEN" },
+  {
+    key: "kuna-pe",
+    kind: "shopify",
+    site: "Kuna",
+    baseUrl: "https://pe.kunastores.com",
+    currency: "PEN",
+    alpacaOnly: true,
+    shipping: {
+      summary: "Envío a todo Perú: S/ 15 (gratis desde S/ 399) o recojo gratis en tienda",
+      days: "Lima 2 días hábiles, provincias 7",
+      toPeru: true,
+    },
+  },
   // Multimarca con varias marcas peruanas (incluida Kuna): el vendedor es la marca.
-  { key: "alpacacollections", kind: "shopify", site: "Alpaca Collections", baseUrl: "https://www.alpacacollections.com", currency: "USD", multiBrand: true, alpacaOnly: true },
+  {
+    key: "alpacacollections",
+    kind: "shopify",
+    site: "Alpaca Collections",
+    baseUrl: "https://www.alpacacollections.com",
+    currency: "USD",
+    multiBrand: true,
+    alpacaOnly: true,
+    shipping: {
+      summary: "Desde EE. UU.; internacional desde US$ 39, aranceles no incluidos",
+      costUsd: 39,
+      days: "8–15 días (internacional)",
+      toPeru: true,
+    },
+  },
   { key: "paka", kind: "shopify", site: "PAKA", baseUrl: "https://www.pakaapparel.com", currency: "USD", alpacaOnly: true },
-  { key: "peruvianconnection", kind: "shopify", site: "Peruvian Connection", baseUrl: "https://www.peruvianconnection.com", currency: "USD", alpacaOnly: true },
+  {
+    key: "peruvianconnection",
+    kind: "shopify",
+    site: "Peruvian Connection",
+    baseUrl: "https://www.peruvianconnection.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Envíos en EE. UU. desde US$ 7.95 (gratis desde US$ 350)", costUsd: 7.95, days: "7–10 días hábiles", toPeru: null },
+  },
   { key: "krimsonklover", kind: "shopify", site: "Krimson Klover", baseUrl: "https://krimsonklover.com", currency: "USD", alpacaOnly: true },
-  { key: "peruvianlink", kind: "shopify", site: "Peruvian Link", baseUrl: "https://peruvianlink.com", currency: "USD", alpacaOnly: true },
+  {
+    key: "peruvianlink",
+    kind: "shopify",
+    site: "Peruvian Link",
+    baseUrl: "https://peruvianlink.com",
+    currency: "USD",
+    alpacaOnly: true,
+    shipping: { summary: "Envíos desde EE. UU. desde US$ 20; internacional según peso", costUsd: 20, toPeru: null },
+  },
 ];
 
 
@@ -95,6 +138,7 @@ async function main() {
       }
     } catch (err) {
       const reason = err instanceof Error ? (err.cause as { code?: string })?.code ?? err.message : String(err);
+      // HTTP 403 suele ser el proxy del entorno: revisar que el dominio esté permitido.
       try {
         await readCache();
         console.warn(`${src.site}: sin acceso (${reason}); uso la descarga del ${retrievedAt!.slice(0, 10)}`);
@@ -103,8 +147,10 @@ async function main() {
         continue;
       }
     }
-    const items = raw.flatMap((p) => normalizeShopifyProduct(p, { ...src, retrievedAt }));
-    console.log(`${src.site}: ${raw.length} productos → ${items.length} ítems (producto × color)`);
+    // Solo lo que se puede comprar hoy: las fichas agotadas (archivo, temporadas pasadas) son ruido.
+    const all = raw.flatMap((p) => normalizeShopifyProduct(p, { ...src, retrievedAt }));
+    const items = all.filter((p) => p.availability.status !== "agotado");
+    console.log(`${src.site}: ${raw.length} productos → ${items.length} ítems con stock (${all.length - items.length} agotados omitidos)`);
     catalog.push(...items);
   }
 

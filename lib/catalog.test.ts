@@ -94,3 +94,19 @@ test("talla exige stock en esa talla", () => {
   const l = applyFilters([conStock], withDemo(parseQueryLocal("talla L")).filters, "relevancia");
   assert.equal(l.exact.length, 1);
 });
+
+test("envío a Perú", () => {
+  const f = parseQueryLocal("chal de alpaca con envío a Lima").filters;
+  assert.equal(f.shipsToPeru, true);
+  assert.deepEqual(f.origins, [], "Lima aquí es destino de envío, no origen");
+});
+
+test("conteos de facetas coinciden con aplicar el filtro", async () => {
+  const { facetCounts } = await import("./filter.ts");
+  const base = withDemo(parseQueryLocal("chompa")).filters;
+  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [] });
+  for (const [key, value] of [["qualities", "baby"], ["colorFamilies", "beige"], ["sizes", "M"]] as const) {
+    const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");
+    assert.deepEqual(counts[key][value], { exact: r.exact.length, total: r.exact.length + r.partial.length }, key);
+  }
+});

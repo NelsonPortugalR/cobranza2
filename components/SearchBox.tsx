@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 export const EXAMPLE_QUERIES = [
-  "chompa baby alpaca beige de Puno, lo más fino posible",
-  "chal suri color natural sin teñir",
-  "hilo 100% alpaca para tejer, menos de 150 soles",
-  "cárdigan de menos de 20 micras",
-  "poncho tejido en telar de Cusco",
+  "Suéter marrón, 100% baby alpaca, talla M, menos de US$180",
+  "chal de baby alpaca con envío a Lima, menos de 600 soles",
+  "cárdigan super baby alpaca talla S",
+  "poncho mezcla de alpaca, talla única",
+  "gorro de alpaca hasta 40 dólares",
 ];
 
 /** Consulta en lenguaje natural. El agente la convierte en filtros; no es un chat. */

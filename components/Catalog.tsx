@@ -1,26 +1,41 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { activeFilterCount, applyFilters, countMatches } from "@/lib/filter.ts";
+import { activeFilterCount } from "@/lib/filter.ts";
+import type { SearchHit, SearchResponse } from "@/lib/search.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
 import { SORT_LABEL, chipsFromFilters } from "@/lib/chips.ts";
 import { stripNonComparable } from "@/lib/comparable.ts";
 import { EMPTY_FILTERS } from "@/lib/types.ts";
-import type { Filters, ParsedQuery, Product, SortKey } from "@/lib/types.ts";
+import type { Filters, ParsedQuery, SortKey } from "@/lib/types.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
 import { FilterPanel } from "./FilterPanel.tsx";
 import { ProductCard } from "./ProductCard.tsx";
 
 const PAGE = 24;
 
+async function fetchResults(filters: Filters, sort: SortKey, offset: number, signal?: AbortSignal): Promise<SearchResponse> {
+  const res = await fetch("/api/search", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ filters, sort, offset, limit: offset === 0 ? PAGE : PAGE * 2 }),
+    signal,
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
 export function Catalog({
   initialQuery,
-  products: PRODUCTS,
+  initialResults,
+  realCount,
   sources: SOURCES,
   realSources,
 }: {
   initialQuery: string;
-  products: Product[];
+  /** Resultados ya calculados en el servidor para la primera pintada. */
+  initialResults: SearchResponse;
+  realCount: number;
   sources: string[];
   realSources: string[];
 }) {
@@ -31,7 +46,10 @@ export function Catalog({
   const [engine, setEngine] = useState<ParsedQuery["engine"] | null>(initial ? "local" : null);
   const [loading, setLoading] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [shown, setShown] = useState(PAGE);
+  const [results, setResults] = useState<SearchResponse>(initialResults);
+  const [hits, setHits] = useState<SearchHit[]>(initialResults.hits);
+  const [fetching, setFetching] = useState(false);
+  const firstRender = useRef(true);
   const [ignored, setIgnored] = useState<string[]>(() => (initial ? stripNonComparable(initial.filters).ignored : []));
   const resultsRef = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
@@ -42,7 +60,6 @@ export function Catalog({
     // 1) Respuesta instantánea con el parser local.
     const local = parseQueryLocal(q);
     const cleanLocal = stripNonComparable(local.filters);
-    setShown(PAGE);
     setIgnored(cleanLocal.ignored);
     setFilters((prev) => ({ ...cleanLocal.filters, includeDemo: prev.includeDemo }));
     setSort(local.sort);
@@ -79,9 +96,41 @@ export function Catalog({
     if (initialQuery) void runQuery(initialQuery, false);
   }, [initialQuery, runQuery]);
 
-  const patch = (p: Partial<Filters>) => {
-    setShown(PAGE);
-    setFilters((f) => ({ ...f, ...p }));
+  const patch = (p: Partial<Filters>) => setFilters((f) => ({ ...f, ...p }));
+
+  // Cada cambio de filtros u orden pide la primera página al servidor.
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    const ctrl = new AbortController();
+    const t = setTimeout(async () => {
+      setFetching(true);
+      try {
+        const r = await fetchResults(filters, sort, 0, ctrl.signal);
+        setResults(r);
+        setHits(r.hits);
+      } catch {
+        // abortada o sin red: se mantienen los resultados anteriores
+      } finally {
+        if (!ctrl.signal.aborted) setFetching(false);
+      }
+    }, 120);
+    return () => {
+      clearTimeout(t);
+      ctrl.abort();
+    };
+  }, [filters, sort]);
+
+  const loadMore = async () => {
+    setFetching(true);
+    try {
+      const r = await fetchResults(filters, sort, hits.length);
+      setHits((h) => [...h, ...r.hits]);
+    } finally {
+      setFetching(false);
+    }
   };
   const reset = () => {
     requestId.current++;
@@ -94,20 +143,14 @@ export function Catalog({
     window.history.replaceState(null, "", window.location.pathname);
   };
 
-  const { exact, partial } = useMemo(() => applyFilters(PRODUCTS, filters, sort), [PRODUCTS, filters, sort]);
-  const count = useCallback(
-    (p: Partial<Filters>) => {
-      return countMatches(PRODUCTS, { ...filters, ...p });
-    },
-    [PRODUCTS, filters],
-  );
-  const realCount = useMemo(() => PRODUCTS.filter((p) => !p.demo).length, [PRODUCTS]);
-  const visibleExact = exact.slice(0, shown);
-  const visiblePartial = partial.slice(0, Math.max(0, shown - exact.length));
-  const hasMore = shown < exact.length + partial.length;
+  const visibleExact = hits.filter((h) => !h.partial);
+  const visiblePartial = hits.filter((h) => h.partial);
+  const total = results.exactTotal + results.partialTotal;
+  const hasMore = hits.length < total;
   const chips = chipsFromFilters(filters);
   const nActive = activeFilterCount(filters);
-  const total = exact.length + partial.length;
+  const exact = { length: results.exactTotal };
+  const partial = { length: results.partialTotal };
 
   return (
     <>
@@ -115,7 +158,7 @@ export function Catalog({
       <section className="relative overflow-hidden border-b border-arena-oscura/70 bg-arena">
         <div className="mx-auto max-w-7xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-20">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-tierra">
-            Alpaca peruana · {realCount.toLocaleString("es-PE")} piezas reales de {realSources.join(", ")}
+            Alpaca peruana · {realCount.toLocaleString("es-PE")} piezas con stock en {realSources.length} tiendas
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-[1.05] tracking-tight text-carbon sm:text-6xl">
             Describe la prenda. <span className="text-tierra">Nosotros leemos cada ficha.</span>
@@ -198,11 +241,11 @@ export function Catalog({
         <div className="lg:grid lg:grid-cols-[250px_1fr] lg:gap-10 lg:pt-6">
           <aside className="hidden lg:block">
             <div className="sticky top-6 max-h-[calc(100dvh-3rem)] overflow-y-auto pb-10 pr-2">
-              <FilterPanel filters={filters} onChange={patch} count={count} sources={SOURCES} realSources={realSources} />
+              <FilterPanel filters={filters} onChange={patch} facets={results.facets} sources={SOURCES} realSources={realSources} />
             </div>
           </aside>
 
-          <main className="pt-4 lg:pt-0">
+          <main className={`pt-4 transition-opacity lg:pt-0 ${fetching ? "opacity-60" : ""}`} aria-busy={fetching}>
             <div className="mb-4 flex items-end justify-between gap-4">
               <p className="text-sm text-piedra">
                 <span className="font-serif text-2xl text-carbon">{exact.length}</span>{" "}
@@ -262,13 +305,14 @@ export function Catalog({
               <div className="mt-10 flex flex-col items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setShown((n) => n + PAGE * 2)}
+                  onClick={() => void loadMore()}
+                  disabled={fetching}
                   className="rounded-full border border-carbon px-6 py-3 text-sm font-medium transition hover:bg-carbon hover:text-lana"
                 >
                   Ver más
                 </button>
                 <p className="text-xs text-piedra">
-                  Mostrando {Math.min(shown, total)} de {total.toLocaleString("es-PE")}
+                  Mostrando {hits.length} de {total.toLocaleString("es-PE")}
                 </p>
               </div>
             )}
@@ -288,7 +332,7 @@ export function Catalog({
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-5 py-5">
-              <FilterPanel filters={filters} onChange={patch} count={count} sources={SOURCES} realSources={realSources} />
+              <FilterPanel filters={filters} onChange={patch} facets={results.facets} sources={SOURCES} realSources={realSources} />
             </div>
             <div className="border-t border-arena-oscura p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               <button

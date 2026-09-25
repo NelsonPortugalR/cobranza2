@@ -36,6 +36,7 @@ export function chipsFromFilters(f: Filters): ActiveChip[] {
   if (f.sizes.length) chips.push({ key: "sizes", label: `Talla ${f.sizes.join(", ")}`, remove: { sizes: [] } });
   if (f.priceMin != null) chips.push({ key: "pmin", label: `Desde ${money(f.priceMin)}`, remove: { priceMin: null } });
   if (f.priceMax != null) chips.push({ key: "pmax", label: `Hasta ${money(f.priceMax)}`, remove: { priceMax: null } });
+  if (f.shipsToPeru) chips.push({ key: "peru", label: "Envía a Perú", remove: { shipsToPeru: false } });
   if (f.inStockOnly) chips.push({ key: "stock", label: "En stock", remove: { inStockOnly: false } });
   for (const s of f.sources) chips.push({ key: `s-${s}`, label: s, remove: { sources: f.sources.filter((x) => x !== s) } });
   if (f.text) chips.push({ key: "text", label: `“${f.text}”`, remove: { text: "" } });

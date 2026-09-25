@@ -23,6 +23,7 @@ const ParsedSchema = z.object({
     priceMax: z.number().nullable(),
     priceCurrency: z.enum(["PEN", "USD"]),
     inStockOnly: z.boolean(),
+    shipsToPeru: z.boolean(),
   }),
   sort: z.enum(["relevancia", "micras_asc", "precio_asc", "precio_desc"]),
   chips: z.array(
@@ -45,6 +46,7 @@ Reglas:
 - Colores comerciales se mapean a familias: oatmeal/hueso/arena → beige; vicuña/fawn → camel; café/chocolate → marron; crudo/marfil → blanco.
 - "natural" referido al color significa sin teñir (dye = "natural"). "tintes naturales" significa teñido.
 - priceMin/priceMax van SIEMPRE en soles. Si el usuario da dólares ("US$", "$", "usd", "dólares"), multiplica por ${USD_PEN} y pon priceCurrency = "USD"; si no, "PEN".
+- shipsToPeru = true si pide que envíen/lleguen a Perú o a una ciudad peruana.
 - sizes: tallas pedidas ("talla M" → ["M"]). Suéter/sweater/jersey = chompa.
 - Solo filtra lo que el usuario pidió; no inventes restricciones. Lo que no encaje en ningún filtro va en "text".
 - chips: una entrada por cada filtro aplicado, con una etiqueta corta en español y el fragmento literal del usuario en "from".`;

@@ -1,14 +1,25 @@
 import { Catalog } from "@/components/Catalog.tsx";
-import { COVERAGE, REAL_SOURCES, SOURCES, compactProducts } from "@/lib/catalog.ts";
+import { ALL_PRODUCTS, COVERAGE, REAL_SOURCES, SOURCES } from "@/lib/catalog.ts";
+import { stripNonComparable } from "@/lib/comparable.ts";
 import { formatDate } from "@/lib/format.ts";
+import { parseQueryLocal } from "@/lib/parseQuery.ts";
+import { search } from "@/lib/search.ts";
+import { EMPTY_FILTERS } from "@/lib/types.ts";
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q } = await searchParams;
+  const query = typeof q === "string" ? q.slice(0, 500) : "";
+  // Primera pintada con la interpretación local; el cliente luego la refina.
+  const parsed = query ? parseQueryLocal(query) : null;
+  const initialResults = parsed
+    ? search(stripNonComparable(parsed.filters).filters, parsed.sort)
+    : search(EMPTY_FILTERS, "relevancia");
   return (
     <>
       <Catalog
-        initialQuery={typeof q === "string" ? q.slice(0, 500) : ""}
-        products={compactProducts()}
+        initialQuery={query}
+        initialResults={initialResults}
+        realCount={ALL_PRODUCTS.filter((p) => !p.demo).length}
         sources={SOURCES}
         realSources={REAL_SOURCES}
       />

@@ -252,18 +252,23 @@ Leímos el catálogo público de **Sol Alpaca** (tienda Shopify, `/products.json
 
 **Decisión de producto (25 sep):** comparamos solo lo que las tiendas publican de forma consistente: tipo de prenda, composición, calidad declarada (baby, super baby, royal), color, tallas con stock, precio (soles o dólares), oferta y envío. Micronaje, raza, región de origen y natural/teñido no se muestran como filtros. Si el usuario los pide, el catálogo avisa: "No filtramos por origen (Puno): las tiendas no lo publican".
 
-**Estado de las fuentes:** todas son tiendas Shopify y usan el mismo conector (`scripts/ingest.ts`). Para activar una fuente basta con permitir su dominio en la red del entorno y correr `npm run ingest`.
+**Estado de las fuentes (25 sep, segunda descarga):** 7 tiendas conectadas por el mismo conector Shopify, **4.160 ítems con stock** (se omiten los agotados).
 
-| Fuente | Dominio a permitir | Estado |
-|---|---|---|
-| Sol Alpaca | `www.solalpaca.com` | ✅ Conectada: 608 productos, 1.038 ítems |
-| **Kuna** (Perú, en soles) | `pe.kunastores.com` | ⏳ Configurada. Kuna dejó `kuna.com.pe` (ahora responde 404) y vende en `kunastores.com` |
-| Alpaca Collections (multimarca, incluye Kuna y otras) | `www.alpacacollections.com` | ⏳ Configurada: una conexión suma varias marcas |
-| PAKA | `www.pakaapparel.com` | ⏳ Configurada |
-| Peruvian Connection | `www.peruvianconnection.com` | ⏳ Configurada (solo productos con alpaca) |
-| Krimson Klover | `krimsonklover.com` | ⏳ Configurada (solo productos con alpaca) |
-| Peruvian Link | `peruvianlink.com` | ⏳ Configurada |
-| Mercado Libre Perú | `api.mercadolibre.com` | 🔑 Requiere registrar una app (OAuth) |
-| Etsy | `openapi.etsy.com` | 🔑 Requiere API key |
+| Fuente | Ítems con stock | Composición | Calidad | Color | Envío a Perú |
+|---|---|---|---|---|---|
+| Sol Alpaca | 924 | 93 % | 94 % | 88 % | Sí (DHL desde Perú) |
+| Kuna (`pe.kunastores.com`, en soles) | 749 | 80 % | 81 % | 100 % | Sí (S/ 15, gratis desde S/ 399) |
+| Alpaca Collections (multimarca) | 988 | 63 % | 51 % | 95 % | Sí (internacional desde US$ 39) |
+| PAKA | 326 | 28 % | 17 % | 91 % | No publica |
+| Peruvian Connection | 269 | 99 % | 71 % | 80 % | No publica |
+| Krimson Klover | 41 | 85 % | 51 % | 95 % | No publica |
+| Peruvian Link | 863 | 86 % | 28 % | 65 % | No publica |
+| Mercado Libre Perú | — | | | | 🔑 Requiere app de desarrollador (OAuth) |
+| Etsy | — | | | | 🔑 Requiere API key |
 
-Las fuentes no conectadas se muestran solo si el usuario activa "Mostrar ejemplos", y cada tarjeta dice **Ejemplo**.
+Aprendizajes de la segunda descarga:
+- **Kuna escribe la composición con palabras** ("elaborado en baby alpaca y seda", "una mezcla de alpaca y lana"). El lector lo entiende: si la frase describe un solo material en español ("elaborado en baby alpaca"), deduce 100 % y lo marca como deducido; si hay dos materiales o dice "mezcla", la marca como mezcla sin porcentaje. En inglés, "crafted with alpaca fiber" no basta para decir 100 %.
+- **Peruvian Connection** escribe "baby alpaca (72%), wool (26%)" y menciona el forro ("Lining: 100% polyester"); el forro se ignora.
+- **Colores en español** (celeste, guinda, rosado, turquesa…) y nombres de fantasía en inglés (willow, pebble, cabernet…) se mapean a familias.
+- **Relevancia intercala tiendas** para que la comparación sea horizontal.
+- La búsqueda corre en el servidor (`/api/search`, ~20 ms). El celular recibe solo la página visible: la portada pesa ~14 KB comprimida.
