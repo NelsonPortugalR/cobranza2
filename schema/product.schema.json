@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vellon.pe/schema/product.json",
+  "title": "Producto de alpaca normalizado",
+  "description": "Un listado público de una tienda o marketplace, normalizado por el agente. Cada campo técnico guarda evidencia (declarado / inferido / desconocido).",
+  "type": "object",
+  "required": ["id", "title", "source", "seller", "productType", "fiber", "color", "origin", "price", "availability", "images", "rawDescription", "evidence", "extraction"],
+  "additionalProperties": false,
+  "$defs": {
+    "quality": { "enum": ["ultrafina", "super_baby", "baby", "fleece", "medium_fleece", "huarizo", "gruesa"] },
+    "region": { "enum": ["puno", "cusco", "arequipa", "huancavelica", "junin", "ayacucho", "apurimac"] },
+    "evidence": {
+      "type": "object",
+      "required": ["provenance", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "provenance": { "enum": ["declarado", "inferido", "desconocido"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "quote": { "type": "string", "description": "Fragmento literal de la fuente que justifica el valor." }
+      }
+    }
+  },
+  "properties": {
+    "id": { "type": "string", "description": "Estable: hash de source.url + variante." },
+    "title": { "type": "string", "description": "Título original, sin reescribir." },
+    "source": {
+      "type": "object",
+      "required": ["site", "url", "method", "retrievedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "site": { "type": "string", "examples": ["Sol Alpaca", "Kuna", "Mercado Libre Perú", "Etsy"] },
+        "url": { "type": "string", "format": "uri" },
+        "method": { "enum": ["api", "feed", "scrape", "manual"] },
+        "retrievedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "seller": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": { "name": { "type": "string" }, "city": { "type": "string" } }
+    },
+    "productType": { "enum": ["chompa", "cardigan", "chal", "poncho", "gorro", "bufanda", "guantes", "fibra", "home"] },
+    "fiber": {
+      "type": "object",
+      "required": ["alpacaPct", "composition", "quality", "micron", "breed"],
+      "additionalProperties": false,
+      "properties": {
+        "alpacaPct": { "type": ["number", "null"], "minimum": 0, "maximum": 100 },
+        "composition": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["material", "pct"],
+            "additionalProperties": false,
+            "properties": { "material": { "type": "string" }, "pct": { "type": "number" } }
+          }
+        },
+        "quality": { "oneOf": [{ "$ref": "#/$defs/quality" }, { "type": "null" }] },
+        "micron": { "type": ["number", "null"], "minimum": 10, "maximum": 40 },
+        "breed": { "enum": ["huacaya", "suri", null] }
+      }
+    },
+    "color": {
+      "type": "object",
+      "required": ["name", "family", "hex", "natural"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string", "description": "Nombre comercial original (p. ej. 'Oatmeal')." },
+        "family": { "enum": ["blanco", "beige", "camel", "marron", "gris", "negro", "azul", "verde", "rojo", "multicolor"] },
+        "hex": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "natural": { "type": ["boolean", "null"], "description": "true = fibra sin teñir." }
+      }
+    },
+    "origin": {
+      "type": "object",
+      "required": ["region"],
+      "additionalProperties": false,
+      "properties": {
+        "region": { "oneOf": [{ "$ref": "#/$defs/region" }, { "type": "null" }] },
+        "detail": { "type": "string", "description": "Texto libre: distrito, cooperativa, 'fibra de X, confección en Y'." }
+      }
+    },
+    "construction": { "enum": ["tejido_a_mano", "tejido_a_maquina", "telar", null] },
+    "weightGrams": { "type": ["number", "null"] },
+    "sizes": { "type": "array", "items": { "type": "string" } },
+    "price": {
+      "type": "object",
+      "required": ["amount", "currency", "amountPen"],
+      "additionalProperties": false,
+      "properties": {
+        "amount": { "type": "number" },
+        "currency": { "enum": ["PEN", "USD"] },
+        "amountPen": { "type": "number", "description": "Normalizado a soles para filtrar y ordenar." }
+      }
+    },
+    "availability": {
+      "type": "object",
+      "required": ["status", "checkedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "status": { "enum": ["en_stock", "pocas_unidades", "agotado", "desconocido"] },
+        "checkedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+    "rawDescription": { "type": "string" },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "quality": { "$ref": "#/$defs/evidence" },
+        "micron": { "$ref": "#/$defs/evidence" },
+        "breed": { "$ref": "#/$defs/evidence" },
+        "natural": { "$ref": "#/$defs/evidence" },
+        "origin": { "$ref": "#/$defs/evidence" },
+        "alpacaPct": { "$ref": "#/$defs/evidence" }
+      }
+    },
+    "extraction": {
+      "type": "object",
+      "required": ["engine", "version", "confidence", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "engine": { "type": "string" },
+        "version": { "type": "string" },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
