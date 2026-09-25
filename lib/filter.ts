@@ -28,6 +28,13 @@ function check<T>(selected: T[], value: T | null | undefined): Verdict {
   return selected.includes(value) ? "pass" : "fail";
 }
 
+/** "unisex" sirve para ambos; sin dato = por confirmar. */
+function genderCheck(p: Product, genders: Filters["genders"]): Verdict {
+  if (genders.length === 0) return "pass";
+  if (!p.gender) return "unknown";
+  return p.gender === "unisex" || genders.includes(p.gender) ? "pass" : "fail";
+}
+
 function sizeCheck(p: Product, sizes: string[]): Verdict {
   if (sizes.length === 0) return "pass";
   if (!p.sizesAvailable) return p.sizes?.some((s) => sizes.includes(s)) ? "unknown" : p.sizes ? "fail" : "unknown";
@@ -38,6 +45,7 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
   if (p.demo && !f.includeDemo) return { verdict: "fail", unknown: [] };
   const checks: [string, Verdict][] = [
     ["size", sizeCheck(p, f.sizes)],
+    ["gender", genderCheck(p, f.genders)],
     ["type", check(f.types, p.productType)],
     ["fiber grade", check(f.qualities, p.fiber.quality)],
     ["breed", check(f.breeds, p.fiber.breed)],
@@ -167,7 +175,8 @@ export function activeFilterCount(f: Filters): number {
     (f.priceMax != null ? 1 : 0) +
     (f.inStockOnly ? 1 : 0) +
 
-    f.sizes.length
+    f.sizes.length +
+    f.genders.length
   );
 }
 
@@ -184,7 +193,7 @@ export function countMatches(products: Product[], f: Filters): { exact: number; 
   return { exact, total };
 }
 
-export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources";
+export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources" | "genders";
 export type FacetCounts = Record<FacetKey, Record<string, { exact: number; total: number }>>;
 
 /** Verdicto de un producto para una sola opción de una faceta. */
@@ -200,6 +209,8 @@ function optionVerdict(p: Product, key: FacetKey, option: string): Verdict {
       return p.color.family == null ? "unknown" : p.color.family === option ? "pass" : "fail";
     case "sizes":
       return sizeCheck(p, [option]);
+    case "genders":
+      return genderCheck(p, [option as "women" | "men"]);
   }
 }
 

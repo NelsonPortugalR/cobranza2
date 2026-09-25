@@ -134,6 +134,17 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
     chips.push({ field: "qualities", label: `≤ ${m} µm`, from: consume(micronMax) });
   }
 
+  const women = rest.match(/\b(women'?s|womens|woman'?s|women|ladies|for her|for women|for my (wife|mom|mother|girlfriend|sister)|de mujer|para mujer|mujer|dama)\b/);
+  const men = rest.match(/\b(men'?s|mens|man'?s|men|for him|for men|for my (husband|dad|father|boyfriend|brother)|de hombre|para hombre|hombre|caballero)\b/);
+  if (women) {
+    f.genders.push("women");
+    chips.push({ field: "genders", label: "Women", from: consume(women) });
+  }
+  if (men) {
+    f.genders.push("men");
+    chips.push({ field: "genders", label: "Men", from: consume(men) });
+  }
+
   for (const [type, re] of TYPE_SYNONYMS) {
     const m = rest.match(re);
     if (m && !f.types.includes(type)) {

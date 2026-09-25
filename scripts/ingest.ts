@@ -107,6 +107,8 @@ const SOURCES: SourceConfig[] = [
     baseUrl: "https://krimsonklover.com",
     currency: "USD",
     alpacaOnly: true,
+    // Marca de ropa de mujer.
+    defaultGender: "women",
     shipping: { summary: "US-based brand; shipping policy not published", toUS: true },
   },
   {
@@ -243,7 +245,8 @@ async function getFx(useCache: boolean): Promise<FxRate> {
       } catch {}
     }
   }
-  if (last) return { ...last, source: last.source === "fallback" ? "fallback" : "last-known" };
+  // Con --cache se reutiliza la tasa guardada tal cual; si falló la descarga en vivo, se marca como "last-known".
+  if (last) return useCache || last.source === "fallback" ? last : { ...last, source: "last-known" };
   return FALLBACK_FX;
 }
 
@@ -289,7 +292,8 @@ async function main() {
         ? normalizeWooProduct(p as WooProduct, { ...src, retrievedAt, fx })
         : normalizeShopifyProduct(p as ShopifyProduct, { ...src, retrievedAt, fx }),
     );
-    const items = all.filter((p) => p.availability.status !== "agotado");
+    // Precios de 0 o 1 son errores o productos de muestra de la tienda.
+    const items = all.filter((p) => p.availability.status !== "agotado" && p.price.amountUsd > 1);
     console.log(`${src.site}: ${raw.length} productos → ${items.length} ítems con stock (${all.length - items.length} agotados omitidos)`);
     catalog.push(...items);
   }

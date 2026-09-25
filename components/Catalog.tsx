@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { activeFilterCount } from "@/lib/filter.ts";
 import type { SearchHit, SearchResponse } from "@/lib/search.ts";
@@ -8,7 +9,6 @@ import { SORT_LABEL, chipsFromFilters } from "@/lib/chips.ts";
 import { stripNonComparable } from "@/lib/comparable.ts";
 import { DEFAULT_FILTERS } from "@/lib/types.ts";
 import type { FxRate } from "@/lib/fx.ts";
-import type { ProductType } from "@/lib/types.ts";
 import type { Filters, ParsedQuery, SortKey } from "@/lib/types.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
 import { FilterPanel } from "./FilterPanel.tsx";
@@ -166,7 +166,7 @@ export function Catalog({
             Peruvian alpaca · {realCount.toLocaleString("en-US")} pieces in stock · {usStoreCount} stores that ship to the US
           </p>
           <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-[1.05] tracking-tight text-carbon sm:text-6xl">
-            Describe the piece. <span className="text-tierra">We read every listing.</span>
+            Peruvian alpaca sweaters, cardigans &amp; scarves, <span className="text-tierra">compared.</span>
           </h1>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-piedra">
             We read the public catalogs of Peru&rsquo;s alpaca makers and turn messy product pages into facts you can
@@ -190,21 +190,14 @@ export function Catalog({
             ))}
           </div>
           <nav aria-label="Shop by category" className="mt-10 grid grid-cols-3 gap-2 sm:grid-cols-6">
-            {CATEGORIES.map(([type, label]) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => {
-                  setQuery("");
-                  setIgnored([]);
-                  setEngine(null);
-                  setFilters({ ...DEFAULT_FILTERS, types: [type] });
-                  resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-                }}
+            {CATEGORIES.map(([slug, label]) => (
+              <Link
+                key={slug}
+                href={`/${slug}`}
                 className="rounded-sm border border-arena-oscura bg-lana/60 px-3 py-3 text-left text-sm text-carbon transition hover:border-tierra/50 hover:bg-white"
               >
                 {label}
-              </button>
+              </Link>
             ))}
           </nav>
         </div>
@@ -303,8 +296,8 @@ export function Catalog({
             )}
 
             <Grid>
-              {visibleExact.map((m) => (
-                <ProductCard key={m.product.id} product={m.product} />
+              {visibleExact.map((m, i) => (
+                <ProductCard key={m.product.id} product={m.product} priority={i < 4} />
               ))}
             </Grid>
 
@@ -374,13 +367,14 @@ export function Catalog({
   );
 }
 
-const CATEGORIES: [ProductType, string][] = [
-  ["chompa", "Sweaters"],
-  ["cardigan", "Cardigans"],
-  ["bufanda", "Scarves"],
-  ["chal", "Shawls & wraps"],
-  ["gorro", "Hats & beanies"],
-  ["guantes", "Gloves"],
+// Enlaces reales (rastreables) a las páginas de colección.
+const CATEGORIES: [string, string][] = [
+  ["alpaca-sweaters", "Sweaters"],
+  ["alpaca-cardigans", "Cardigans"],
+  ["alpaca-scarves", "Scarves"],
+  ["alpaca-shawls-and-wraps", "Shawls & wraps"],
+  ["alpaca-hats-and-beanies", "Hats & beanies"],
+  ["alpaca-gloves-and-mittens", "Gloves"],
 ];
 
 function Grid({ children }: { children: React.ReactNode }) {

@@ -4,18 +4,28 @@ import { AVAILABILITY_LABEL, QUALITY_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy
 import { compositionLabel, formatPen, formatUsd, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "./ProductImage.tsx";
 
-export function ProductCard({ product: p, unknownFields = [] }: { product: Product; unknownFields?: string[] }) {
+export function ProductCard({
+  product: p,
+  unknownFields = [],
+  priority = false,
+}: {
+  product: Product;
+  unknownFields?: string[];
+  /** Primeras tarjetas visibles: la imagen se carga de inmediato (mejor LCP). */
+  priority?: boolean;
+}) {
   const soldOut = p.availability.status === "agotado";
   const price = usdPrice(p);
 
   return (
     <Link
-      href={`/producto/${p.id}`}
+      href={`/products/${p.slug ?? p.id}`}
       className="group flex flex-col overflow-hidden rounded-sm bg-white ring-1 ring-arena-oscura/60 transition hover:ring-tierra/40"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-arena">
         <ProductImage
           product={p}
+          priority={priority}
           className={`h-full w-full transition duration-500 group-hover:scale-[1.03] ${soldOut ? "opacity-60 grayscale-[30%]" : ""}`}
         />
         {p.demo && (
@@ -54,7 +64,7 @@ export function ProductCard({ product: p, unknownFields = [] }: { product: Produ
         </dl>
 
         {p.sizes && p.sizes.length > 0 && !(p.sizes.length === 1 && p.sizes[0] === "Única") && (
-          <div className="flex flex-wrap gap-1" aria-label="Tallas">
+          <div className="flex flex-wrap gap-1" aria-label="Sizes">
             {p.sizes.map((sz) => {
               const known = p.sizesAvailable != null;
               const ok = !known || p.sizesAvailable!.includes(sz);

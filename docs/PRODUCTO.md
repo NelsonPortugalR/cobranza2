@@ -299,3 +299,47 @@ Aprendizajes de la segunda descarga:
 | Portada | Accesos directos a Sweaters, Cardigans, Scarves, Shawls & wraps, Hats & beanies y Gloves; ejemplos de búsqueda en inglés; sección "Makers that ship to the US". |
 
 Tiendas que envían a EE. UU. (4.584 prendas con stock): Sol Alpaca, Kuna USA, Incalpaca, Alpaca Collections, Peruvian Link, PAKA, Peruvian Connection, All Alpaca, Etno Alpaca y Krimson Klover. PAKA y Krimson Klover no publican política de envío, pero son marcas con sede en EE. UU. Qinti no publica política: sus prendas aparecen como "to confirm".
+
+---
+
+## 10. SEO, dominio y descubrimiento por IA (25 sep 2026)
+
+### Nombre y dominio
+
+**Nombre recomendado: Alpaca Atlas.** Es fácil de leer y escribir para un comprador de EE. UU., contiene la palabra clave "alpaca" y transmite la idea de un mapa de tiendas. En una búsqueda no apareció ninguna marca de moda con ese nombre, solo un hilo llamado "Atlas" y una granja. Descartado: "The Alpaca Edit", que choca con un sello musical (*Alpaca Edits*) y con una campaña de la marca Trenery.
+
+**Dominio, por orden de preferencia:** `alpacaatlas.com` → `thealpacaatlas.com` → `alpacaatlas.co`. Desde el entorno de trabajo no se pudo consultar la disponibilidad: hay que verificarla y comprarlo (Netlify Domains o Cloudflare Registrar, unos US$10–12 al año). El nombre y el dominio se cambian con variables de entorno, sin tocar código.
+
+### Qué quedó implementado en el sitio
+
+| Área | Detalle |
+|---|---|
+| Arquitectura de URLs | URLs en inglés: `/products/<slug>` (redirección 301 desde `/producto/<id>`), `/<colección>`, `/brands/<tienda>`, `/guides/<guía>`. |
+| Páginas de colección (SEO programático) | **188 páginas** generadas con los datos: por categoría (`/alpaca-sweaters`), calidad (`/baby-alpaca-sweaters`, `/royal-alpaca`), género (`/womens-alpaca-cardigans`), color (`/gray-alpaca-scarves`), 100 % alpaca, rango de precio (`/alpaca-scarves-under-100`) y ofertas. Solo se crean si hay al menos 8 productos (sin páginas vacías). Cada una tiene H1 propio, texto con datos reales (cantidad, marcas, rango y mediana de precio), enlaces a colecciones relacionadas, 48 productos, tiendas y preguntas frecuentes con datos. |
+| Fichas de producto | Título y descripción únicos, resumen propio en prosa, migas de pan, enlaces a colecciones y a la marca, imagen principal priorizada (LCP). Solo se indexan las de tiendas que envían a EE. UU. |
+| Datos estructurados (schema.org) | `Organization`, `WebSite` (con buscador), `Product` + `Offer` (precio en USD, stock, vendedor, material, color, tallas, público), `CollectionPage` + `ItemList`, `BreadcrumbList`, `FAQPage`, `Article`, `Brand`, `AboutPage`. |
+| Contenido editorial (E-E-A-T) | 4 guías: grados de fibra (tabla NTP 231.301), alpaca vs. cashmere vs. merino, cuidado y lavado, cómo leer la etiqueta. Cada una abre con una respuesta corta (pensada para fragmentos destacados y respuestas de IA) y tiene preguntas frecuentes. Páginas About (metodología, cómo se gana dinero), Terms y Privacy. |
+| Rastreo | `sitemap.xml` (unas 4.700 URLs con imágenes), `robots.txt` que permite explícitamente a los rastreadores de IA (GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, Google-Extended, Applebot-Extended…), `/api/` bloqueado, búsquedas `?q=` con `noindex` para no generar duplicados, URLs canónicas en todas las páginas, página 404 útil. |
+| IA / LLMs | `/llms.txt` (estándar llmstxt.org) con resumen del sitio, datos clave, colecciones con precios, guías y marcas, más un enlace `<link rel="alternate">` desde todas las páginas. |
+| Compartir | Imagen Open Graph generada, etiquetas Twitter/X, manifest e ícono. |
+| Rendimiento y accesibilidad | Páginas estáticas (colecciones, marcas, guías) y fichas en caché de un día (ISR). Imágenes con `srcset`, carga diferida salvo las primeras (prioridad alta para LCP), texto alternativo descriptivo, enlace "Skip to content", una sola H1 por página, `lang="en-US"`. |
+| Fase privada | **Todo el sitio va con `noindex` y `robots.txt` bloqueando todo** hasta activar `SITE_INDEXABLE=true`, para que Google no indexe la versión `netlify.app` antes del lanzamiento. |
+
+### Lista para el lanzamiento público
+
+1. Comprar el dominio y conectarlo en Netlify como **dominio principal** (con `www`). El HTTPS es automático y `vellon-alpaca.netlify.app` redirige solo.
+2. Variables de entorno en Netlify (Site configuration → Environment variables), y volver a desplegar:
+   - `NEXT_PUBLIC_SITE_URL=https://www.alpacaatlas.com`
+   - `SITE_INDEXABLE=true`
+   - `GOOGLE_SITE_VERIFICATION=<código de Search Console>`
+   - `BING_SITE_VERIFICATION=<código de Bing Webmaster Tools>`
+3. Quitar la protección con contraseña del sitio.
+4. **Google Search Console:** verificar el dominio y enviar `https://www.alpacaatlas.com/sitemap.xml`.
+5. **Bing Webmaster Tools:** importar desde Search Console y enviar el sitemap. Bing alimenta a Copilot y es una de las fuentes de búsqueda de ChatGPT.
+6. **Actualización diaria del catálogo** (descarga y nuevo despliegue): el stock y los precios frescos son una señal de calidad, y los datos `Product` deben coincidir con lo que muestra la tienda.
+
+### Qué no depende del código (SEO externo)
+
+- **Enlaces entrantes:** avisar a las marcas (varias podrían enlazar al comparador), guías de regalo en blogs de moda sostenible, respuestas útiles en foros (r/BuyItForLife, r/Sustainable_Fashion) y prensa de nicho.
+- **Contenido continuo:** 1–2 guías al mes (guía de regalos, alpaca para viajar, tallas por marca, entrevistas a talleres).
+- **Expectativa realista:** un dominio nuevo tarda normalmente de 3 a 6 meses en posicionarse para términos competitivos. Nadie puede garantizar el primer puesto; lo que sí está hecho es que el sitio cumpla técnicamente todo lo que Google y los asistentes de IA necesitan para entenderlo y citarlo.

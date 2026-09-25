@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-25T14:17:10.776Z",
-  "items": 6956,
+  "generatedAt": "2026-09-25T15:29:17.089Z",
+  "items": 6785,
   "sources": [
     {
       "site": "Sol Alpaca",
@@ -8,11 +8,11 @@
     },
     {
       "site": "Kuna",
-      "items": 749
+      "items": 694
     },
     {
       "site": "Kuna USA",
-      "items": 641
+      "items": 584
     },
     {
       "site": "Incalpaca",
@@ -24,7 +24,7 @@
     },
     {
       "site": "Alpaca Collections",
-      "items": 988
+      "items": 933
     },
     {
       "site": "PAKA",
@@ -44,7 +44,7 @@
     },
     {
       "site": "Anntarah",
-      "items": 829
+      "items": 828
     },
     {
       "site": "Etno Alpaca",
@@ -52,7 +52,7 @@
     },
     {
       "site": "Qinti",
-      "items": 250
+      "items": 249
     },
     {
       "site": "All Alpaca",
@@ -60,21 +60,21 @@
     },
     {
       "site": "Pure Alpaca",
-      "items": 290
+      "items": 288
     }
   ],
   "fields": [
     {
       "key": "composition",
       "label": "Fiber content (100% or blend)",
-      "count": 5332,
+      "count": 5245,
       "pct": 77
     },
     {
       "key": "quality",
       "label": "Fiber grade (baby, super baby…)",
-      "count": 4648,
-      "pct": 67
+      "count": 4646,
+      "pct": 68
     },
     {
       "key": "micron",
@@ -91,13 +91,13 @@
     {
       "key": "color",
       "label": "Color",
-      "count": 6182,
+      "count": 6012,
       "pct": 89
     },
     {
       "key": "natural",
       "label": "Natural vs. dyed",
-      "count": 3172,
+      "count": 3115,
       "pct": 46
     },
     {
@@ -109,13 +109,13 @@
     {
       "key": "sizes",
       "label": "Sizes in stock",
-      "count": 6666,
+      "count": 6497,
       "pct": 96
     },
     {
       "key": "shipping",
       "label": "Shipping to the US",
-      "count": 4584,
+      "count": 4472,
       "pct": 66
     }
   ]

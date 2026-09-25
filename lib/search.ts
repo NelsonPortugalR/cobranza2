@@ -22,6 +22,7 @@ const FACET_OPTIONS = {
   colorFamilies: COLOR_FAMILIES,
   sizes: [...SIZE_ORDER.slice(1, 7), "Única"],
   sources: SOURCES,
+  genders: ["women", "men"],
 };
 
 /** Lo mínimo que necesita una tarjeta: el catálogo completo nunca viaja al celular. */

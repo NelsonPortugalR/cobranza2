@@ -20,6 +20,7 @@ const ParsedSchema = z.object({
     origins: z.array(z.enum(REGIONS)),
     composition: z.enum(["cualquiera", "100", "mezcla"]),
     sizes: z.array(z.enum(["XXS", "XS", "S", "M", "L", "XL", "XXL", "Única"])),
+    genders: z.array(z.enum(["women", "men"])),
     priceMin: z.number().nullable(),
     priceMax: z.number().nullable(),
     inStockOnly: z.boolean(),
@@ -49,6 +50,7 @@ Rules:
 - Map fashion color names to families: oatmeal/sand/ecru → beige; fawn/tan/cognac → camel; mocha/chocolate → marron; ivory → blanco; charcoal/heather → gris; navy/indigo → azul; burgundy/rust/orange → rojo; lilac/plum → rosa; mustard → amarillo.
 - Prices are always in USD. If the shopper gives soles ("S/", "soles", "PEN"), divide by ${FX.penPerUsd}.
 - shipsToUS is true unless the shopper explicitly says shipping does not matter.
+- genders: ["women"] for women's/ladies/for her, ["men"] for men's/for him; empty if not stated.
 - sizes: requested sizes ("size M", "medium" → ["M"]; "one size" → ["Única"]). Sweater/jumper/pullover = chompa.
 - Only apply what the shopper asked for; do not invent constraints. Anything that fits no filter goes in "text".
 - chips: one entry per applied filter, with a short English label and the shopper's literal words in "from".`;

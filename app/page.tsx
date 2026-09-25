@@ -5,8 +5,24 @@ import { formatDate } from "@/lib/format.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
 import { search } from "@/lib/search.ts";
 import { DEFAULT_FILTERS } from "@/lib/types.ts";
+import type { Metadata } from "next";
+import Link from "next/link";
+import { RichText } from "@/components/RichText.tsx";
+import { getCollection } from "@/lib/seo/collections.ts";
+import { GUIDES } from "@/lib/seo/guides.ts";
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+type Search = { searchParams: Promise<{ q?: string }> };
+
+export async function generateMetadata({ searchParams }: Search): Promise<Metadata> {
+  const { q } = await searchParams;
+  return {
+    alternates: { canonical: "/" },
+    // Las búsquedas (?q=) no se indexan: evitan miles de URLs casi duplicadas.
+    ...(q ? { robots: { index: false, follow: true } } : {}),
+  };
+}
+
+export default async function Home({ searchParams }: Search) {
   const { q } = await searchParams;
   const query = typeof q === "string" ? q.slice(0, 500) : "";
   // Primera pintada con la interpretación local; el cliente luego la refina.
@@ -25,9 +41,54 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ q
         usStoreCount={US_SOURCES.length}
         fx={FX}
       />
+      <PopularCollections />
       <HowItWorks />
       <StoresSection />
     </>
+  );
+}
+
+const POPULAR = [
+  "baby-alpaca-sweaters",
+  "womens-alpaca-sweaters",
+  "mens-alpaca-sweaters",
+  "womens-alpaca-cardigans",
+  "royal-alpaca",
+  "100-percent-alpaca-sweaters",
+  "alpaca-scarves-under-100",
+  "alpaca-on-sale",
+  "alpaca-shawls-and-wraps",
+  "alpaca-hats-and-beanies",
+  "alpaca-coats-and-jackets",
+  "alpaca-throws-and-blankets",
+];
+
+/** Enlaces rastreables a las colecciones más buscadas y a las guías. */
+function PopularCollections() {
+  const cols = POPULAR.map(getCollection).filter((c) => c != null);
+  return (
+    <section className="mx-auto mt-24 max-w-7xl px-4 sm:px-6">
+      <h2 className="font-serif text-3xl tracking-tight">Popular collections</h2>
+      <ul className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+        {cols.map((c) => (
+          <li key={c!.slug}>
+            <Link href={`/${c!.slug}`} className="block rounded-sm border border-arena-oscura bg-white px-4 py-3 text-sm hover:border-tierra/50">
+              {c!.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <h2 className="mt-14 font-serif text-2xl tracking-tight">Before you buy</h2>
+      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+        {GUIDES.map((g) => (
+          <li key={g.slug}>
+            <Link href={`/guides/${g.slug}`} className="text-sm text-tierra underline decoration-tierra/30 underline-offset-2 hover:decoration-tierra">
+              {g.title}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
@@ -36,7 +97,7 @@ function HowItWorks() {
     {
       n: "01",
       title: "We read the makers’ own catalogs",
-      body: "Kuna, Incalpaca, Sol Alpaca, PAKA, Peruvian Connection and more. Only public product data, following each store’s rules for automated reading.",
+      body: "Kuna, Incalpaca, Sol Alpaca, PAKA, Peruvian Connection and more. Only public product data, following each store’s rules for automated reading. See our [methodology](/about).",
     },
     {
       n: "02",
@@ -57,7 +118,9 @@ function HowItWorks() {
           <div key={s.n} className="border-t border-carbon pt-4">
             <p className="font-serif text-sm text-ocre">{s.n}</p>
             <h3 className="mt-2 text-base font-medium">{s.title}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-piedra">{s.body}</p>
+            <p className="mt-2 text-sm leading-relaxed text-piedra">
+              <RichText text={s.body} />
+            </p>
           </div>
         ))}
       </div>

@@ -11,6 +11,8 @@ export interface ActiveChip {
 /** Chips visibles derivados de los filtros actuales (vengan del parser o del panel). */
 export function chipsFromFilters(f: Filters): ActiveChip[] {
   const chips: ActiveChip[] = [];
+  for (const g of f.genders)
+    chips.push({ key: `g-${g}`, label: g === "women" ? "Women" : "Men", remove: { genders: f.genders.filter((x) => x !== g) } });
   for (const t of f.types) chips.push({ key: `t-${t}`, label: TYPE_LABEL[t], remove: { types: f.types.filter((x) => x !== t) } });
 
   if (f.qualities.length) {

@@ -116,7 +116,7 @@ test("US shipping filter", () => {
 
 test("facet counts match applying the filter", () => {
   const base = withDemo(parseQueryLocal("sweater", FX)).filters;
-  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [] });
+  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [] });
   for (const [key, value] of [["qualities", "baby"], ["colorFamilies", "beige"], ["sizes", "M"]] as const) {
     const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");
     assert.deepEqual(counts[key][value], { exact: r.exact.length, total: r.exact.length + r.partial.length }, key);
@@ -127,4 +127,24 @@ test("BCRP exchange-rate response", () => {
   assert.equal(bcrpDate("23.Set.26"), "2026-09-23");
   const fx = parseBcrp({ periods: [{ name: "22.Set.26", values: ["3.39"] }, { name: "23.Set.26", values: ["3.385"] }, { name: "24.Set.26", values: ["n.d."] }] });
   assert.deepEqual(fx, { penPerUsd: 3.385, date: "2026-09-23", source: "BCRP" });
+});
+
+test("women's / men's", () => {
+  const f = parseQueryLocal("women's cardigan in size S", FX).filters;
+  assert.deepEqual(f.genders, ["women"]);
+  assert.deepEqual(f.types, ["cardigan"]);
+  assert.deepEqual(parseQueryLocal("alpaca sweater for my husband", FX).filters.genders, ["men"]);
+  const base = withDemo(parseQueryLocal("sweater", FX)).filters;
+  const w = { ...PRODUCTS[0], gender: "women" as const };
+  const u = { ...PRODUCTS[1], id: "u", gender: "unisex" as const };
+  const m = { ...PRODUCTS[2], id: "m", gender: "men" as const };
+  const r = applyFilters([w, u, m], { ...base, types: [], genders: ["women"] }, "precio_asc");
+  assert.deepEqual(r.exact.map((x) => x.product.id).sort(), [w.id, "u"].sort());
+});
+
+test("slugs are URL-safe and English", async () => {
+  const { slugify } = await import("./slug.ts");
+  assert.equal(slugify("Langui Sweater — Gray Incalpaca"), "langui-sweater-gray-incalpaca");
+  assert.equal(slugify("100% Alpaca Shawls & Wraps"), "100-percent-alpaca-shawls-and-wraps");
+  assert.equal(slugify("Suéter Niño"), "sueter-nino");
 });

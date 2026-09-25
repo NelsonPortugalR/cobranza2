@@ -50,6 +50,8 @@ export type Region =
   | "ayacucho"
   | "apurimac";
 
+export type Gender = "women" | "men" | "unisex";
+
 export type Availability = "en_stock" | "pocas_unidades" | "agotado" | "desconocido";
 
 export type AcquisitionMethod = "api" | "feed" | "scrape" | "manual";
@@ -72,6 +74,10 @@ export interface Product {
   title: string;
   /** Título tal como lo publica la tienda, si se tradujo al inglés. */
   titleOriginal?: string;
+  /** Slug en inglés para la URL pública (/products/<slug>); se asigna al cargar el catálogo. */
+  slug?: string;
+  /** Para quién es la prenda, según etiquetas, título u opciones de la tienda. null = no lo indica. */
+  gender?: Gender | null;
   source: {
     site: string;
     url: string;
@@ -143,6 +149,8 @@ export interface Filters {
   composition: "cualquiera" | "100" | "mezcla";
   /** Tallas pedidas (S, M, L…). Se exige stock en esa talla. */
   sizes: string[];
+  /** Mujer / hombre. "unisex" cumple ambos. */
+  genders: Gender[];
   /** Límites de precio en USD. */
   priceMin: number | null;
   priceMax: number | null;
@@ -178,6 +186,7 @@ export const EMPTY_FILTERS: Filters = {
   origins: [],
   composition: "cualquiera",
   sizes: [],
+  genders: [],
   priceMin: null,
   priceMax: null,
   inStockOnly: false,

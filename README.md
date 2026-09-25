@@ -1,6 +1,6 @@
-# Vellón: Peruvian alpaca, compared
+# Alpaca Atlas: Peruvian alpaca, compared
 
-Portal en inglés para compradores de EE. UU.: busca y compara alpaca peruana de 15 tiendas, con precios en USD y envío a EE. UU. (ver `docs/PRODUCTO.md` §9).
+Portal en inglés para compradores de EE. UU.: busca y compara alpaca peruana de 15 tiendas, con precios en USD y envío a EE. UU. (ver `docs/PRODUCTO.md` §9). SEO, dominio y lista de lanzamiento: §10.
 
 ## Origen: catálogo vertical de alpaca peruana
 

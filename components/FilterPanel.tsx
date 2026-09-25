@@ -13,7 +13,7 @@ import {
 
 import type { FacetCounts, FacetKey } from "@/lib/filter.ts";
 
-type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes";
+type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders";
 
 const SIZES = [...SIZE_ORDER.slice(1, 7), "Única"];
 
@@ -49,6 +49,21 @@ export function FilterPanel({
           />
         </label>
         <p className="mt-1 text-xs text-piedra">Based on each store&rsquo;s published shipping policy.</p>
+      </Section>
+
+      <Section title="For">
+        <div className="grid grid-cols-2 gap-1.5">
+          {(["women", "men"] as const).map((g) => (
+            <Pill
+              key={g}
+              active={filters.genders.includes(g)}
+              onClick={() => toggle("genders", g)}
+              label={g === "women" ? "Women" : "Men"}
+              n={optionCount("genders", g)}
+              block
+            />
+          ))}
+        </div>
       </Section>
 
       <Section title="Category">

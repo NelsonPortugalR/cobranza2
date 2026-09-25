@@ -1,4 +1,4 @@
-import type { Breed, ColorFamily, FieldEvidence, Product, ProductType, Quality } from "../types.ts";
+import type { Breed, ColorFamily, FieldEvidence, Gender, Product, ProductType, Quality } from "../types.ts";
 import { COLOR_SWATCH, SIZE_ORDER } from "../taxonomy.ts";
 import { FALLBACK_FX, toUsd, type FxRate } from "../fx.ts";
 import { englishTitle, translateColor } from "./translate.ts";
@@ -45,6 +45,23 @@ export interface ShopifySource {
   multiBrand?: boolean;
   /** Tienda que también vende otras fibras: descarta productos sin alpaca. */
   alpacaOnly?: boolean;
+  /** Para tiendas que solo venden a un público (p. ej. solo mujer). */
+  defaultGender?: Gender;
+}
+
+const WOMEN = /\b(women'?s?|woman|womens|ladies|lady|mujer(es)?|damas?|femenin[oa]s?|for her)\b/i;
+const MEN = /\b(men'?s?|man|mens|hombres?|caballeros?|masculin[oa]s?|for him)\b/i;
+const UNISEX = /\bunisex\b/i;
+
+/** Para quién es la prenda, según título, tipo, etiquetas y opciones (p. ej. "MUJER" en Kuna). */
+export function inferGender(p: ShopifyProduct, fallback?: Gender): Gender | null {
+  const text = [p.title, p.product_type, p.tags.join(" "), p.options.flatMap((o) => o.values).join(" ")].join(" ");
+  const w = WOMEN.test(text);
+  const m = MEN.test(text);
+  if (UNISEX.test(text) || (w && m)) return "unisex";
+  if (w) return "women";
+  if (m) return "men";
+  return fallback ?? null;
 }
 
 export const ENGINE = { engine: "reglas", version: "shopify-rules-v1" };
@@ -256,7 +273,9 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
 
   const body = htmlToText(p.body_html);
   const text = `${p.title}\n${body}`;
-  if (src.alpacaOnly && !/alpaca|suri|vicu[nñ]a/i.test(`${text} ${p.tags.join(" ")}`)) return [];
+  // Solo alpaca: la vicuña es otra fibra (y otro rango de precio), no entra al catálogo.
+  if (src.alpacaOnly && !/alpaca|suri/i.test(`${text} ${p.tags.join(" ")}`)) return [];
+  if (/vicu[nñ]a/i.test(p.title) && !/alpaca/i.test(p.title)) return [];
   const { composition, quote: compQuote } = extractComposition(text);
   const words = composition.length ? null : extractMaterialsFromWords(text);
   const alpacaPct = composition.length
@@ -277,6 +296,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
   const breed: Breed | null = suri ? "suri" : huacaya ? "huacaya" : null;
   const madeIn = text.match(/made in peru|hecho en per[uú]/i);
   const handmade = text.match(/hand[- ]?(knit|made|woven|loomed)|tejido a mano/i);
+  const gender = inferGender(p, src.defaultGender);
 
   const colorOpt = p.options.find((o) => /^colou?r$/i.test(o.name));
   const sizeOpt = p.options.find((o) => /^(size|talla)$/i.test(o.name));
@@ -328,6 +348,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       },
       seller: { name: src.multiBrand && p.vendor ? p.vendor : src.site },
       productType,
+      gender,
       fiber: {
         alpacaPct,
         composition,
