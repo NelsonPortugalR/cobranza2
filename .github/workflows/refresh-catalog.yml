@@ -1,13 +1,17 @@
 # Actualización diaria del catálogo: descarga los catálogos públicos de las tiendas,
 # convierte precios al tipo de cambio del día y, si hubo cambios, los publica en la rama.
 # Cada push dispara un nuevo despliegue en Netlify.
-# Nota: GitHub solo ejecuta los "schedule" desde la rama por defecto del repositorio.
+# Nota: GitHub solo ejecuta los "schedule" desde la rama por defecto (main), pero el
+# catálogo se actualiza en la rama que Netlify publica en producción (PRODUCTION_BRANCH).
 name: Refresh catalog
 
 on:
   schedule:
     - cron: "17 10 * * *" # 05:17 en Lima
   workflow_dispatch:
+
+env:
+  PRODUCTION_BRANCH: claude/alpaca-catalog-agent-rhyuwz
 
 permissions:
   contents: write
@@ -22,6 +26,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.PRODUCTION_BRANCH }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -44,4 +50,4 @@ jobs:
           git add data/catalog.json data/coverage.json data/fx.json
           if git diff --cached --quiet; then echo "No changes."; exit 0; fi
           git commit -m "Daily catalog refresh $(date -u +%F)"
-          git push
+          git push origin HEAD:${{ env.PRODUCTION_BRANCH }}
