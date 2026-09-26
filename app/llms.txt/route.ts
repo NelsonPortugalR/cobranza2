@@ -13,13 +13,14 @@ export function GET() {
   const lines = [
     `# ${SITE.name}`,
     "",
-    `> ${SITE.name} is an independent comparison site for authentic Peruvian alpaca clothing and accessories. It tracks ${US_PRODUCTS.length.toLocaleString("en-US")} in-stock pieces from ${US_BRANDS.length} stores that ship to the United States (${US_BRANDS.map((b) => b.name).join(", ")}), with fiber content, fiber grade, color, sizes in stock and prices in US dollars. It does not sell anything; every product links to the maker's own store.`,
+    `> ${SITE.name} compares Peruvian alpaca clothing and accessories straight from the makers' stores, and every fact is sourced. It tracks ${US_PRODUCTS.length.toLocaleString("en-US")} in-stock pieces from ${US_BRANDS.length} stores that ship to the United States (${US_BRANDS.map((b) => b.name).join(", ")}), with fiber content, fiber grade, color, sizes in stock, shipping origin and duties, and prices in US dollars. It does not sell or test anything; every product links to the maker's own store.`,
     "",
     "Key facts:",
     "- Data comes from each store's public product catalog and is refreshed regularly; only in-stock items are listed.",
     `- Prices published in Peruvian soles are converted to USD at the official BCRP exchange rate (latest: S/ ${FX.penPerUsd} per USD${FX.date ? `, ${FX.date}` : ""}).`,
-    "- Fiber content and grade are shown as stated by each store; inferred values are labeled as inferred.",
-    "- “Baby alpaca” is a fiber grade (about 23 microns or finer under Peru's NTP 231.301 standard), not fiber from baby animals. “Royal alpaca” is a commercial name for the finest grade, typically around 19 microns or less.",
+    "- Fiber content and grade are shown as stated by each store; inferred values are labeled as inferred, and missing details are shown as not published.",
+    "- Shipping origin, duties on delivery, free-shipping thresholds and return windows come from each store's published policy, quoted with the date it was checked.",
+    "- “Baby alpaca” is a fiber grade, not fiber from baby animals: Peru's 20.1–23 micron class (called “Extrafina” since NTP 231.301:2022). “Royal alpaca” is a brand name for a store's finest lots, not an official class.",
     "",
     "## Collections",
     ...main.map((c) => {

@@ -27,40 +27,44 @@ export const GUIDES: Guide[] = [
     slug: "alpaca-fiber-grades-explained",
     title: "Alpaca Fiber Grades Explained: Royal, Baby and Superfine",
     description:
-      "What “baby alpaca”, “royal alpaca” and “superfine” actually mean, how Peru grades alpaca fiber by micron, and which grade to choose for sweaters, scarves and accessories.",
+      "Will it itch? What “baby alpaca”, “royal alpaca” and “superfine” mean, Peru's official fiber classes (NTP 231.301:2022) and which grade to choose.",
     summary:
-      "Alpaca is graded by fiber diameter, measured in microns (µm): the lower the number, the softer the fiber. “Baby alpaca” does not come from baby animals; under Peru's technical standard NTP 231.301 it is fiber of about 23 microns or finer. “Royal alpaca” is a commercial name brands use for their finest selection, typically around 19 microns or less.",
-    updated: "2026-09-25",
+      "Whether alpaca itches depends on how fine the fiber is, measured in microns (µm): the lower the number, the softer it feels. “Baby alpaca” is a fiber grade, not fiber from baby animals: it is Peru's 20.1–23 micron class, officially renamed “Extrafina” in 2022. “Royal alpaca” is a brand name for a store's finest lots, not an official class.",
+    updated: "2026-09-26",
     sections: [
       {
-        heading: "Why microns matter",
+        heading: "Will it itch? Microns explain it",
         paragraphs: [
-          "A micron is one thousandth of a millimeter. Finer fibers bend more easily against the skin, which is why they feel softer and less prickly. Coarser fibers, roughly above 30 microns, are the ones most people associate with an itchy sweater.",
-          "Alpaca also contains no lanolin, the wax found in sheep's wool, which is one reason many people who find wool uncomfortable are happy wearing alpaca.",
+          "A micron is one thousandth of a millimeter. Thin fibers bend when they touch your skin, so they feel soft. Thick fibers push back, and that is what feels prickly.",
+          "Most people find fibers finer than about 23 microns comfortable next to the skin. Alpaca also has no lanolin, the wax in sheep's wool that some people react to.",
         ],
       },
       {
         heading: "Peru's official alpaca fiber classes",
         paragraphs: [
-          "Peru, home to most of the world's alpacas, classifies alpaca fiber by average diameter under its technical standard NTP 231.301. The classes below are the reference most Peruvian mills work with.",
+          "Peru grades sorted alpaca fiber by average diameter under the technical standard NTP 231.301. The 2022 version renamed the classes and added an ultrafine class. Stores still use the 2014 names, like “baby” and “super baby”.",
+          "Source: [NTP 231.301:2022, INACAL technical committee CTN 055](https://reglamentostecnicos.mincetur.gob.pe/informacion_general/eventos/diciembre_2024/06_Requisitos_calidad_fibra_alpaca.pdf), checked September 26, 2026.",
         ],
         table: {
-          caption: "Alpaca fiber classes by average diameter (NTP 231.301)",
-          head: ["Class", "Average diameter", "Typical use"],
+          caption: "Alpaca fiber classes by average diameter (NTP 231.301:2022, with the 2014 names)",
+          head: ["Class (2022)", "Average diameter", "Name in 2014", "Typical use"],
           rows: [
-            ["Alpaca Baby", "≤ 23 µm", "Sweaters, scarves, anything worn next to the skin"],
-            ["Alpaca Fleece", "23.1 – 26.5 µm", "Outer layers, blankets, heavier knits"],
-            ["Alpaca Medium Fleece", "26.6 – 29 µm", "Throws, outerwear"],
-            ["Alpaca Huarizo", "29.1 – 31.5 µm", "Rugs, sturdy textiles"],
-            ["Alpaca Gruesa (coarse)", "> 31.5 µm", "Industrial and home textiles"],
+            ["Ultrafina", "≤ 18 µm", "—", "The finest knits"],
+            ["Superfina", "18.1 – 20 µm", "Super Baby", "Next-to-skin knits"],
+            ["Extrafina", "20.1 – 23 µm", "Baby", "Sweaters, scarves, anything worn next to the skin"],
+            ["Fina", "23.1 – 26.5 µm", "Fleece", "Outer layers, blankets, heavier knits"],
+            ["Semifina", "26.6 – 29 µm", "Medium Fleece", "Throws, outerwear"],
+            ["Semigruesa", "29.1 – 31.5 µm", "Huarizo", "Rugs, sturdy textiles"],
+            ["Gruesa", "> 31.5 µm", "Gruesa", "Industrial and home textiles"],
           ],
         },
       },
       {
-        heading: "Commercial names: royal, superfine, super baby",
+        heading: "Brand names: royal and imperial",
         paragraphs: [
-          "Brands also use their own names for their best lots. **Royal alpaca** is usually the finest, often described as around 19 microns or less; **super baby** or **superfine** typically sits around 20 microns. These are marketing grades, not official classes, so each brand defines them slightly differently.",
-          "On this site we show the grade exactly as each store states it, and we never invent a micron count a store hasn't published. You can browse [royal alpaca](/royal-alpaca) or [baby alpaca](/baby-alpaca) pieces across brands.",
+          "**Royal alpaca** and **imperial alpaca** are names stores give to their finest lots. They are not official classes, so each store decides what they mean. Several stores describe royal alpaca as under 19 microns.",
+          "**Super baby** and **baby** are the 2014 official names. Today they are called Superfina and Extrafina.",
+          "We show the grade exactly as each store names it, and we never add a micron count a store hasn't published. Browse [royal alpaca](/royal-alpaca) or [baby alpaca](/baby-alpaca) across brands.",
         ],
       },
       {
@@ -69,23 +73,27 @@ export const GUIDES: Guide[] = [
         bullets: [
           "**Next to the skin** (sweaters, scarves, turtlenecks): baby alpaca or finer. See [baby alpaca sweaters](/baby-alpaca-sweaters).",
           "**Maximum softness or a special gift**: royal alpaca, usually the priciest grade.",
-          "**Outer layers and throws**: blends and fleece-grade alpaca are warm, durable and better value.",
-          "**Blends**: silk adds sheen and drape, wool adds structure, nylon adds durability (common in socks).",
+          "**Outer layers and throws**: blends and coarser grades are warm, durable and better value.",
+          "**Check the percentage too**: a “baby alpaca” sweater with 37% alpaca is mostly other fibers. Cards on this site show the alpaca share next to the grade.",
         ],
       },
     ],
     faq: [
       {
         q: "Is baby alpaca made from baby alpacas?",
-        a: "No. “Baby alpaca” is a fiber grade, not the age of the animal. It refers to fiber of about 23 microns or finer, selected from adult alpacas.",
+        a: "No. “Baby alpaca” is a fiber grade, not the age of the animal. It is fiber of 20.1 to 23 microns, sorted from adult alpacas. Since 2022, Peru's standard calls this class “Extrafina”.",
       },
       {
         q: "What is the difference between royal alpaca and baby alpaca?",
-        a: "Both are fine grades, but royal alpaca is the finer, rarer selection (typically around 19 microns or less), while baby alpaca goes up to about 23 microns. Royal alpaca usually costs more.",
+        a: "Baby alpaca is an official class (20.1–23 microns). Royal alpaca is a brand name for a store's finest lots; several stores describe it as under 19 microns. Royal alpaca usually costs more.",
       },
       {
         q: "Is alpaca itchy?",
-        a: "Fine alpaca grades such as baby and royal are generally not itchy for most people. Itchiness is mostly caused by coarse fibers (above roughly 30 microns), and alpaca contains no lanolin.",
+        a: "Fine grades such as baby and royal are usually not itchy for most people. Itch comes mostly from coarse fibers, above roughly 30 microns. Alpaca also has no lanolin. Check the percentage as well: a blend can include coarser fibers.",
+      },
+      {
+        q: "Is super baby alpaca an official grade?",
+        a: "It was: NTP 231.301:2014 named the 18.1–20 micron class “Super Baby”. The 2022 version calls it “Superfina”.",
       },
     ],
     related: ["baby-alpaca", "royal-alpaca", "baby-alpaca-sweaters", "alpaca-scarves"],
@@ -190,12 +198,13 @@ export const GUIDES: Guide[] = [
       "What fiber content, “alpaca blend”, “baby alpaca” and “made in Peru” mean on a product page, and the details worth checking before you buy alpaca online.",
     summary:
       "Check three things: the fiber content (percent of alpaca and what it's blended with), the grade (baby or royal alpaca for next-to-skin pieces) and whether your size is actually in stock. “Alpaca blend” can mean anything from 20% to 90% alpaca, so the percentage matters more than the name.",
-    updated: "2026-09-25",
+    updated: "2026-09-26",
     sections: [
       {
         heading: "Fiber content first",
         paragraphs: [
-          "A piece labeled “alpaca” may be a blend. Look for the exact percentages, such as “70% baby alpaca, 30% silk”. We show the fiber content exactly as each store publishes it, and when a store doesn't give percentages we say so. Browse only [100% alpaca sweaters](/100-percent-alpaca-sweaters) if you want pure alpaca.",
+          "Is it really alpaca, or a blend? Look for exact percentages, such as “70% baby alpaca, 30% silk”. A piece called “baby alpaca” can still be mostly other fibers.",
+          "We show the fiber content exactly as each store publishes it. When a store gives no percentages, or only part of them, we say so. Browse [100% alpaca sweaters](/100-percent-alpaca-sweaters), or use the **No synthetics** filter to skip acrylic and polyester.",
         ],
       },
       {
@@ -204,25 +213,44 @@ export const GUIDES: Guide[] = [
         bullets: [
           "**Alpaca + silk**: more sheen and drape, common in wraps and scarves.",
           "**Alpaca + wool or merino**: more structure and bounce, common in coats and heavier knits.",
-          "**Alpaca + nylon**: durability, common in socks and gloves.",
+          "**Alpaca + nylon (also called polyamide)**: durability. Normal in socks and gloves.",
+          "**Alpaca + acrylic**: cheaper and lighter, but warms less and can pill. “Microfiber” and “dralon” on a label usually mean acrylic.",
           "**Alpaca + cotton**: lighter, for transitional seasons.",
+        ],
+      },
+      {
+        heading: "Will you pay anything on delivery?",
+        paragraphs: [
+          "A package shipped from Peru can be charged import duties or fees when it arrives, unless the store collects them at checkout. Some stores say so (“duties included”, or “DDP”); others say duties are the buyer's responsibility.",
+          "Each product page shows where the package ships from and what the store says about duties, with a quote and the date we checked. Use the **No fees on delivery** filter to see only pieces that ship from the US or have duties paid at checkout.",
+        ],
+      },
+      {
+        heading: "Seals and certifications",
+        paragraphs: [
+          "Some Peruvian makers label pieces “AIA-certified”. The AIA (International Alpaca Association) is Peru's alpaca industry association. We show that label only when the store states it, with its words, and we can't verify what each certification covers.",
+          "A store appearing in the AIA's member list does not mean every piece carries a seal.",
         ],
       },
       {
         heading: "Sizes, prices and shipping",
         paragraphs: [
-          "Peruvian brands often sell in soles; we convert to US dollars at the official exchange rate of the day and keep the original price for reference. Your card issuer may use a slightly different rate. Shipping and import duties vary by store: some ship from the US, others from Peru with duties included. Each product page shows the store's published shipping policy.",
+          "Peruvian brands often sell in soles; we convert to US dollars at the official exchange rate of the day and keep the original price for reference. Your card issuer may use a slightly different rate. Check that your size is in stock: we show stock per size when the store publishes it.",
         ],
       },
     ],
     faq: [
       {
         q: "How can I tell if alpaca is real?",
-        a: "Buy from established makers that publish the fiber content, and look for exact percentages. Very low prices for “100% baby alpaca” are a warning sign.",
+        a: "Buy from makers that publish the fiber content with exact percentages. “100% alpaca” stated by the store is stronger than a description that only says “made of alpaca”. Very low prices for “100% baby alpaca” are worth a question to the store.",
       },
       {
         q: "What does “alpaca blend” mean?",
-        a: "It means alpaca is mixed with another fiber. The alpaca share can vary widely, so always check the percentage on the label.",
+        a: "Alpaca is mixed with another fiber. The alpaca share can be anything from under 20% to over 90%, so check the percentage and whether the rest is acrylic or polyester.",
+      },
+      {
+        q: "Will I pay customs on a package from Peru?",
+        a: "It depends on the store. Some collect duties at checkout (“duties included” or “DDP”), so nothing is due on delivery. Others say import duties are the buyer's responsibility. Each product page quotes the store's policy; filter by “No fees on delivery” to avoid surprises.",
       },
     ],
     related: ["100-percent-alpaca-sweaters", "baby-alpaca", "alpaca-on-sale"],

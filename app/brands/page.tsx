@@ -19,7 +19,7 @@ export default function BrandsPage() {
       <Breadcrumbs items={[{ name: "Home", path: "/" }, { name: "Brands", path: "/brands" }]} />
       <h1 className="font-serif text-4xl tracking-tight sm:text-5xl">Peruvian alpaca brands that ship to the US</h1>
       <p className="mt-4 max-w-3xl text-[15px] leading-relaxed text-piedra">
-        We compare {US_BRANDS.length} stores selling authentic Peruvian alpaca to US shoppers, from large Arequipa-based makers to
+        We compare {US_BRANDS.length} stores selling Peruvian alpaca to US shoppers, from large Arequipa-based makers to
         US-based brands knitting in Peru. Counts and prices update with every catalog refresh; shipping details come from each
         store&rsquo;s published policy.
       </p>

@@ -10,7 +10,7 @@ export const SITE = {
   url: (process.env.NEXT_PUBLIC_SITE_URL ?? "https://vellon-alpaca.netlify.app").replace(/\/$/, ""),
   tagline: "Peruvian alpaca, compared",
   description:
-    "Compare authentic Peruvian alpaca sweaters, cardigans, scarves and accessories from Peru's top makers: fiber content, sizes in stock and USD prices.",
+    "Peruvian alpaca sweaters, cardigans, scarves and accessories compared straight from the makers' stores: fiber content, sizes, shipping and USD prices, all sourced.",
   /** Hasta que no se active explícitamente, ningún buscador indexa el sitio (fase privada). */
   indexable: process.env.SITE_INDEXABLE === "true",
   locale: "en_US",

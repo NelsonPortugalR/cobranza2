@@ -90,8 +90,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div>
               <p className="font-serif text-lg text-carbon">{SITE.name}</p>
               <p className="mt-2 text-xs leading-relaxed text-piedra">
-                An independent comparison site for authentic Peruvian alpaca. We don&rsquo;t sell anything: every product links to
-                the maker&rsquo;s own store. Prices in soles are converted to USD at the day&rsquo;s official rate.
+                Peruvian alpaca, compared straight from the makers&rsquo; stores. Every fact is sourced. We don&rsquo;t sell anything:
+                every product links to the maker&rsquo;s own store. Prices in soles are converted to USD at the day&rsquo;s official rate.
               </p>
             </div>
             <FooterList title="Shop" links={CATEGORY_COLLECTIONS.slice(0, 8).map((c) => ({ href: `/${c.slug}`, label: c.name }))} />
