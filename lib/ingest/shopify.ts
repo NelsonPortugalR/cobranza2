@@ -40,6 +40,8 @@ export interface ShopifySource {
   baseUrl: string;
   currency: "USD" | "PEN";
   shipping?: Product["shipping"];
+  /** Tiendas que etiquetan con "alpaca" productos que no lo son (venta cruzada): sus etiquetas no cuentan. */
+  ignoreAlpacaTags?: boolean;
   /** Política curada (data/policies.json); si existe, manda sobre `shipping`. */
   policy?: StorePolicy;
   retrievedAt: string;
@@ -94,7 +96,8 @@ const TYPE_RULES: [ProductType, RegExp][] = [
   ["bufanda", /\b(scarf|scarves|scarfs|bufandas?|chalinas?|pa[nñ]uelos?|cuelleras?|neck ?warmer|snood|cowl|tubo)\b/i],
   ["gorro", /\b(beanies?|hats?|chullos?|bucket|berets?|headbands?|gorros?|sombreros?|balaclava|vinchas?)\b/i],
   ["guantes", /\b(gloves?|mittens?|mitts|glittens?|guantes|mitones)\b/i],
-  ["medias", /\b(socks?|medias?|calcetines|legwarmers?|leg warmers?|calentadores)\b/i],
+  // "media" en singular no: "Media Luna" es un bolso o un llavero, no calcetines.
+  ["medias", /\b(socks?|medias|calcetines|legwarmers?|leg warmers?|calentadores)\b/i],
   ["fibra", /\b(ovillos?|hilos?|madejas?|yarns?|skeins?|roving)\b/i],
   ["home", /\b(throws?|blankets?|cushions?|pillows?|mantas?|plaids?|coj[ií]n(es)?|frazadas?)\b/i],
   ["chompa", /\b(sweaters?|pullovers?|jumpers?|turtlenecks?|crew ?necks?|chompas?|su[eé]ter(es)?|jerseys?|troyer|tops?|polos?|hoodies?)\b/i],
@@ -120,7 +123,9 @@ const PCT_AFTER = new RegExp(MATERIAL + String.raw`\s*[:(]?\s*(\d{1,3}(?:[.,]\d+
 // El forro no es la prenda: "Lining: 100% polyester" / "Forro: 100% poliéster".
 const LINING = /\b(lining|lined with|forro|forrad[oa])\b[^.\n]*/gi;
 
-const isAlpaca = (m: string) => /alpaca|suri/i.test(m);
+// Con límites de palabra: "ensuring" contiene "suri" y dejaba pasar bolsos y joyas.
+const ALPACA_WORD = /\balpacas?\b|\bsuri\b/i;
+const isAlpaca = (m: string) => ALPACA_WORD.test(m);
 
 function titleCase(s: string) {
   return s.toLowerCase().replace(/\s+/g, " ").replace(/(^|[\s(/-])(\S)/g, (_, sep: string, c: string) => sep + c.toUpperCase());
@@ -286,7 +291,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
   const body = htmlToText(p.body_html);
   const text = `${p.title}\n${body}`;
   // Solo alpaca: la vicuña es otra fibra (y otro rango de precio), no entra al catálogo.
-  if (src.alpacaOnly && !/alpaca|suri/i.test(`${text} ${p.tags.join(" ")}`)) return [];
+  if (src.alpacaOnly && !ALPACA_WORD.test(`${text} ${src.ignoreAlpacaTags ? "" : p.tags.join(" ")}`)) return [];
   if (/vicu[nñ]a/i.test(p.title) && !/alpaca/i.test(p.title)) return [];
   const { composition, quote: compQuote } = extractComposition(text);
   const words = composition.length ? null : extractMaterialsFromWords(text);

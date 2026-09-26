@@ -75,6 +75,8 @@ const SOURCES: SourceConfig[] = [
   },
   {
     key: "alpacacollections",
+    // Alpaca Collections etiqueta como alpaca prendas de algodón orgánico y de llama.
+    ignoreAlpacaTags: true,
     kind: "shopify",
     site: "Alpaca Collections",
     baseUrl: "https://www.alpacacollections.com",
@@ -141,6 +143,8 @@ const SOURCES: SourceConfig[] = [
   },
   {
     key: "qinti",
+    // Qinti etiqueta bolsos y joyas con "Baby Alpaca Scarves" (venta cruzada).
+    ignoreAlpacaTags: true,
     kind: "shopify",
     site: "Qinti",
     baseUrl: "https://www.qintiperu.com",

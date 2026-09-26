@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-09-26T13:33:16.501Z",
-  "items": 6772,
+  "generatedAt": "2026-09-26T13:47:56.700Z",
+  "items": 6565,
   "sources": [
     {
       "site": "Sol Alpaca",
@@ -12,7 +12,7 @@
     },
     {
       "site": "Kuna USA",
-      "items": 583
+      "items": 579
     },
     {
       "site": "Incalpaca",
@@ -24,7 +24,7 @@
     },
     {
       "site": "Alpaca Collections",
-      "items": 933
+      "items": 770
     },
     {
       "site": "PAKA",
@@ -32,7 +32,7 @@
     },
     {
       "site": "Peruvian Connection",
-      "items": 269
+      "items": 267
     },
     {
       "site": "Krimson Klover",
@@ -52,7 +52,7 @@
     },
     {
       "site": "Qinti",
-      "items": 249
+      "items": 211
     },
     {
       "site": "All Alpaca",
@@ -67,14 +67,14 @@
     {
       "key": "composition",
       "label": "Fiber content (100% or blend)",
-      "count": 5337,
-      "pct": 79
+      "count": 5259,
+      "pct": 80
     },
     {
       "key": "quality",
       "label": "Fiber grade (baby, super baby…)",
       "count": 4662,
-      "pct": 69
+      "pct": 71
     },
     {
       "key": "micron",
@@ -91,13 +91,13 @@
     {
       "key": "color",
       "label": "Color",
-      "count": 6000,
+      "count": 5811,
       "pct": 89
     },
     {
       "key": "natural",
       "label": "Natural vs. dyed",
-      "count": 3115,
+      "count": 3004,
       "pct": 46
     },
     {
@@ -109,14 +109,14 @@
     {
       "key": "sizes",
       "label": "Sizes in stock",
-      "count": 6484,
+      "count": 6277,
       "pct": 96
     },
     {
       "key": "shipping",
       "label": "Shipping to the US",
-      "count": 4738,
-      "pct": 70
+      "count": 4531,
+      "pct": 69
     }
   ]
 }

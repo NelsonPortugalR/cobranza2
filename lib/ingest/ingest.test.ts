@@ -263,3 +263,19 @@ test("devoluciones: cada tienda tiene todos los campos, con cita, 'conflicting' 
     }
   }
 });
+
+test("solo alpaca: 'ensuring' no es suri, y 'Media Luna' no es calcetín (casos reales de Qinti e Incalpaca)", () => {
+  const base: ShopifyProduct = {
+    id: 1, title: "Curva Crossbody Handbag - Navy/Red Multi.", handle: "curva", product_type: "Handbag", vendor: "Qinti", tags: [],
+    body_html: "<p>Crafted from premium mercerized Peruvian Pima cotton and finished with genuine leather trim, crafted in Peru, ensuring that every design is unique.</p>",
+    options: [{ name: "Title", position: 1, values: ["Default Title"] }],
+    variants: [{ id: 11, title: "Default Title", option1: "Default Title", option2: null, option3: null, price: "195.00", compare_at_price: null, available: true }],
+    images: [],
+  } as unknown as ShopifyProduct;
+  const src = { site: "Qinti", baseUrl: "https://www.qintiperu.com", currency: "USD" as const, retrievedAt: "2026-09-26T00:00:00Z", alpacaOnly: true };
+  assert.equal(normalizeShopifyProduct(base, src).length, 0, "un bolso de algodón no entra");
+  const scarf = { ...base, title: "Suri Alpaca Scarf", body_html: "<p>Materials: 100% Baby Alpaca</p>" } as ShopifyProduct;
+  assert.equal(normalizeShopifyProduct(scarf, src).length, 1);
+  assert.notEqual(inferType({ ...base, title: "LLAVERO MEDIA LUNA | MARRÓN", product_type: "" } as ShopifyProduct), "medias");
+  assert.equal(inferType({ ...base, title: "Medias de alpaca", product_type: "" } as ShopifyProduct), "medias");
+});
