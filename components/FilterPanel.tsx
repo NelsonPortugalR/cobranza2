@@ -16,7 +16,7 @@ import {
 import type { FacetCounts, FacetKey } from "@/lib/filter.ts";
 import { ALPACA_RANGES, ALPACA_RANGE_LABEL } from "@/lib/fiber.ts";
 
-type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders" | "alpacaRanges";
+type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders" | "alpacaRanges" | "shipsFrom";
 
 const SIZES = [...SIZE_ORDER.slice(1, 7), "Única"];
 
@@ -41,17 +41,30 @@ export function FilterPanel({
 
   return (
     <div className="space-y-7 text-sm">
-      <Section title="Shipping">
-        <label className="flex cursor-pointer items-center justify-between gap-3">
-          <span>Ships to the US</span>
+      <Section title="Shipping to the US" hint="From each store's published policy. Every store here ships to the US.">
+        <ul className="space-y-0.5">
+          {(["US", "Peru"] as const).map((s) => (
+            <CheckRow
+              key={s}
+              checked={filters.shipsFrom.includes(s)}
+              onChange={() => toggle("shipsFrom", s)}
+              label={`Ships from ${s === "US" ? "the US" : "Peru"}`}
+              n={optionCount("shipsFrom", s)}
+            />
+          ))}
+        </ul>
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 border-t border-arena-oscura/60 pt-3">
+          <span>
+            No fees on delivery
+            <span className="block text-xs text-piedra">Ships from the US, or duties are paid at checkout</span>
+          </span>
           <input
             type="checkbox"
             className="h-4 w-4 accent-tierra"
-            checked={filters.shipsToUS}
-            onChange={(e) => onChange({ shipsToUS: e.target.checked })}
+            checked={filters.noFeesOnDelivery}
+            onChange={(e) => onChange({ noFeesOnDelivery: e.target.checked })}
           />
         </label>
-        <p className="mt-1 text-xs text-piedra">Based on each store&rsquo;s published shipping policy.</p>
       </Section>
 
       <Section title="For">

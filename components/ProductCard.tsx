@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types.ts";
 import { AVAILABILITY_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
-import { compositionLabel, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
+import { compositionLabel, formatPen, formatUsd, gradeWithShare, shippingLine, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "./ProductImage.tsx";
 
 export function ProductCard({
@@ -88,6 +88,8 @@ export function ProductCard({
             The store doesn&rsquo;t list {unknownFields.join(", ")}. Check before buying.
           </p>
         )}
+
+        <p className="text-[11px] text-piedra">{shippingLine(p)}</p>
 
         <div className="mt-auto flex flex-wrap items-baseline justify-between gap-x-2 border-t border-arena pt-3">
           <span className="flex items-baseline gap-1.5">

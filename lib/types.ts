@@ -1,4 +1,5 @@
 import type { AlpacaRange, CompositionStatus, FiberFamily } from "./fiber.ts";
+import type { FeesOnDelivery, ShipsFrom } from "./policies.ts";
 // Modelo de datos normalizado. Ver schema/product.schema.json para la versión JSON Schema.
 
 export type ProductType =
@@ -137,6 +138,18 @@ export interface Product {
     days?: string;
     /** true = la tienda envía a EE. UU.; null = no lo publica. */
     toUS: boolean | null;
+    /** Desde dónde sale el paquete, según la política de la tienda (data/policies.json). */
+    shipsFrom?: ShipsFrom;
+    /** Si el comprador en EE. UU. puede pagar aranceles al recibir. */
+    feesOnDelivery?: FeesOnDelivery;
+    freeShippingOverUsd?: number | null;
+    deliveryDays?: { min: number; max: number } | null;
+    returnsDays?: number | null;
+    policyUrl?: string;
+    returnsUrl?: string;
+    /** Fecha en que se revisó la política. */
+    checkedOn?: string;
+    evidence?: Partial<Record<"shipsFrom" | "feesOnDelivery" | "freeShipping" | "deliveryDays" | "returns", { provenance: "stated" | "inferred"; quote: string }>>;
   };
   availability: { status: Availability; checkedAt: string };
   images: string[];
@@ -176,6 +189,10 @@ export interface Filters {
   inStockOnly: boolean;
   /** Solo tiendas que envían a EE. UU. (activo por defecto: público objetivo). */
   shipsToUS: boolean;
+  /** Desde dónde sale el paquete (vacío = cualquiera). */
+  shipsFrom: ("US" | "Peru")[];
+  /** Sin aranceles al recibir en EE. UU. */
+  noFeesOnDelivery: boolean;
   sources: string[];
   /** Mostrar también productos de ejemplo de tiendas aún no conectadas. */
   includeDemo: boolean;
@@ -211,6 +228,8 @@ export const EMPTY_FILTERS: Filters = {
   priceMax: null,
   inStockOnly: false,
   shipsToUS: false,
+  shipsFrom: [],
+  noFeesOnDelivery: false,
   sources: [],
   includeDemo: false,
 };

@@ -30,6 +30,23 @@ export function compositionLabel(p: Product): string | null {
   return listed;
 }
 
+/** Línea corta de envío para tarjetas: desde dónde sale y si hay aranceles al recibir. */
+export function shippingLine(p: Product): string {
+  const s = p.shipping;
+  const from = s?.shipsFrom === "US" ? "Ships from the US" : s?.shipsFrom === "Peru" ? "Ships from Peru" : "Ships from: not stated";
+  const fees =
+    s?.shipsFrom === "US"
+      ? null
+      : s?.feesOnDelivery === "none"
+        ? "duties included"
+        : s?.feesOnDelivery === "may_apply"
+          ? "duties may apply"
+          : s?.shipsFrom === "Peru"
+            ? "duties not stated"
+            : null;
+  return [from, fees].filter(Boolean).join(" · ");
+}
+
 /** Explicación corta del estado de la composición, para la ficha. */
 export function compositionNote(p: Product): string | undefined {
   const total = Math.round(p.fiber.composition.reduce((a, c) => a + c.pct, 0));

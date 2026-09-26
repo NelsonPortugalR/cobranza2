@@ -36,6 +36,13 @@ function genderCheck(p: Product, genders: Filters["genders"]): Verdict {
   return p.gender === "unisex" || genders.includes(p.gender) ? "pass" : "fail";
 }
 
+function shipsFromCheck(p: Product, from: Filters["shipsFrom"]): Verdict {
+  if (from.length === 0) return "pass";
+  const v = p.shipping?.shipsFrom;
+  if (!v || v === "not_published") return "unknown";
+  return from.includes(v) ? "pass" : "fail";
+}
+
 function sizeCheck(p: Product, sizes: string[]): Verdict {
   if (sizes.length === 0) return "pass";
   if (!p.sizesAvailable) return p.sizes?.some((s) => sizes.includes(s)) ? "unknown" : p.sizes ? "fail" : "unknown";
@@ -77,6 +84,17 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             : "pass",
     ],
     ["US shipping", !f.shipsToUS ? "pass" : p.shipping?.toUS == null ? "unknown" : p.shipping.toUS ? "pass" : "fail"],
+    ["ships from", shipsFromCheck(p, f.shipsFrom)],
+    [
+      "fees on delivery",
+      !f.noFeesOnDelivery
+        ? "pass"
+        : p.shipping?.feesOnDelivery === "none"
+          ? "pass"
+          : p.shipping?.feesOnDelivery === "may_apply"
+            ? "fail"
+            : "unknown",
+    ],
     ["text", textMatch(p, f.text)],
   ];
   if (checks.some(([, v]) => v === "fail")) return { verdict: "fail", unknown: [] };
@@ -167,6 +185,8 @@ export function activeFilterCount(f: Filters): number {
     (f.dye !== "cualquiera" ? 1 : 0) +
     (f.alpacaRanges.length ? 1 : 0) +
     (f.noSynthetics ? 1 : 0) +
+    f.shipsFrom.length +
+    (f.noFeesOnDelivery ? 1 : 0) +
     (f.priceMin != null ? 1 : 0) +
     (f.priceMax != null ? 1 : 0) +
     (f.inStockOnly ? 1 : 0) +
@@ -189,7 +209,7 @@ export function countMatches(products: Product[], f: Filters): { exact: number; 
   return { exact, total };
 }
 
-export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources" | "genders" | "alpacaRanges";
+export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources" | "genders" | "alpacaRanges" | "shipsFrom";
 export type FacetCounts = Record<FacetKey, Record<string, { exact: number; total: number }>>;
 
 /** Verdicto de un producto para una sola opción de una faceta. */
@@ -209,6 +229,8 @@ function optionVerdict(p: Product, key: FacetKey, option: string): Verdict {
       return genderCheck(p, [option as "women" | "men"]);
     case "alpacaRanges":
       return alpacaRangeVerdict(p, option as AlpacaRange);
+    case "shipsFrom":
+      return shipsFromCheck(p, [option as "US" | "Peru"]);
   }
 }
 

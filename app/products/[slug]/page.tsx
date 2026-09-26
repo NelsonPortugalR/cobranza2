@@ -253,6 +253,8 @@ export default async function ProductPage({ params }: Params) {
             </dl>
           </section>
 
+          {p.shipping?.checkedOn && <ShippingSection s={p.shipping} site={p.source.site} />}
+
           <section className="mt-10">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">
               From the store{p.titleOriginal ? " (in Spanish)" : ""}
@@ -366,6 +368,68 @@ export default async function ProductPage({ params }: Params) {
         </div>
       </div>
     </div>
+  );
+}
+
+const FEES_TEXT = {
+  none: "No: duties are paid at checkout, or it ships within the US",
+  may_apply: "May apply: the store says import duties are not included",
+  not_published: "Not published by the store",
+} as const;
+
+/** Envío y devoluciones de la política de la tienda, con cita, fuente y fecha. */
+function ShippingSection({ s, site }: { s: NonNullable<Product["shipping"]>; site: string }) {
+  const ev = s.evidence ?? {};
+  const rows: { label: string; value: string | null; hint?: string; e?: { provenance: "stated" | "inferred"; quote: string } }[] = [
+    {
+      label: "Ships from",
+      value: s.shipsFrom === "US" ? "United States" : s.shipsFrom === "Peru" ? "Peru" : null,
+      e: ev.shipsFrom,
+    },
+    {
+      label: "Fees on delivery",
+      value: FEES_TEXT[s.feesOnDelivery ?? "not_published"],
+      hint: "Customs duties or fees a carrier can collect when an international package arrives.",
+      e: ev.feesOnDelivery,
+    },
+    { label: "Free shipping", value: s.freeShippingOverUsd ? `On orders over $${s.freeShippingOverUsd}` : null, e: ev.freeShipping },
+    { label: "Delivery to the US", value: s.deliveryDays ? `${s.deliveryDays.min}–${s.deliveryDays.max} business days` : null, e: ev.deliveryDays },
+    { label: "Returns", value: s.returnsDays ? `${s.returnsDays} days` : null, e: ev.returns },
+  ];
+  return (
+    <section className="mt-10">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Shipping &amp; returns</h2>
+      <dl className="mt-3 divide-y divide-arena-oscura border-y border-arena-oscura">
+        {rows.map((r) => (
+          <div key={r.label} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
+            <dt className="text-piedra">{r.label}</dt>
+            <dd>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={r.value ? "" : "italic text-piedra"}>{r.value ?? "Not published by the store"}</span>
+                {r.value && r.e && <ProvenanceBadge ev={{ provenance: r.e.provenance === "stated" ? "declarado" : "inferido", confidence: 1 }} />}
+              </div>
+              {r.hint && <p className="mt-0.5 text-xs text-piedra">{r.hint}</p>}
+              {r.value && r.e && <p className="mt-1 text-xs italic text-piedra">“{r.e.quote}”</p>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs text-piedra">
+        From {site}&rsquo;s{" "}
+        <a href={s.policyUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline">
+          shipping policy
+        </a>
+        {s.returnsUrl && (
+          <>
+            {" "}and{" "}
+            <a href={s.returnsUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline">
+              returns policy
+            </a>
+          </>
+        )}
+        , checked {formatDate(`${s.checkedOn}T12:00:00Z`)}. Policies change: confirm at checkout.
+      </p>
+    </section>
   );
 }
 

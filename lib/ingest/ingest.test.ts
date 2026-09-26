@@ -221,3 +221,18 @@ test("micras: solo cuando la tienda las afirma de la pieza", async () => {
   assert.equal(extractMicron("a grade separated by fineness when the fleece is sorted, up to 23 microns according to the AIA"), null);
   assert.equal(extractMicron("ordinary wool usually runs from 27 to 45 microns"), null);
 });
+
+test("envío: la política de la tienda se hereda y Kuna USA cambia con la etiqueta express", async () => {
+  const { shippingFromPolicy } = await import("../policies.ts");
+  const { readFileSync } = await import("node:fs");
+  const policies = JSON.parse(readFileSync(new URL("../../data/policies.json", import.meta.url), "utf8")).stores;
+  const express = shippingFromPolicy(policies["Kuna USA"], ["express_shipping", "BLUSAS"]);
+  assert.equal(express.shipsFrom, "US");
+  assert.deepEqual(express.deliveryDays, { min: 2, max: 5 });
+  assert.equal(express.feesOnDelivery, "none");
+  const standard = shippingFromPolicy(policies["Kuna USA"], []);
+  assert.equal(standard.shipsFrom, "not_published", "el almacén principal no dice dónde está");
+  assert.equal(shippingFromPolicy(policies["Etno Alpaca"]).feesOnDelivery, "may_apply");
+  assert.equal(shippingFromPolicy(policies["Sol Alpaca"]).feesOnDelivery, "none");
+  assert.equal(shippingFromPolicy(policies["Qinti"]).shipsFrom, "not_published");
+});

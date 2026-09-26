@@ -34,6 +34,9 @@ export function chipsFromFilters(f: Filters): ActiveChip[] {
     chips.push({ key: `o-${r}`, label: `Origin: ${REGION_LABEL[r]}`, remove: { origins: f.origins.filter((x) => x !== r) } });
   for (const r of f.alpacaRanges)
     chips.push({ key: `a-${r}`, label: ALPACA_RANGE_LABEL[r], remove: { alpacaRanges: f.alpacaRanges.filter((x) => x !== r) } });
+  for (const s of f.shipsFrom)
+    chips.push({ key: `from-${s}`, label: `Ships from ${s === "US" ? "the US" : "Peru"}`, remove: { shipsFrom: f.shipsFrom.filter((x) => x !== s) } });
+  if (f.noFeesOnDelivery) chips.push({ key: "nofees", label: "No fees on delivery", remove: { noFeesOnDelivery: false } });
   if (f.noSynthetics) chips.push({ key: "nosyn", label: "No synthetics", remove: { noSynthetics: false } });
   if (f.sizes.length) chips.push({ key: "sizes", label: `Size ${f.sizes.map((x) => (x === "Única" ? "one size" : x)).join(", ")}`, remove: { sizes: [] } });
   if (f.priceMin != null) chips.push({ key: "pmin", label: `Over $${f.priceMin}`, remove: { priceMin: null } });

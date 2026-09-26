@@ -25,6 +25,7 @@ const FACET_OPTIONS = {
   sources: SOURCES,
   genders: ["women", "men"],
   alpacaRanges: ALPACA_RANGES,
+  shipsFrom: ["US", "Peru"],
 };
 
 /** Lo mínimo que necesita una tarjeta: el catálogo completo nunca viaja al celular. */
@@ -35,7 +36,10 @@ function toCard(p: Product): Product {
     rawDescription: "",
     evidence: {},
     extraction: { ...p.extraction, warnings: [] },
-    shipping: undefined,
+    // Lo justo para la línea de envío de la tarjeta.
+    shipping: p.shipping
+      ? { summary: "", toUS: p.shipping.toUS, shipsFrom: p.shipping.shipsFrom, feesOnDelivery: p.shipping.feesOnDelivery }
+      : undefined,
     images: p.images.slice(0, 1),
   };
 }

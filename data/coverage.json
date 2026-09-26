@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T03:37:40.540Z",
+  "generatedAt": "2026-09-26T03:42:13.865Z",
   "items": 6772,
   "sources": [
     {
@@ -115,8 +115,8 @@
     {
       "key": "shipping",
       "label": "Shipping to the US",
-      "count": 4489,
-      "pct": 66
+      "count": 4738,
+      "pct": 70
     }
   ]
 }

@@ -13,8 +13,9 @@ import { isAllowed, parseRobots } from "../lib/ingest/robots.ts";
 import { normalizeWooProduct, type WooProduct } from "../lib/ingest/woocommerce.ts";
 import { FALLBACK_FX, parseBcrp, parseOpenEr, type FxRate } from "../lib/fx.ts";
 import type { Product } from "../lib/types.ts";
+import type { StorePolicy } from "../lib/policies.ts";
 
-const USER_AGENT = "VellonBot/0.1 (catalogo de alpaca; solo lectura)";
+const USER_AGENT = "AlpacaAtlasBot/1.0 (+https://alpacaatlas.com/about; read-only)";
 
 interface SourceConfig extends Omit<ShopifySource, "retrievedAt"> {
   key: string;
@@ -257,6 +258,8 @@ async function main() {
   await writeFile("data/fx.json", JSON.stringify(fx, null, 2));
   console.log(`Tipo de cambio: S/ ${fx.penPerUsd} por USD (${fx.source}${fx.date ? `, ${fx.date}` : ""})`);
   const catalog: Product[] = [];
+  // Políticas de envío curadas a mano (data/policies.json): mandan sobre el resumen de SOURCES.
+  const policies: Record<string, StorePolicy> = JSON.parse(await readFile("data/policies.json", "utf8")).stores;
   // Catálogo anterior: si una tienda falla y no hay descarga en caché (p. ej. en GitHub
   // Actions), se conservan sus fichas de la última actualización mientras sean recientes.
   const previous: Product[] = JSON.parse(await readFile("data/catalog.json", "utf8").catch(() => "[]"));
@@ -297,8 +300,8 @@ async function main() {
     // Solo lo que se puede comprar hoy: las fichas agotadas (archivo, temporadas pasadas) son ruido.
     const all = raw.flatMap((p) =>
       src.kind === "woocommerce"
-        ? normalizeWooProduct(p as WooProduct, { ...src, retrievedAt, fx })
-        : normalizeShopifyProduct(p as ShopifyProduct, { ...src, retrievedAt, fx }),
+        ? normalizeWooProduct(p as WooProduct, { ...src, retrievedAt, fx, policy: policies[src.site] })
+        : normalizeShopifyProduct(p as ShopifyProduct, { ...src, retrievedAt, fx, policy: policies[src.site] }),
     );
     // Precios de 0 o 1 son errores o productos de muestra de la tienda.
     const items = all.filter((p) => p.availability.status !== "agotado" && p.price.amountUsd > 1);

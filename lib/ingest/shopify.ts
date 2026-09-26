@@ -1,4 +1,5 @@
 import { fiberFamily, SYNTHETIC, type CompositionStatus, type FiberFamily } from "../fiber.ts";
+import { shippingFromPolicy, type StorePolicy } from "../policies.ts";
 import type { Breed, ColorFamily, FieldEvidence, Gender, Product, ProductType, Quality } from "../types.ts";
 import { COLOR_SWATCH, SIZE_ORDER } from "../taxonomy.ts";
 import { FALLBACK_FX, toUsd, type FxRate } from "../fx.ts";
@@ -39,6 +40,8 @@ export interface ShopifySource {
   baseUrl: string;
   currency: "USD" | "PEN";
   shipping?: Product["shipping"];
+  /** Política curada (data/policies.json); si existe, manda sobre `shipping`. */
+  policy?: StorePolicy;
   retrievedAt: string;
   /** Tipo de cambio del día de la descarga (para convertir soles a USD). */
   fx?: FxRate;
@@ -389,7 +392,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
         amountUsd: toUsd(amount, src.currency, src.fx ?? FALLBACK_FX),
         compareAt,
       },
-      shipping: src.shipping,
+      shipping: src.policy ? shippingFromPolicy(src.policy, p.tags) : src.shipping,
       availability: {
         status: sizesAvailable.length === 0 ? "agotado" : sizesAvailable.length === 1 && sizes.length > 2 ? "pocas_unidades" : "en_stock",
         checkedAt: src.retrievedAt,

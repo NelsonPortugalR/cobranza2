@@ -117,7 +117,7 @@ test("US shipping filter", () => {
 
 test("facet counts match applying the filter", () => {
   const base = withDemo(parseQueryLocal("sweater", FX)).filters;
-  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [], alpacaRanges: [] });
+  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [], alpacaRanges: [], shipsFrom: [] });
   for (const [key, value] of [["qualities", "baby"], ["colorFamilies", "beige"], ["sizes", "M"]] as const) {
     const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");
     assert.deepEqual(counts[key][value], { exact: r.exact.length, total: r.exact.length + r.partial.length }, key);

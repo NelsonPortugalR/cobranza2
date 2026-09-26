@@ -26,6 +26,8 @@ const ParsedSchema = z.object({
     priceMax: z.number().nullable(),
     inStockOnly: z.boolean(),
     shipsToUS: z.boolean(),
+    shipsFrom: z.array(z.enum(["US", "Peru"])),
+    noFeesOnDelivery: z.boolean(),
   }),
   sort: z.enum(["relevancia", "micras_asc", "precio_asc", "precio_desc"]),
   chips: z.array(
