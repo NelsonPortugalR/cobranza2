@@ -14,7 +14,8 @@
       "feesOnDelivery": {
         "value": "none",
         "provenance": "stated",
-        "quote": "Sol Alpaca operates on a DDP (Delivered Duty Paid) basis. All applicable custom fees, import duties, and local taxes are calculated and collected at checkout."
+        "quote": "Sol Alpaca operates on a DDP (Delivered Duty Paid) basis. All applicable custom fees, import duties, and local taxes are calculated and collected at checkout.",
+        "basis": "duties_included"
       },
       "deliveryDays": {
         "min": 3,
@@ -67,7 +68,8 @@
       "feesOnDelivery": {
         "value": "none",
         "provenance": "stated",
-        "quote": "For shipments to the United States, all taxes and additional fees are assumed by the KUNA USA online store."
+        "quote": "For shipments to the United States, all taxes and additional fees are assumed by the KUNA USA online store.",
+        "basis": "duties_included"
       },
       "deliveryDays": {
         "min": 10,
@@ -163,7 +165,8 @@
       "feesOnDelivery": {
         "value": "none",
         "provenance": "inferred",
-        "quote": "Please note that we do not cover any import taxes, duties, and fees for orders outside the United States."
+        "basis": "ships_from_us",
+        "quote": "these pieces are specially requested from Peru rather than stocked in our U.S. warehouse."
       },
       "returns": {
         "days": 30,
@@ -246,11 +249,6 @@
         "provenance": "inferred",
         "quote": "SALES TAX: Sales tax will be applied as part of the order total for orders shipped to the following states"
       },
-      "feesOnDelivery": {
-        "value": "none",
-        "provenance": "inferred",
-        "quote": "STANDARD SHIPPING FOR ORDERS TO UNITED STATES ZIP CODES: Arrives within 7–10 business days."
-      },
       "freeShippingOverUsd": {
         "value": 350,
         "quote": "$350 & over* Complimentary"
@@ -299,11 +297,6 @@
         "provenance": "inferred",
         "quote": "Free domestic shipping on orders over $99"
       },
-      "feesOnDelivery": {
-        "value": "none",
-        "provenance": "inferred",
-        "quote": "Free domestic shipping on orders over $99"
-      },
       "freeShippingOverUsd": {
         "value": 99,
         "quote": "Free domestic shipping on orders over $99"
@@ -342,11 +335,6 @@
         "value": "US",
         "provenance": "inferred",
         "quote": "All products are shipped via USPS, UPS, or FedEx … Our Continental USA shipping model"
-      },
-      "feesOnDelivery": {
-        "value": "none",
-        "provenance": "inferred",
-        "quote": "Our Continental USA shipping model … flat rate system based on order subtotal"
       },
       "freeShippingOverUsd": {
         "value": 199.99,

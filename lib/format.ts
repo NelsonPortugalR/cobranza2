@@ -30,21 +30,18 @@ export function compositionLabel(p: Product): string | null {
   return listed;
 }
 
-/** Línea corta de envío para tarjetas: desde dónde sale y si hay aranceles al recibir. */
+/** Línea corta de envío para tarjetas: desde dónde sale y, si no hay cobros al recibir, por qué. */
 export function shippingLine(p: Product): string {
   const s = p.shipping;
+  if (s?.feesOnDelivery === "none" && s.feesBasis === "ships_from_us") return "Ships from within the US — no import fees";
   const from = s?.shipsFrom === "US" ? "Ships from the US" : s?.shipsFrom === "Peru" ? "Ships from Peru" : "Ships from: not stated";
   const fees =
-    s?.shipsFrom === "US"
-      ? null
-      : s?.feesOnDelivery === "none"
-        ? "duties included"
-        : s?.feesOnDelivery === "may_apply"
-          ? "duties may apply"
-          : s?.shipsFrom === "Peru"
-            ? "duties not stated"
-            : null;
-  return [from, fees].filter(Boolean).join(" · ");
+    s?.feesOnDelivery === "none"
+      ? "Duties included (stated by store)"
+      : s?.feesOnDelivery === "may_apply"
+        ? "duties may apply"
+        : "duties not stated";
+  return `${from} · ${fees}`;
 }
 
 /** Explicación corta del estado de la composición, para la ficha. */

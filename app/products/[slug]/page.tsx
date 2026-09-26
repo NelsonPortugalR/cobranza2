@@ -49,7 +49,7 @@ function summary(p: Product): string {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const p = getProduct((await params).slug);
-  if (!p) return {};
+  if (!p) notFound();
   const price = usdPrice(p);
   const grade = fiberWords(p).replace(/\b\w/g, (c) => c.toUpperCase());
   // "Langui Sweater — Gray · Baby Alpaca by Incalpaca", acortado si Google lo cortaría.
@@ -401,7 +401,8 @@ export default async function ProductPage({ params }: Params) {
 }
 
 const FEES_TEXT = {
-  none: "No: duties are paid at checkout, or it ships within the US",
+  duties_included: "None: duties included (stated by store)",
+  ships_from_us: "None: ships from within the US — no import fees",
   may_apply: "May apply: the store says import duties are not included",
   not_published: "Not published by the store",
 } as const;
@@ -417,7 +418,10 @@ function ShippingSection({ s, site }: { s: NonNullable<Product["shipping"]>; sit
     },
     {
       label: "Fees on delivery",
-      value: FEES_TEXT[s.feesOnDelivery ?? "not_published"],
+      value:
+        s.feesOnDelivery === "none"
+          ? FEES_TEXT[s.feesBasis ?? "duties_included"]
+          : FEES_TEXT[s.feesOnDelivery === "may_apply" ? "may_apply" : "not_published"],
       hint: "Customs duties or fees a carrier can collect when an international package arrives.",
       e: ev.feesOnDelivery,
     },

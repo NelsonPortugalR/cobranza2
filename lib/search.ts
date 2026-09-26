@@ -38,7 +38,7 @@ function toCard(p: Product): Product {
     extraction: { ...p.extraction, warnings: [] },
     // Lo justo para la línea de envío de la tarjeta.
     shipping: p.shipping
-      ? { summary: "", toUS: p.shipping.toUS, shipsFrom: p.shipping.shipsFrom, feesOnDelivery: p.shipping.feesOnDelivery }
+      ? { summary: "", toUS: p.shipping.toUS, shipsFrom: p.shipping.shipsFrom, feesOnDelivery: p.shipping.feesOnDelivery, feesBasis: p.shipping.feesBasis }
       : undefined,
     images: p.images.slice(0, 1),
   };

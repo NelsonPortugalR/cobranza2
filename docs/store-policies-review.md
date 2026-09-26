@@ -1,19 +1,19 @@
 # Store policies for manual review (checked 2026-09-26)
 
-Read from each store's /policies/shipping-policy and /policies/refund-policy pages. "Inferred" means it follows from the store's words but isn't stated literally. Validate every **none** under Fees on delivery by hand.
+Read from each store's /policies/shipping-policy and /policies/refund-policy pages. "Inferred" means it follows from the store's words but isn't stated literally. Validate every **none** under Fees on delivery by hand. Rule: none only when the store states duties are included, or states it ships from the US. Peruvian Connection, Krimson Klover and Peruvian Link were removed from the filter because their US origin is only inferred.
 
 ## Summary
 
 | Store | Ships from | Fees on delivery | Return window | Refund | Return shipping paid by | Return to | Sale items | Refunds shipping | Refunds duties |
 |---|---|---|---|---|---|---|---|---|---|
-| Sol Alpaca | Peru | **none** | 30 | refund_or_exchange | customer | Peru | clearance_only | false | false |
-| Kuna USA | US for Express items (inferred); rest not published | **none** | 30 | refund | store | not published | yes | not published | not published |
+| Sol Alpaca | Peru | **none** — duties included (stated) | 30 | refund_or_exchange | customer | Peru | clearance_only | false | false |
+| Kuna USA | US for Express items (inferred); rest not published | **none** — duties included (stated) | 30 | refund | store | not published | yes | not published | not published |
 | Incalpaca | Peru (inferred) | not published | not published | refund | not published | Peru | not published | not published | not published |
-| Alpaca Collections | US | **none** (inferred) | 30 | refund_or_exchange | customer | US | exchange_or_credit_only | false | not published |
+| Alpaca Collections | US | **none** — ships from within the US (stated) | 30 | refund_or_exchange | customer | US | exchange_or_credit_only | false | not published |
 | PAKA | not published | not published | 30 | refund_or_exchange | **conflicting** | not published | not published | not published | not published |
-| Peruvian Connection | US (inferred) | **none** (inferred) | 30 | refund_or_exchange | customer | not published | not published | false | not published |
-| Krimson Klover | US (inferred) | **none** (inferred) | 14 | refund | customer | not published | not published | not published | not published |
-| Peruvian Link | US (inferred) | **none** (inferred) | 30 | **conflicting** | not published | US | yes | not published | not published |
+| Peruvian Connection | US (inferred) | not published | 30 | refund_or_exchange | customer | not published | not published | false | not published |
+| Krimson Klover | US (inferred) | not published | 14 | refund | customer | not published | not published | not published | not published |
+| Peruvian Link | US (inferred) | not published | 30 | **conflicting** | not published | US | yes | not published | not published |
 | Etno Alpaca | Peru | may_apply | **conflicting** | refund_or_exchange | customer | Peru | not published | not published | not published |
 | Qinti | not published | not published | 15 | refund | customer | US | yes | false | not published |
 | All Alpaca | Peru | not published | 15 | exchange_or_credit | customer | Peru | not published | not published | not published |
@@ -65,7 +65,7 @@ Shipping policy: https://incalpacastores.com/policies/shipping-policy · Returns
 Shipping policy: https://www.alpacacollections.com/policies/shipping-policy · Returns policy: https://www.alpacacollections.com/policies/refund-policy · checked 2026-09-26
 
 - **Ships from:** US — “these pieces are specially requested from Peru rather than stocked in our U.S. warehouse.” [stated]
-- **Fees on delivery:** none — “Please note that we do not cover any import taxes, duties, and fees for orders outside the United States.” [inferred]
+- **Fees on delivery:** none — “these pieces are specially requested from Peru rather than stocked in our U.S. warehouse.” [inferred]
 - **Return window (days):** 30 — “we’ll gladly accept returns or exchanges of unworn and unwashed merchandise within 30 days of receiving your order.”
 - **Refund type:** refund_or_exchange — “we’ll gladly exchange it for any item you choose from our website or issue a refund to your original payment method.”
 - **Return shipping paid by:** customer — “Please note that we do not provide a return label, and shipping costs are non-refundable unless the return is due to a product defect or damage.”
@@ -93,7 +93,7 @@ Shipping policy: https://www.pakaapparel.com/policies/shipping-policy · Returns
 Shipping policy: https://www.peruvianconnection.com/policies/shipping-policy · Returns policy: https://www.peruvianconnection.com/policies/refund-policy · checked 2026-09-26
 
 - **Ships from:** US — “SALES TAX: Sales tax will be applied as part of the order total for orders shipped to the following states” [inferred]
-- **Fees on delivery:** none — “STANDARD SHIPPING FOR ORDERS TO UNITED STATES ZIP CODES: Arrives within 7–10 business days.” [inferred]
+- **Fees on delivery:** not published
 - **Return window (days):** 30 — “Peruvian Connection will gladly accept unworn, unwashed, or defective merchandise for refund or exchange when items are returned within 30 days (with tags attached)” (Returns after 30 and within 90 days get merchandise credit.)
 - **Refund type:** refund_or_exchange — “Your refund for the returned merchandise will be credited back to the original order payment method.”
 - **Return shipping paid by:** customer — “Return shipping is the responsibility of the customer.”
@@ -107,7 +107,7 @@ Shipping policy: https://www.peruvianconnection.com/policies/shipping-policy · 
 Shipping policy: https://krimsonklover.com/policies/shipping-policy · Returns policy: https://krimsonklover.com/policies/refund-policy · checked 2026-09-26
 
 - **Ships from:** US — “Free domestic shipping on orders over $99” [inferred]
-- **Fees on delivery:** none — “Free domestic shipping on orders over $99” [inferred]
+- **Fees on delivery:** not published
 - **Return window (days):** 14 — “All returns must be made within 14 days of purchase.”
 - **Refund type:** refund — “For returns, your refund will be credited back to the original form of payment.”
 - **Return shipping paid by:** customer — “Please note that shipping costs are deducted from your return.”
@@ -121,7 +121,7 @@ Shipping policy: https://krimsonklover.com/policies/shipping-policy · Returns p
 Shipping policy: https://peruvianlink.com/policies/shipping-policy · Returns policy: https://peruvianlink.com/policies/refund-policy · checked 2026-09-26
 
 - **Ships from:** US — “All products are shipped via USPS, UPS, or FedEx … Our Continental USA shipping model” [inferred]
-- **Fees on delivery:** none — “Our Continental USA shipping model … flat rate system based on order subtotal” [inferred]
+- **Fees on delivery:** not published
 - **Return window (days):** 30 — “We have a 30-day return policy, which means you have 30 days after receiving your item to request a return.”
 - **Refund type:** **conflicting** — “If approved, you’ll be automatically refunded on your original payment method within 10 business days.” / “you may return it within 30 days of receipt for an exchange or full refund in the form of a store credit.”
 - **Return shipping paid by:** not published

@@ -16,24 +16,33 @@
 
 ## Dónde se guarda
 
+El almacenamiento está detrás de una interfaz mínima, `LogStore` en `lib/searchLog/store.ts`, con tres métodos: `append`, `read` y `purgeBefore`. Para migrar a una base de datos basta con una implementación nueva de esa interfaz; nada más cambia.
+
 - **Producción:** Netlify Blobs, almacén global `search-log`, claves `events/AAAA-MM-DD/…`. Viene incluido en Netlify; no es un servicio nuevo.
 - **Deploy previews:** almacén del deploy, separado de producción.
 - **Desarrollo:** `.search-log/*.ndjson` (ignorado por git).
 
-**Pendiente:** el paquete `@netlify/blobs` no se pudo instalar desde el entorno de trabajo porque la política de npm devuelve 403. El código lo carga de forma dinámica: sin el paquete, el sitio funciona igual pero no guarda nada, y el reporte indica `storage: off`. Para activarlo, en cualquier máquina con npm:
+### Estado: esperando el paquete `@netlify/blobs`
 
-```
-npm install @netlify/blobs
-git commit -am "Add @netlify/blobs for the search log" && git push
-```
+- **Por qué no está:** la política de paquetes del entorno de trabajo lo bloquea (npm devuelve 403 "forbidden by your security policy"). No es un bloqueo de red: el registro de npm responde, pero el paquete está prohibido.
+- **Opción A (acordada):** alguien del equipo, en una máquina con npm y en la rama del PR:
+  ```
+  npm install @netlify/blobs
+  git commit -am "Add @netlify/blobs for the search log" && git push
+  ```
+- **Opción B, si A no ocurre:** cambiar la configuración de red del entorno no alcanza. Hace falta que un administrador de la organización permita `@netlify/blobs` en la política de paquetes de Claude Code, o que otro entorno con npm sin esa política ejecute la opción A (por ejemplo, un workflow de GitHub Actions que tú lances).
+- **Mientras falte (verificado):** el sitio publica y funciona igual. `/api/log` responde 204, la búsqueda responde normal y el servidor solo registra un aviso ("@netlify/blobs no disponible; registro desactivado"). El reporte indica `storage: off`. Apenas llegue el paquete, el registro se activa en el siguiente deploy, sin cambios de código.
 
 ## Reporte semanal
 
-`https://alpacaatlas.com/api/admin/search-report?token=<SEARCH_REPORT_TOKEN>`
-
+- **Ruta:** `https://alpacaatlas.com/api/admin/search-report`
+- **Token:** lo lee de la variable `SEARCH_REPORT_TOKEN` en Netlify (Project configuration → Environment variables). Solo la conoces tú. Hay dos maneras de enviarlo:
+  - En el navegador del celular: `https://alpacaatlas.com/api/admin/search-report?token=TU_TOKEN`. Queda en el historial del navegador y en los registros de acceso de Netlify.
+  - Desde un script o terminal (preferible): cabecera `Authorization: Bearer TU_TOKEN`, por ejemplo `curl -H "Authorization: Bearer TU_TOKEN" https://alpacaatlas.com/api/admin/search-report`.
 - **Rango por defecto:** la semana anterior, de lunes a lunes (UTC). Otro rango: `&from=2026-10-05&to=2026-10-12`. Formato JSON: `&format=json`.
 - **Contenido:** búsquedas, sesiones, % con clics, visitas a tiendas, % no entendidas, reformulaciones, **las 20 búsquedas más frecuentes sin resultado** y **las 20 con resultados pero sin clics**, con el texto que no se entendió.
-- **Sin `SEARCH_REPORT_TOKEN` en Netlify,** la ruta responde 404.
+- **Sin la variable, o con un token incorrecto,** la ruta responde 404.
+- **Después de cambiar la variable,** hay que volver a desplegar para que la función la tome.
 
 ## IA fuera de línea (semanal)
 

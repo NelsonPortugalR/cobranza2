@@ -279,3 +279,17 @@ test("solo alpaca: 'ensuring' no es suri, y 'Media Luna' no es calcetín (casos 
   assert.notEqual(inferType({ ...base, title: "LLAVERO MEDIA LUNA | MARRÓN", product_type: "" } as ShopifyProduct), "medias");
   assert.equal(inferType({ ...base, title: "Medias de alpaca", product_type: "" } as ShopifyProduct), "medias");
 });
+
+test("sin cobros al recibir: solo declarado, o inferido si la tienda declara que envía desde EE. UU.", async () => {
+  const { shippingFromPolicy } = await import("../policies.ts");
+  const { readFileSync } = await import("node:fs");
+  const stores = JSON.parse(readFileSync(new URL("../../data/policies.json", import.meta.url), "utf8")).stores;
+  assert.equal(shippingFromPolicy(stores["Sol Alpaca"]).feesBasis, "duties_included");
+  assert.equal(shippingFromPolicy(stores["Kuna USA"], ["express_shipping"]).feesBasis, "duties_included");
+  const ac = shippingFromPolicy(stores["Alpaca Collections"]);
+  assert.deepEqual([ac.feesOnDelivery, ac.feesBasis], ["none", "ships_from_us"]);
+  for (const s of ["Peruvian Connection", "Krimson Klover", "Peruvian Link"]) assert.equal(shippingFromPolicy(stores[s]).feesOnDelivery, "not_published", s);
+  // Aunque alguien vuelva a cargar un "none" inferido sin origen declarado, el código lo descarta.
+  const guessed = { ...stores["Peruvian Link"], feesOnDelivery: { value: "none", provenance: "inferred", basis: "ships_from_us", quote: "x" } };
+  assert.equal(shippingFromPolicy(guessed).feesOnDelivery, "not_published");
+});

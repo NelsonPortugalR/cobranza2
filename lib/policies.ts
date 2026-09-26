@@ -11,6 +11,12 @@ export interface PolicyFact<T> {
   quote: string;
 }
 
+/**
+ * Por qué no hay cobros al recibir: la tienda declara que los aranceles están incluidos, o
+ * declara que envía desde EE. UU. (no hay importación). Nada más cuenta.
+ */
+export type FeesBasis = "duties_included" | "ships_from_us";
+
 export interface StorePolicy {
   policyUrl: string;
   returnsUrl?: string;
@@ -18,7 +24,7 @@ export interface StorePolicy {
   shipsToUS: boolean;
   shipsToUSQuote?: string;
   shipsFrom?: PolicyFact<Exclude<ShipsFrom, "not_published">>;
-  feesOnDelivery?: PolicyFact<Exclude<FeesOnDelivery, "not_published">>;
+  feesOnDelivery?: PolicyFact<Exclude<FeesOnDelivery, "not_published">> & { basis?: FeesBasis };
   freeShippingOverUsd?: { value: number; quote: string };
   deliveryDays?: { min: number; max: number; quote: string };
   returns?: { days: number; quote: string };
@@ -51,13 +57,18 @@ export function shippingFromPolicy(policy: StorePolicy, tags: string[] = []): Pr
   const tagSet = new Set(tags.map((t) => t.toLowerCase()));
   const override = Object.entries(policy.byTag ?? {}).find(([tag]) => tagSet.has(tag.toLowerCase()))?.[1] ?? {};
   const shipsFrom = override.shipsFrom ?? policy.shipsFrom;
-  const fees = override.feesOnDelivery ?? policy.feesOnDelivery;
+  // Regla: "sin cobros al recibir" solo si la tienda lo declara, o si declara (no inferido) que
+  // envía desde EE. UU. Si ambas cosas son inferidas, el dato queda como no publicado.
+  const rawFees = override.feesOnDelivery ?? policy.feesOnDelivery;
+  const shipsFromUsStated = shipsFrom?.value === "US" && shipsFrom.provenance === "stated";
+  const fees =
+    rawFees && (rawFees.provenance === "stated" || (rawFees.basis === "ships_from_us" && shipsFromUsStated)) ? rawFees : undefined;
   const days = override.deliveryDays ?? policy.deliveryDays;
   const from: ShipsFrom = shipsFrom?.value ?? "not_published";
   const feeValue: FeesOnDelivery = fees?.value ?? "not_published";
   const summary = [
     FROM_TEXT[from],
-    feeValue === "none" ? (from === "US" ? "no customs fees" : "duties included") : feeValue === "may_apply" ? "import duties not included" : null,
+    feeValue === "none" ? (fees?.basis === "ships_from_us" ? "no import fees" : "duties included") : feeValue === "may_apply" ? "import duties not included" : null,
     policy.freeShippingOverUsd ? `free shipping over $${policy.freeShippingOverUsd.value}` : null,
   ]
     .filter(Boolean)
@@ -68,6 +79,7 @@ export function shippingFromPolicy(policy: StorePolicy, tags: string[] = []): Pr
     days: days ? `${days.min}–${days.max} business days to the US` : undefined,
     shipsFrom: from,
     feesOnDelivery: feeValue,
+    ...(fees?.value === "none" && fees.basis ? { feesBasis: fees.basis } : {}),
     freeShippingOverUsd: policy.freeShippingOverUsd?.value ?? null,
     deliveryDays: days ? { min: days.min, max: days.max } : null,
     returnsDays: policy.returns?.days ?? null,

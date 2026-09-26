@@ -142,6 +142,8 @@ export interface Product {
     shipsFrom?: ShipsFrom;
     /** Si el comprador en EE. UU. puede pagar aranceles al recibir. */
     feesOnDelivery?: FeesOnDelivery;
+    /** Motivo de "sin cobros al recibir": aranceles incluidos (declarado) o envío desde EE. UU. (declarado). */
+    feesBasis?: "duties_included" | "ships_from_us";
     freeShippingOverUsd?: number | null;
     deliveryDays?: { min: number; max: number } | null;
     returnsDays?: number | null;
