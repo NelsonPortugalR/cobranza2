@@ -84,7 +84,8 @@ export async function POST(req: Request) {
 
   const local = parseQueryLocal(query, FX);
   const answer = answerFor(query, local);
-  if (!llmAllowed() || local.intent === "question" || local.intent === "store") return Response.json({ ...local, answer });
+  // Solo como respaldo: el modelo se consulta únicamente si las reglas dejaron texto sin entender.
+  if (!llmAllowed() || local.intent === "question" || local.intent === "store" || !local.filters.text) return Response.json({ ...local, answer });
 
   const key = query.trim().toLowerCase().replace(/\s+/g, " ");
   const hit = cache.get(key);
