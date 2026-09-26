@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-lana: #faf7f2;
+  --color-arena: #efe7da;
+  --color-arena-oscura: #e2d6c3;
+  --color-tierra: #6b4f3a;
+  --color-carbon: #2a2622;
+  --color-piedra: #7a7168;
+  --color-ocre: #a8683a;
+  --color-musgo: #5b6b4e;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Fraunces", ui-serif, Georgia, serif;
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-lana);
+  color: var(--color-carbon);
+}
+
+/* Barra horizontal sin scrollbar visible (chips en móvil). */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

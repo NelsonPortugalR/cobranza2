@@ -1,0 +1,122 @@
+{
+  "generatedAt": "2026-09-25T15:29:17.089Z",
+  "items": 6785,
+  "sources": [
+    {
+      "site": "Sol Alpaca",
+      "items": 924
+    },
+    {
+      "site": "Kuna",
+      "items": 694
+    },
+    {
+      "site": "Kuna USA",
+      "items": 584
+    },
+    {
+      "site": "Incalpaca",
+      "items": 325
+    },
+    {
+      "site": "Incalpaca Remate",
+      "items": 254
+    },
+    {
+      "site": "Alpaca Collections",
+      "items": 933
+    },
+    {
+      "site": "PAKA",
+      "items": 326
+    },
+    {
+      "site": "Peruvian Connection",
+      "items": 269
+    },
+    {
+      "site": "Krimson Klover",
+      "items": 41
+    },
+    {
+      "site": "Peruvian Link",
+      "items": 863
+    },
+    {
+      "site": "Anntarah",
+      "items": 828
+    },
+    {
+      "site": "Etno Alpaca",
+      "items": 89
+    },
+    {
+      "site": "Qinti",
+      "items": 249
+    },
+    {
+      "site": "All Alpaca",
+      "items": 118
+    },
+    {
+      "site": "Pure Alpaca",
+      "items": 288
+    }
+  ],
+  "fields": [
+    {
+      "key": "composition",
+      "label": "Fiber content (100% or blend)",
+      "count": 5245,
+      "pct": 77
+    },
+    {
+      "key": "quality",
+      "label": "Fiber grade (baby, super baby…)",
+      "count": 4646,
+      "pct": 68
+    },
+    {
+      "key": "micron",
+      "label": "Micron count",
+      "count": 0,
+      "pct": 0
+    },
+    {
+      "key": "breed",
+      "label": "Breed (Huacaya / Suri)",
+      "count": 201,
+      "pct": 3
+    },
+    {
+      "key": "color",
+      "label": "Color",
+      "count": 6012,
+      "pct": 89
+    },
+    {
+      "key": "natural",
+      "label": "Natural vs. dyed",
+      "count": 3115,
+      "pct": 46
+    },
+    {
+      "key": "origin",
+      "label": "Region of origin",
+      "count": 0,
+      "pct": 0
+    },
+    {
+      "key": "sizes",
+      "label": "Sizes in stock",
+      "count": 6497,
+      "pct": 96
+    },
+    {
+      "key": "shipping",
+      "label": "Shipping to the US",
+      "count": 4472,
+      "pct": 66
+    }
+  ]
+}
