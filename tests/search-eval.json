@@ -1,0 +1,42 @@
+{
+  "_about": "Search evaluation set: query → expected parse. Fields use the Filters schema (lib/types.ts). qualitiesHas = that grade must be among the selected ones; textIncludes = leftover free text must contain it; answerHref = the answer must link there; answerStore = the answer must come from that store's policy. Anything not listed must not appear as leftover text.",
+  "cases": [
+    { "id": 1, "query": "alpaca sweaters women", "expect": { "types": ["chompa"], "genders": ["women"] } },
+    { "id": 2, "query": "alpaca sweaters for men", "expect": { "types": ["chompa"], "genders": ["men"] } },
+    { "id": 3, "query": "alpaca hoodie", "expect": { "types": ["chompa"], "textIncludes": "hood" } },
+    { "id": 4, "query": "100% alpaca sweater", "expect": { "types": ["chompa"], "alpacaRanges": ["100"] } },
+    { "id": 5, "query": "baby alpaca scarf", "expect": { "types": ["bufanda"], "qualitiesHas": "baby" } },
+    { "id": 6, "query": "royal alpaca wrap in camel", "expect": { "types": ["chal"], "qualities": ["royal"], "colorFamilies": ["camel"] } },
+    {
+      "id": 7,
+      "query": "Brown sweater, 100% baby alpaca, size M, under $180",
+      "expect": { "types": ["chompa"], "colorFamilies": ["marron"], "alpacaRanges": ["100"], "qualitiesHas": "baby", "sizes": ["M"], "priceMax": 180 }
+    },
+    { "id": 8, "query": "alpaca throw blanket", "expect": { "types": ["home"] } },
+    { "id": 9, "query": "peruvian alpaca sweater", "expect": { "types": ["chompa"] } },
+    { "id": 10, "query": "kuna alpaca", "expect": { "sources": ["Kuna USA"] } },
+    { "id": 11, "query": "alpaca 111", "expect": { "sources": ["Kuna USA"] } },
+    { "id": 12, "query": "sol alpaca scarf", "expect": { "sources": ["Sol Alpaca"], "types": ["bufanda"] } },
+    { "id": 13, "query": "chompa de alpaca para mujer", "expect": { "types": ["chompa"], "genders": ["women"] } },
+    { "id": 14, "query": "alpaca chullo", "expect": { "types": ["gorro"] } },
+    { "id": 15, "query": "llama sweater", "expect": { "types": ["chompa"], "note": true } },
+    { "id": 16, "query": "scarf under $80", "expect": { "types": ["bufanda"], "priceMax": 80 } },
+    { "id": 17, "query": "alpaca scarf no customs fees under 100", "expect": { "types": ["bufanda"], "priceMax": 100, "noFeesOnDelivery": true } },
+    { "id": 18, "query": "alpaca cardigan ships from us", "expect": { "types": ["cardigan"], "shipsFrom": ["US"] } },
+    {
+      "id": 19,
+      "query": "soft sweater for my mom that won't itch under $150",
+      "expect": { "types": ["chompa"], "genders": ["women"], "qualitiesHas": "baby", "priceMax": 150, "interpreted": "qualities" }
+    },
+    { "id": 20, "query": "is alpaca itchy", "expect": { "intent": "question", "answerHref": "/guides/alpaca-fiber-grades-explained" } },
+    { "id": 21, "query": "is baby alpaca from baby alpacas", "expect": { "intent": "question", "answerHref": "/guides/alpaca-fiber-grades-explained" } },
+    { "id": 22, "query": "alpaca vs cashmere", "expect": { "intent": "question", "answerHref": "/guides/alpaca-vs-cashmere-vs-merino" } },
+    { "id": 23, "query": "how to wash alpaca sweater", "expect": { "intent": "question", "answerHref": "/guides/how-to-care-for-alpaca" } },
+    {
+      "id": 24,
+      "query": "will i pay customs on a package from peru",
+      "expect": { "intent": "question", "answerHref": "/guides/how-to-buy-alpaca-online", "noFeesOnDelivery": true }
+    },
+    { "id": 25, "query": "does sol alpaca charge duties", "expect": { "intent": "store", "answerStore": "Sol Alpaca" } }
+  ]
+}

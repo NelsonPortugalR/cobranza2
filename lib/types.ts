@@ -203,6 +203,8 @@ export interface InterpretationChip {
   label: string;
   /** Texto del usuario que originó este filtro. */
   from: string;
+  /** true = interpretación nuestra, no algo que la persona pidió literalmente. */
+  interpreted?: boolean;
 }
 
 export interface ParsedQuery {
@@ -210,6 +212,10 @@ export interface ParsedQuery {
   sort: SortKey;
   chips: InterpretationChip[];
   engine: "local" | "claude";
+  /** Qué pide la persona: productos, una pregunta, algo de una tienda, o ambas cosas. */
+  intent?: "product_search" | "question" | "store" | "mixed";
+  /** Aviso corto sobre cómo se interpretó la búsqueda ("llama" → piezas de alpaca). */
+  note?: string;
 }
 
 export const EMPTY_FILTERS: Filters = {
