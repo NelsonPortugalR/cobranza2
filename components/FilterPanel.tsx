@@ -41,6 +41,10 @@ export function FilterPanel({
 
   return (
     <div className="space-y-7 text-sm">
+      <p className="rounded-sm bg-arena px-3 py-2 text-xs leading-relaxed text-piedra">
+        Numbers are exact matches. <span className="text-piedra/70">+N</span> are possible matches: the store doesn&rsquo;t
+        publish that detail, so we can&rsquo;t confirm it. Options with no results are hidden.
+      </p>
       <Section title="Shipping to the US" hint="From each store's published policy. Every store here ships to the US.">
         <ul className="space-y-0.5">
           {(["US", "Peru"] as const).map((s) => (
@@ -129,7 +133,7 @@ export function FilterPanel({
 
       <Section title="Color">
         <div className="grid max-w-xs grid-cols-6 gap-2">
-          {COLOR_FAMILIES.map((c) => {
+          {COLOR_FAMILIES.filter((c) => filters.colorFamilies.includes(c) || optionCount("colorFamilies", c).total > 0).map((c) => {
             const active = filters.colorFamilies.includes(c);
             return (
               <button
@@ -265,13 +269,13 @@ function Pill({
   n: { exact: number; total: number };
   block?: boolean;
 }) {
+  if (!active && n.total === 0) return null;
   return (
     <button
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      disabled={!active && n.total === 0}
-      title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} to confirm` : undefined}
+      title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} possible (detail not published)` : undefined}
       className={`rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-35 ${block ? "w-full" : ""} ${
         active ? "border-carbon bg-carbon text-lana" : "border-arena-oscura bg-white hover:border-tierra/60"
       }`}
@@ -294,11 +298,12 @@ function CheckRow({
   detail?: string;
   n: { exact: number; total: number };
 }) {
+  if (!checked && n.total === 0) return null;
   return (
     <li>
       <label
         className={`flex cursor-pointer items-center gap-2.5 py-1 ${!checked && n.total === 0 ? "opacity-40" : ""}`}
-        title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} to confirm` : undefined}
+        title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} possible (detail not published)` : undefined}
       >
         <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-tierra" />
         <span className="flex-1">

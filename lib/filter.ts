@@ -71,7 +71,7 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             : "fail",
     ],
     ["fiber content", anyOf(f.alpacaRanges.map((r) => alpacaRangeVerdict(p, r)))],
-    ["synthetics", f.noSynthetics ? noSyntheticsVerdict(p) : "pass"],
+    ["full fiber content", f.noSynthetics ? noSyntheticsVerdict(p) : "pass"],
     ["price", (f.priceMax == null || p.price.amountUsd <= f.priceMax) && (f.priceMin == null || p.price.amountUsd >= f.priceMin) ? "pass" : "fail"],
     [
       "stock",
@@ -84,9 +84,9 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             : "pass",
     ],
     ["US shipping", !f.shipsToUS ? "pass" : p.shipping?.toUS == null ? "unknown" : p.shipping.toUS ? "pass" : "fail"],
-    ["ships from", shipsFromCheck(p, f.shipsFrom)],
+    ["where it ships from", shipsFromCheck(p, f.shipsFrom)],
     [
-      "fees on delivery",
+      "duties on delivery",
       !f.noFeesOnDelivery
         ? "pass"
         : p.shipping?.feesOnDelivery === "none"

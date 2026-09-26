@@ -231,11 +231,13 @@ export function Catalog({
                     key={c.key}
                     type="button"
                     onClick={() => patch(c.remove)}
-                    className="group flex shrink-0 items-center gap-1.5 rounded-full bg-tierra px-3 py-1 text-xs text-lana"
+                    className="group flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-tierra py-1.5 pl-3 pr-2 text-xs text-lana sm:min-h-0 sm:py-1"
                     aria-label={`Remove filter ${c.label}`}
                   >
                     {c.label}
-                    <span className="text-lana/60 group-hover:text-lana">×</span>
+                    <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full text-sm text-lana/70 group-hover:bg-lana/15 group-hover:text-lana">
+                      ×
+                    </span>
                   </button>
                 ))}
                 {sort !== "relevancia" && (
@@ -268,7 +270,14 @@ export function Catalog({
               <p className="text-sm text-piedra">
                 <span className="font-serif text-2xl text-carbon">{exact.length.toLocaleString("en-US")}</span>{" "}
                 {exact.length === 1 ? "exact match" : "exact matches"}
-                {partial.length > 0 && ` · ${partial.length.toLocaleString("en-US")} to confirm`}
+                {partial.length > 0 && (
+                  <>
+                    {" · "}
+                    <a href="#possible-matches" className="underline decoration-piedra/40 underline-offset-2" title="The store doesn't publish something you asked for, so we can't confirm it">
+                      {partial.length.toLocaleString("en-US")} possible
+                    </a>
+                  </>
+                )}
               </p>
               <label className="flex items-center gap-2 text-xs text-piedra">
                 <span className="hidden sm:inline">Sort</span>
@@ -302,7 +311,7 @@ export function Catalog({
             </Grid>
 
             {visiblePartial.length > 0 && (
-              <section className="mt-12">
+              <section id="possible-matches" className="mt-12 scroll-mt-24">
                 <div className="mb-4 border-t border-arena-oscura pt-6">
                   <h2 className="font-serif text-xl">Possible matches</h2>
                   <p className="mt-1 max-w-2xl text-sm text-piedra">
