@@ -12,6 +12,7 @@ import { AVAILABILITY_LABEL, BREED_LABEL, NTP_CLASSES, QUALITY_LABEL, QUALITY_RA
 import { compositionLabel, compositionNote, formatDate, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
+import aiaMembers from "@/data/aia-members.json";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -82,6 +83,8 @@ function gradeHint(p: Product): string | undefined {
   return `${named}Equivalent official class: ${g.official}, ${c?.microns} µm (NTP 231.301:2022).`;
 }
 
+const AIA = aiaMembers as { checkedOn: string; stores: Record<string, { list: string; url: string }> };
+
 const METHOD_LABEL: Record<Product["source"]["method"], string> = {
   api: "the store's official API",
   feed: "the store's public product feed",
@@ -145,6 +148,23 @@ export default async function ProductPage({ params }: Params) {
         p.fiber.micron != null && p.fiber.micronKind === "exact"
           ? `Official class for this diameter: ${officialClassFromMicron(p.fiber.micron)} (NTP 231.301:2022).`
           : undefined,
+      optional: true,
+    },
+    {
+      label: "Seal",
+      value: p.seal ? `${p.seal.type === "blend" ? "AIA Alpaca Blend Mark" : p.seal.type.startsWith("origin") ? "AIA Alpaca Origin Mark" : "AIA-certified"} (as stated by the store)` : null,
+      ev: p.seal ? { provenance: "declarado", confidence: 1, quote: p.seal.quote } : undefined,
+      hint: p.seal
+        ? "The AIA (International Alpaca Association) is Peru's alpaca industry association. We can't verify what each certification covers."
+        : undefined,
+      optional: true,
+    },
+    {
+      label: "Store and the AIA",
+      value: AIA.stores[p.source.site] ? `${p.source.site} is listed as an AIA member (${AIA.stores[p.source.site].list})` : null,
+      hint: AIA.stores[p.source.site]
+        ? `Checked ${AIA.checkedOn} on the AIA's public list. Membership doesn't mean every piece carries a seal.`
+        : undefined,
       optional: true,
     },
     { label: "Breed", value: p.fiber.breed ? BREED_LABEL[p.fiber.breed] : null, ev: p.evidence.breed, optional: true },

@@ -104,6 +104,40 @@
         "amountPen": { "type": "number", "description": "Normalizado a soles para filtrar y ordenar." }
       }
     },
+    "seal": {
+      "description": "Third-party seal as stated by the store on the product page",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["issuer", "type", "quote", "readOn"],
+          "additionalProperties": false,
+          "properties": {
+            "issuer": { "const": "AIA" },
+            "type": { "enum": ["origin_gold", "origin_silver", "blend", "unspecified"] },
+            "quote": { "type": "string" },
+            "readOn": { "type": "string", "format": "date-time" }
+          }
+        }
+      ]
+    },
+    "labTest": {
+      "description": "Reserved: our own lab test (Tested by Alpaca Atlas). No UI until there is data.",
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["date", "lab", "result"],
+          "additionalProperties": false,
+          "properties": {
+            "date": { "type": "string", "format": "date" },
+            "lab": { "type": "string" },
+            "result": { "type": "string" },
+            "reportUrl": { "type": "string", "format": "uri" }
+          }
+        }
+      ]
+    },
     "availability": {
       "type": "object",
       "required": ["status", "checkedAt"],

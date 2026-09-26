@@ -1,0 +1,9 @@
+{
+  "_about": "Stores in our catalog that appear in the International Alpaca Association (AIA) public member lists. Checked by hand; the AIA's terms don't allow copying its lists, so we record only the fact for our own stores, with a link. Membership does not mean every piece carries an AIA seal.",
+  "checkedOn": "2026-09-26",
+  "stores": {
+    "Incalpaca": { "list": "Associate members, Peru", "url": "https://aia.org.pe/miembros-asociados-peru/" },
+    "Etno Alpaca": { "list": "Extraordinary members, Peru", "url": "https://aia.org.pe/miembros-extraordinarios-peru/" },
+    "Peruvian Link": { "list": "Extraordinary members, United States", "url": "https://aia.org.pe/miembros-extraordinarios-estados-unidos/" }
+  }
+}

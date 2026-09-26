@@ -298,6 +298,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
   const mainAlpaca = composition.filter((c) => isAlpaca(c.material)).sort((a, b) => b.pct - a.pct)[0];
   const fiberFacts = compositionFacts(composition, words);
   const micron = extractMicron(body);
+  const seal = extractSeal(body);
   // Sin porcentaje, "made from baby alpaca" igual declara la calidad (no la composición).
   const mentioned = mainAlpaca ? null : text.match(/\b(royal|imperial|super\s+baby|baby)\s+(alpaca|suri)\b/i);
   const compositionQuote = compQuote ?? words?.quote;
@@ -397,6 +398,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
         status: sizesAvailable.length === 0 ? "agotado" : sizesAvailable.length === 1 && sizes.length > 2 ? "pocas_unidades" : "en_stock",
         checkedAt: src.retrievedAt,
       },
+      ...(seal ? { seal: { issuer: "AIA" as const, ...seal, readOn: src.retrievedAt } } : {}),
       images: [...new Set(images)].slice(0, 4),
       rawDescription: body,
       evidence: {
@@ -439,6 +441,21 @@ export function extractMicron(text: string): { micron: number; kind: "max" | "ex
     return { micron, kind: kind === "auto" ? (qualifier ? "max" : "exact") : kind, quote: m[0].trim() };
   }
   return null;
+}
+
+/** Sello AIA / Alpaca Mark, solo si la tienda lo menciona en la ficha. */
+export function extractSeal(text: string): { type: "origin_gold" | "origin_silver" | "blend" | "unspecified"; quote: string } | null {
+  const m = text.match(/[^.\n]{0,60}\b(alpaca\s+(?:origin\s+|blend\s+)?mark|aia[- ]certified|certified by the international alpaca association|sello\s+(?:de\s+(?:la\s+)?)?aia|certificad[oa]\s+por\s+la\s+aia)\b[^.\n]{0,60}/i);
+  if (!m) return null;
+  const q = m[0];
+  const type = /blend\s+mark/i.test(q)
+    ? "blend"
+    : /origin\s+mark/i.test(q) && /gold|dorad/i.test(q)
+      ? "origin_gold"
+      : /origin\s+mark/i.test(q) && /silver|platead/i.test(q)
+        ? "origin_silver"
+        : "unspecified";
+  return { type, quote: q.trim() };
 }
 
 /** Estado de la composición, familias de fibra y si lleva sintéticos (acrílico o poliéster). */

@@ -152,6 +152,10 @@ export interface Product {
     evidence?: Partial<Record<"shipsFrom" | "feesOnDelivery" | "freeShipping" | "deliveryDays" | "returns", { provenance: "stated" | "inferred"; quote: string }>>;
   };
   availability: { status: Availability; checkedAt: string };
+  /** Sello de un tercero tal como lo declara la tienda en la ficha (p. ej. "AIA-certified"). */
+  seal?: { issuer: "AIA"; type: "origin_gold" | "origin_silver" | "blend" | "unspecified"; quote: string; readOn: string } | null;
+  /** Reservado: prueba de laboratorio propia ("Tested by Alpaca Atlas"). Sin interfaz hasta que haya datos. */
+  labTest?: { date: string; lab: string; result: string; reportUrl?: string } | null;
   images: string[];
   rawDescription: string;
   evidence: Partial<

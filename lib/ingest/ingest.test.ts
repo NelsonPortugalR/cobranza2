@@ -236,3 +236,11 @@ test("envío: la política de la tienda se hereda y Kuna USA cambia con la etiqu
   assert.equal(shippingFromPolicy(policies["Sol Alpaca"]).feesOnDelivery, "none");
   assert.equal(shippingFromPolicy(policies["Qinti"]).shipsFrom, "not_published");
 });
+
+test("sello AIA: solo lo que la ficha declara, con su tipo si lo dice", async () => {
+  const { extractSeal } = await import("./shopify.ts");
+  assert.equal(extractSeal("Material: 100% AIA-certified Baby Alpaca")?.type, "unspecified");
+  assert.equal(extractSeal("This piece carries the Alpaca Blend Mark.")?.type, "blend");
+  assert.equal(extractSeal("Awarded the gold Alpaca Origin Mark")?.type, "origin_gold");
+  assert.equal(extractSeal("Soft baby alpaca, made in Peru."), null);
+});
