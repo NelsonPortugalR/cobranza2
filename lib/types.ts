@@ -1,3 +1,5 @@
+import type { AlpacaRange, CompositionStatus, FiberFamily } from "./fiber.ts";
+import type { FeesOnDelivery, ShipsFrom } from "./policies.ts";
 // Modelo de datos normalizado. Ver schema/product.schema.json para la versión JSON Schema.
 
 export type ProductType =
@@ -15,9 +17,13 @@ export type ProductType =
   | "home"
   | "otro";
 
-/** Categorías de finura según NTP 231.301 (rangos en micras). */
+/**
+ * Grado de fibra tal como lo nombra la tienda. "royal" e "imperial" son nombres comerciales
+ * (no son clases de la NTP); super baby y baby coinciden con las clases de la NTP 231.301:2014.
+ */
 export type Quality =
-  | "ultrafina"
+  | "royal"
+  | "imperial"
   | "super_baby"
   | "baby"
   | "fleece"
@@ -89,14 +95,25 @@ export interface Product {
   fiber: {
     /** % de alpaca en la composición total (0–100). */
     alpacaPct: number | null;
-    composition: { material: string; pct: number }[];
+    /** Composición con porcentajes tal como la publica la tienda; family = vocabulario controlado. */
+    composition: { material: string; pct: number; family?: FiberFamily }[];
+    /** Cómo publica la tienda la composición (ver lib/fiber.ts). */
+    compositionStatus?: CompositionStatus;
+    /** true = lleva acrílico o poliéster; false = composición completa sin ellos; null = no se sabe. */
+    hasSynthetics?: boolean | null;
+    /** Familias de fibra mencionadas (con o sin porcentaje). */
+    families?: FiberFamily[];
     /** Materiales nombrados sin porcentaje ("baby alpaca y seda"). */
     materials?: string[];
     /** true = la tienda dice que es mezcla aunque no dé porcentajes. */
     blend?: boolean;
     quality: Quality | null;
-    /** Diámetro medio de fibra en micras, si se declara o puede inferirse. */
+    /** Diámetro de fibra en micras, solo si la tienda lo declara (cita en evidence.micron). */
     micron: number | null;
+    /** "max" = la tienda da un tope ("under 19 microns"); "exact" = un valor. */
+    micronKind?: "max" | "exact";
+    /** Nombre del grado tal como lo escribe la tienda ("Royal Alpaca", "Imperial Alpaca"). */
+    gradeName?: string;
     breed: Breed | null;
   };
   color: {
@@ -121,8 +138,26 @@ export interface Product {
     days?: string;
     /** true = la tienda envía a EE. UU.; null = no lo publica. */
     toUS: boolean | null;
+    /** Desde dónde sale el paquete, según la política de la tienda (data/policies.json). */
+    shipsFrom?: ShipsFrom;
+    /** Si el comprador en EE. UU. puede pagar aranceles al recibir. */
+    feesOnDelivery?: FeesOnDelivery;
+    /** Motivo de "sin cobros al recibir": aranceles incluidos (declarado) o envío desde EE. UU. (declarado). */
+    feesBasis?: "duties_included" | "ships_from_us";
+    freeShippingOverUsd?: number | null;
+    deliveryDays?: { min: number; max: number } | null;
+    returnsDays?: number | null;
+    policyUrl?: string;
+    returnsUrl?: string;
+    /** Fecha en que se revisó la política. */
+    checkedOn?: string;
+    evidence?: Partial<Record<"shipsFrom" | "feesOnDelivery" | "freeShipping" | "deliveryDays" | "returns", { provenance: "stated" | "inferred"; quote: string }>>;
   };
   availability: { status: Availability; checkedAt: string };
+  /** Sello de un tercero tal como lo declara la tienda en la ficha (p. ej. "AIA-certified"). */
+  seal?: { issuer: "AIA"; type: "origin_gold" | "origin_silver" | "blend" | "unspecified"; quote: string; readOn: string } | null;
+  /** Reservado: prueba de laboratorio propia ("Tested by Alpaca Atlas"). Sin interfaz hasta que haya datos. */
+  labTest?: { date: string; lab: string; result: string; reportUrl?: string } | null;
   images: string[];
   rawDescription: string;
   evidence: Partial<
@@ -146,7 +181,10 @@ export interface Filters {
   colorFamilies: ColorFamily[];
   dye: "cualquiera" | "natural" | "tenido";
   origins: Region[];
-  composition: "cualquiera" | "100" | "mezcla";
+  /** Rangos de % de alpaca (vacío = cualquiera). */
+  alpacaRanges: AlpacaRange[];
+  /** Sin acrílico ni poliéster. */
+  noSynthetics: boolean;
   /** Tallas pedidas (S, M, L…). Se exige stock en esa talla. */
   sizes: string[];
   /** Mujer / hombre. "unisex" cumple ambos. */
@@ -157,6 +195,10 @@ export interface Filters {
   inStockOnly: boolean;
   /** Solo tiendas que envían a EE. UU. (activo por defecto: público objetivo). */
   shipsToUS: boolean;
+  /** Desde dónde sale el paquete (vacío = cualquiera). */
+  shipsFrom: ("US" | "Peru")[];
+  /** Sin aranceles al recibir en EE. UU. */
+  noFeesOnDelivery: boolean;
   sources: string[];
   /** Mostrar también productos de ejemplo de tiendas aún no conectadas. */
   includeDemo: boolean;
@@ -167,6 +209,8 @@ export interface InterpretationChip {
   label: string;
   /** Texto del usuario que originó este filtro. */
   from: string;
+  /** true = interpretación nuestra, no algo que la persona pidió literalmente. */
+  interpreted?: boolean;
 }
 
 export interface ParsedQuery {
@@ -174,6 +218,10 @@ export interface ParsedQuery {
   sort: SortKey;
   chips: InterpretationChip[];
   engine: "local" | "claude";
+  /** Qué pide la persona: productos, una pregunta, algo de una tienda, o ambas cosas. */
+  intent?: "product_search" | "question" | "store" | "mixed";
+  /** Aviso corto sobre cómo se interpretó la búsqueda ("llama" → piezas de alpaca). */
+  note?: string;
 }
 
 export const EMPTY_FILTERS: Filters = {
@@ -184,13 +232,16 @@ export const EMPTY_FILTERS: Filters = {
   colorFamilies: [],
   dye: "cualquiera",
   origins: [],
-  composition: "cualquiera",
+  alpacaRanges: [],
+  noSynthetics: false,
   sizes: [],
   genders: [],
   priceMin: null,
   priceMax: null,
   inStockOnly: false,
   shipsToUS: false,
+  shipsFrom: [],
+  noFeesOnDelivery: false,
   sources: [],
   includeDemo: false,
 };

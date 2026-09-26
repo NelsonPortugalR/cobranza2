@@ -6,14 +6,17 @@ import {
   COLOR_LABEL,
   COLOR_SWATCH,
   PRODUCT_TYPES,
+  NTP_CLASSES,
+  NTP_SOURCE,
   QUALITY_RANGES,
   SIZE_ORDER,
   TYPE_LABEL,
 } from "@/lib/taxonomy.ts";
 
 import type { FacetCounts, FacetKey } from "@/lib/filter.ts";
+import { ALPACA_RANGES, ALPACA_RANGE_LABEL } from "@/lib/fiber.ts";
 
-type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders";
+type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders" | "alpacaRanges" | "shipsFrom";
 
 const SIZES = [...SIZE_ORDER.slice(1, 7), "Única"];
 
@@ -38,17 +41,34 @@ export function FilterPanel({
 
   return (
     <div className="space-y-7 text-sm">
-      <Section title="Shipping">
-        <label className="flex cursor-pointer items-center justify-between gap-3">
-          <span>Ships to the US</span>
+      <p className="rounded-sm bg-arena px-3 py-2 text-xs leading-relaxed text-piedra">
+        Numbers are exact matches. <span className="text-piedra/70">+N</span> are possible matches: the store doesn&rsquo;t
+        publish that detail, so we can&rsquo;t confirm it. Options with no results are hidden.
+      </p>
+      <Section title="Shipping to the US" hint="From each store's published policy. Every store here ships to the US.">
+        <ul className="space-y-0.5">
+          {(["US", "Peru"] as const).map((s) => (
+            <CheckRow
+              key={s}
+              checked={filters.shipsFrom.includes(s)}
+              onChange={() => toggle("shipsFrom", s)}
+              label={`Ships from ${s === "US" ? "the US" : "Peru"}`}
+              n={optionCount("shipsFrom", s)}
+            />
+          ))}
+        </ul>
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 border-t border-arena-oscura/60 pt-3">
+          <span>
+            No fees on delivery
+            <span className="block text-xs text-piedra">Ships from the US, or duties are paid at checkout</span>
+          </span>
           <input
             type="checkbox"
             className="h-4 w-4 accent-tierra"
-            checked={filters.shipsToUS}
-            onChange={(e) => onChange({ shipsToUS: e.target.checked })}
+            checked={filters.noFeesOnDelivery}
+            onChange={(e) => onChange({ noFeesOnDelivery: e.target.checked })}
           />
         </label>
-        <p className="mt-1 text-xs text-piedra">Based on each store&rsquo;s published shipping policy.</p>
       </Section>
 
       <Section title="For">
@@ -95,23 +115,25 @@ export function FilterPanel({
         </div>
       </Section>
 
-      <Section title="Fiber grade" hint="As stated by the store, finest first.">
+      <Section title="Fiber grade" hint="The name each store uses, finest first.">
         <ul className="space-y-1">
-          {QUALITY_RANGES.slice(0, 4).map((q) => (
+          {QUALITY_RANGES.filter((q) => filters.qualities.includes(q.id) || optionCount("qualities", q.id).total > 0).map((q) => (
             <CheckRow
               key={q.id}
               checked={filters.qualities.includes(q.id)}
               onChange={() => toggle("qualities", q.id)}
               label={q.label}
+              detail={q.official ? undefined : "brand name"}
               n={optionCount("qualities", q.id)}
             />
           ))}
         </ul>
+        <GradeHelp />
       </Section>
 
       <Section title="Color">
         <div className="grid max-w-xs grid-cols-6 gap-2">
-          {COLOR_FAMILIES.map((c) => {
+          {COLOR_FAMILIES.filter((c) => filters.colorFamilies.includes(c) || optionCount("colorFamilies", c).total > 0).map((c) => {
             const active = filters.colorFamilies.includes(c);
             return (
               <button
@@ -135,15 +157,29 @@ export function FilterPanel({
       </Section>
 
       <Section title="Fiber content">
-        <Segmented
-          value={filters.composition}
-          options={[
-            ["cualquiera", "Any"],
-            ["100", "100% alpaca"],
-            ["mezcla", "Blend"],
-          ]}
-          onChange={(composition) => onChange({ composition })}
-        />
+        <ul className="space-y-0.5">
+          {ALPACA_RANGES.map((r) => (
+            <CheckRow
+              key={r}
+              checked={filters.alpacaRanges.includes(r)}
+              onChange={() => toggle("alpacaRanges", r)}
+              label={ALPACA_RANGE_LABEL[r]}
+              n={optionCount("alpacaRanges", r)}
+            />
+          ))}
+        </ul>
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 border-t border-arena-oscura/60 pt-3">
+          <span>
+            No synthetics
+            <span className="block text-xs text-piedra">No acrylic or polyester in the published fiber content</span>
+          </span>
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-tierra"
+            checked={filters.noSynthetics}
+            onChange={(e) => onChange({ noSynthetics: e.target.checked })}
+          />
+        </label>
       </Section>
 
       <Section title="Price (USD)">
@@ -171,6 +207,45 @@ export function FilterPanel({
   );
 }
 
+/** Equivalencias oficiales (NTP 231.301:2022) para quien nunca oyó hablar de micras. */
+function GradeHelp() {
+  return (
+    <details className="mt-3 text-xs text-piedra">
+      <summary className="cursor-pointer text-tierra underline decoration-tierra/30 underline-offset-2">What do these grades mean?</summary>
+      <p className="mt-2 leading-relaxed">
+        Grades describe how fine the fiber is, measured in microns (thousandths of a millimeter). Finer fiber feels softer and
+        itches less. Peru&rsquo;s standard sets these classes:
+      </p>
+      <table className="mt-2 w-full text-left">
+        <thead>
+          <tr className="text-[10px] uppercase tracking-wide">
+            <th className="py-1 font-medium">Official class</th>
+            <th className="py-1 font-medium">Microns</th>
+            <th className="py-1 font-medium">Old name</th>
+          </tr>
+        </thead>
+        <tbody>
+          {NTP_CLASSES.slice(0, 4).map((c) => (
+            <tr key={c.name2022} className="border-t border-arena-oscura/60">
+              <td className="py-1">{c.name2022}</td>
+              <td className="py-1 tabular-nums">{c.microns}</td>
+              <td className="py-1">{c.name2014 ?? "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 leading-relaxed">
+        &ldquo;Royal&rdquo; and &ldquo;Imperial&rdquo; are brand names for a store&rsquo;s finest lots, not official classes.
+        Source:{" "}
+        <a href={NTP_SOURCE.url} target="_blank" rel="noopener noreferrer" className="underline">
+          NTP 231.301:2022
+        </a>
+        . <a href="/guides/alpaca-fiber-grades-explained" className="underline">Full guide</a>
+      </p>
+    </details>
+  );
+}
+
 function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <section>
@@ -194,13 +269,13 @@ function Pill({
   n: { exact: number; total: number };
   block?: boolean;
 }) {
+  if (!active && n.total === 0) return null;
   return (
     <button
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      disabled={!active && n.total === 0}
-      title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} to confirm` : undefined}
+      title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} possible (detail not published)` : undefined}
       className={`rounded-full border px-3 py-1.5 text-xs transition disabled:opacity-35 ${block ? "w-full" : ""} ${
         active ? "border-carbon bg-carbon text-lana" : "border-arena-oscura bg-white hover:border-tierra/60"
       }`}
@@ -223,11 +298,12 @@ function CheckRow({
   detail?: string;
   n: { exact: number; total: number };
 }) {
+  if (!checked && n.total === 0) return null;
   return (
     <li>
       <label
         className={`flex cursor-pointer items-center gap-2.5 py-1 ${!checked && n.total === 0 ? "opacity-40" : ""}`}
-        title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} to confirm` : undefined}
+        title={n.total > n.exact ? `${n.exact} exact · ${n.total - n.exact} possible (detail not published)` : undefined}
       >
         <input type="checkbox" checked={checked} onChange={onChange} className="h-4 w-4 accent-tierra" />
         <span className="flex-1">
@@ -240,32 +316,6 @@ function CheckRow({
         </span>
       </label>
     </li>
-  );
-}
-
-function Segmented<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: [T, string][];
-  onChange: (v: T) => void;
-}) {
-  return (
-    <div className="grid auto-cols-fr grid-flow-col rounded-full bg-arena p-0.5 text-xs">
-      {options.map(([v, label]) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={value === v}
-          onClick={() => onChange(v)}
-          className={`rounded-full px-2 py-1.5 transition ${value === v ? "bg-white text-carbon shadow-sm" : "text-piedra"}`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
   );
 }
 

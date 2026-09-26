@@ -8,7 +8,7 @@ import { JsonLd } from "@/components/JsonLd.tsx";
 
 export const metadata: Metadata = {
   title: "About & How It Works",
-  description: `${SITE.name} compares authentic Peruvian alpaca from the makers' own stores. How we collect product data, convert prices and choose what to show.`,
+  description: `${SITE.name} compares Peruvian alpaca straight from the makers' stores, and every fact is sourced. How we read product data, shipping policies and prices.`,
   alternates: { canonical: "/about" },
 };
 
@@ -19,7 +19,7 @@ export default function AboutPage() {
       <h1 className="font-serif text-4xl tracking-tight sm:text-5xl">About {SITE.name}</h1>
       <div className="mt-8 space-y-5 text-[15px] leading-relaxed text-carbon/85">
         <p>
-          {SITE.name} is an independent comparison site for authentic Peruvian alpaca. We bring together{" "}
+          {SITE.name} compares Peruvian alpaca straight from the makers&rsquo; stores, and every fact is sourced. We bring together{" "}
           {US_PRODUCTS.length.toLocaleString("en-US")} sweaters, cardigans, scarves and accessories from {US_BRANDS.length} stores
           that ship to the US, so you can compare fiber content, sizes in stock and prices in one place, then buy directly from the
           maker.
@@ -32,10 +32,31 @@ export default function AboutPage() {
         </p>
         <h2 className="pt-4 font-serif text-2xl text-carbon">What we show, and what we don&rsquo;t</h2>
         <p>
-          We show fiber content, grade, color and sizes exactly as each store publishes them. When a store doesn&rsquo;t publish a
-          detail, we say so instead of guessing. Where we infer something (for example, “100%” from a description that names a single
-          fiber), we label it as inferred.
+          We don&rsquo;t test the garments. We report what each store publishes, quote it, and say when a detail is missing instead
+          of guessing. Anything we infer is labeled as inferred.
         </p>
+        <ul className="list-disc space-y-2 pl-5">
+          <li>
+            <strong className="font-medium text-carbon">Fiber content.</strong> The percentages as the store lists them. We mark
+            when the store gives only part of the composition, names the fibers without percentages, or only says &ldquo;pure
+            alpaca&rdquo; (shown as &ldquo;per description&rdquo;). &ldquo;No synthetics&rdquo; means no acrylic or polyester in a
+            complete published composition.
+          </li>
+          <li>
+            <strong className="font-medium text-carbon">Grade.</strong> The name the store uses, such as baby, super baby or royal.
+            Baby and super baby match Peru&rsquo;s official classes (NTP 231.301:2022); royal and imperial are brand names. We show a
+            micron count only when the store states it.
+          </li>
+          <li>
+            <strong className="font-medium text-carbon">Shipping and returns.</strong> Where the package ships from, whether duties
+            may be due on delivery, free-shipping thresholds, delivery times and return windows come from each store&rsquo;s
+            published policy. We quote it, link it and show the date we checked it.
+          </li>
+          <li>
+            <strong className="font-medium text-carbon">Seals.</strong> If a store calls a piece &ldquo;AIA-certified&rdquo;, we
+            quote it. We can&rsquo;t verify what a certification covers.
+          </li>
+        </ul>
         <h2 className="pt-4 font-serif text-2xl text-carbon">Prices and currency</h2>
         <p>
           Stores that sell in Peruvian soles are converted to US dollars using the official exchange rate published by Peru&rsquo;s

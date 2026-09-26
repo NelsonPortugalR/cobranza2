@@ -47,6 +47,6 @@ export function ProductImage({
 
 /** Texto alternativo descriptivo: tipo, material, color y marca (útil para accesibilidad y búsqueda de imágenes). */
 function altText(p: Product): string {
-  const fiber = p.fiber.quality === "baby" ? "baby alpaca" : p.fiber.quality === "ultrafina" ? "royal alpaca" : "alpaca";
+  const fiber = p.fiber.quality === "baby" ? "baby alpaca" : p.fiber.quality === "royal" ? "royal alpaca" : "alpaca";
   return `${p.title} — ${p.color.name.toLowerCase()} ${fiber} by ${p.seller.name}`;
 }

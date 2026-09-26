@@ -8,10 +8,12 @@ import { absoluteUrl, clampDescription, fitTitle, OG_IMAGE, SITE } from "@/lib/s
 import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs.tsx";
 import { JsonLd } from "@/components/JsonLd.tsx";
 import type { FieldEvidence, Product } from "@/lib/types.ts";
-import { AVAILABILITY_LABEL, BREED_LABEL, QUALITY_LABEL, TYPE_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
-import { compositionLabel, formatDate, formatPen, formatUsd, usdPrice } from "@/lib/format.ts";
+import { AVAILABILITY_LABEL, BREED_LABEL, NTP_CLASSES, QUALITY_LABEL, QUALITY_RANGES, TYPE_LABEL, TYPE_SINGULAR, officialClassFromMicron } from "@/lib/taxonomy.ts";
+import { compositionLabel, compositionNote, formatDate, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
+import { OutboundLink } from "@/components/OutboundLink.tsx";
+import aiaMembers from "@/data/aia-members.json";
 
 type Params = { params: Promise<{ slug: string }> };
 
@@ -23,7 +25,7 @@ export function generateStaticParams() {
 }
 
 const fiberWords = (p: Product) =>
-  p.fiber.quality === "ultrafina" ? "royal alpaca" : p.fiber.quality === "super_baby" ? "super baby alpaca" : p.fiber.quality === "baby" ? "baby alpaca" : "alpaca";
+  p.fiber.quality === "royal" ? "royal alpaca" : p.fiber.quality === "imperial" ? "imperial alpaca" : p.fiber.quality === "super_baby" ? "super baby alpaca" : p.fiber.quality === "baby" ? "baby alpaca" : "alpaca";
 
 /** Resumen propio en prosa (contenido único por ficha, útil para Google y para respuestas de IA). */
 function summary(p: Product): string {
@@ -47,7 +49,7 @@ function summary(p: Product): string {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const p = getProduct((await params).slug);
-  if (!p) return {};
+  if (!p) notFound();
   const price = usdPrice(p);
   const grade = fiberWords(p).replace(/\b\w/g, (c) => c.toUpperCase());
   // "Langui Sweater — Gray · Baby Alpaca by Incalpaca", acortado si Google lo cortaría.
@@ -71,6 +73,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     twitter: { card: "summary_large_image", title: title.absolute, description, images: [p.images[0] ?? OG_IMAGE.url] },
   };
 }
+
+/** Qué significa el grado declarado según la norma peruana (o que es un nombre comercial). */
+function gradeHint(p: Product): string | undefined {
+  const g = QUALITY_RANGES.find((q) => q.id === p.fiber.quality);
+  if (!g) return undefined;
+  const named = p.fiber.gradeName ? `Named by the store as “${p.fiber.gradeName}”. ` : "";
+  if (!g.official) return `${named}A brand name for the store's finest fiber, not an official class; its fineness depends on the store.`;
+  const c = NTP_CLASSES.find((x) => x.name2022 === g.official);
+  return `${named}Equivalent official class: ${g.official}, ${c?.microns} µm (NTP 231.301:2022).`;
+}
+
+const AIA = aiaMembers as { checkedOn: string; stores: Record<string, { list: string; url: string }> };
 
 const METHOD_LABEL: Record<Product["source"]["method"], string> = {
   api: "the store's official API",
@@ -110,14 +124,58 @@ export default async function ProductPage({ params }: Params) {
   const text = summary(p);
 
   const rows: { label: string; value: string | null; ev?: FieldEvidence; hint?: string; optional?: boolean }[] = [
-    { label: "Fiber content", value: compositionLabel(p), ev: p.evidence.alpacaPct },
+    { label: "Fiber content", value: compositionLabel(p), ev: p.evidence.alpacaPct, hint: compositionNote(p) },
+    {
+      label: "Synthetics",
+      value:
+        p.fiber.hasSynthetics === true
+          ? `Contains ${(p.fiber.families ?? []).filter((f) => f === "acrylic" || f === "polyester").join(" and ")}`
+          : p.fiber.hasSynthetics === false
+            ? "No acrylic or polyester in the published fiber content"
+            : null,
+      optional: true,
+    },
     {
       label: "Fiber grade",
-      value: p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null,
+      value: gradeWithShare(p),
       ev: p.evidence.quality,
-      hint: p.fiber.quality && p.fiber.micron == null ? "As named by the store." : undefined,
+      hint: gradeHint(p),
     },
-    { label: "Micron count", value: p.fiber.micron != null ? `${p.fiber.micron} µm` : null, ev: p.evidence.micron, optional: true },
+    {
+      label: "Fiber diameter",
+      value: p.fiber.micron != null ? `${p.fiber.micronKind === "max" ? "≤ " : ""}${p.fiber.micron} µm` : null,
+      ev: p.evidence.micron,
+      hint:
+        p.fiber.micron != null && p.fiber.micronKind === "exact"
+          ? `Official class for this diameter: ${officialClassFromMicron(p.fiber.micron)} (NTP 231.301:2022).`
+          : undefined,
+      optional: true,
+    },
+    {
+      label: "Seal",
+      value: p.seal ? `${p.seal.type === "blend" ? "AIA Alpaca Blend Mark" : p.seal.type.startsWith("origin") ? "AIA Alpaca Origin Mark" : "AIA-certified"} (as stated by the store)` : null,
+      ev: p.seal ? { provenance: "declarado", confidence: 1, quote: p.seal.quote } : undefined,
+      hint: p.seal
+        ? "The AIA (International Alpaca Association) is Peru's alpaca industry association. We can't verify what each certification covers."
+        : undefined,
+      optional: true,
+    },
+    {
+      label: "Store and the AIA",
+      // Si la ficha dice "AIA-certified" y la tienda no figura en la lista, lo decimos sin sugerir
+      // que la afirmación sea falsa: el sello puede ser del fabricante de la prenda.
+      value: AIA.stores[p.source.site]
+        ? `${p.source.site} is listed as an AIA member (${AIA.stores[p.source.site].list})`
+        : p.seal
+          ? `${p.source.site}: not found on AIA's public list as of ${AIA.checkedOn}`
+          : null,
+      hint: AIA.stores[p.source.site]
+        ? `Checked ${AIA.checkedOn} on the AIA's public list. Membership doesn't mean every piece carries a seal.`
+        : p.seal
+          ? "The seal may belong to the maker of the garment rather than the store."
+          : undefined,
+      optional: true,
+    },
     { label: "Breed", value: p.fiber.breed ? BREED_LABEL[p.fiber.breed] : null, ev: p.evidence.breed, optional: true },
     { label: "Color", value: p.color.name },
     { label: "Construction", value: p.construction ? CONSTRUCTION_LABEL[p.construction] : null, optional: true },
@@ -196,14 +254,14 @@ export default async function ProductPage({ params }: Params) {
             </p>
           )}
 
-          <a
+          <OutboundLink
             href={p.source.url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
+            productId={p.id}
+            store={p.source.site}
             className="mt-6 hidden w-full items-center justify-center gap-2 rounded-full bg-carbon py-3.5 text-sm font-medium text-lana transition hover:bg-tierra lg:flex"
           >
             Shop at {p.source.site} ↗
-          </a>
+          </OutboundLink>
 
           <section className="mt-10">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">At a glance</h2>
@@ -223,6 +281,8 @@ export default async function ProductPage({ params }: Params) {
               ))}
             </dl>
           </section>
+
+          {p.shipping?.checkedOn && <ShippingSection s={p.shipping} site={p.source.site} />}
 
           <section className="mt-10">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">
@@ -326,17 +386,82 @@ export default async function ProductPage({ params }: Params) {
               {TYPE_SINGULAR[p.productType]} · {AVAILABILITY_LABEL[p.availability.status]}
             </p>
           </div>
-          <a
+          <OutboundLink
             href={p.source.url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
+            productId={p.id}
+            store={p.source.site}
             className="ml-auto shrink-0 rounded-full bg-carbon px-5 py-3 text-sm font-medium text-lana"
           >
             Shop at {p.source.site} ↗
-          </a>
+          </OutboundLink>
         </div>
       </div>
     </div>
+  );
+}
+
+const FEES_TEXT = {
+  duties_included: "None: duties included (stated by store)",
+  ships_from_us: "None: ships from within the US — no import fees",
+  may_apply: "May apply: the store says import duties are not included",
+  not_published: "Not published by the store",
+} as const;
+
+/** Envío y devoluciones de la política de la tienda, con cita, fuente y fecha. */
+function ShippingSection({ s, site }: { s: NonNullable<Product["shipping"]>; site: string }) {
+  const ev = s.evidence ?? {};
+  const rows: { label: string; value: string | null; hint?: string; e?: { provenance: "stated" | "inferred"; quote: string } }[] = [
+    {
+      label: "Ships from",
+      value: s.shipsFrom === "US" ? "United States" : s.shipsFrom === "Peru" ? "Peru" : null,
+      e: ev.shipsFrom,
+    },
+    {
+      label: "Fees on delivery",
+      value:
+        s.feesOnDelivery === "none"
+          ? FEES_TEXT[s.feesBasis ?? "duties_included"]
+          : FEES_TEXT[s.feesOnDelivery === "may_apply" ? "may_apply" : "not_published"],
+      hint: "Customs duties or fees a carrier can collect when an international package arrives.",
+      e: ev.feesOnDelivery,
+    },
+    { label: "Free shipping", value: s.freeShippingOverUsd ? `On orders over $${s.freeShippingOverUsd}` : null, e: ev.freeShipping },
+    { label: "Delivery to the US", value: s.deliveryDays ? `${s.deliveryDays.min}–${s.deliveryDays.max} business days` : null, e: ev.deliveryDays },
+  ];
+  return (
+    <section className="mt-10">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Shipping</h2>
+      <dl className="mt-3 divide-y divide-arena-oscura border-y border-arena-oscura">
+        {rows.map((r) => (
+          <div key={r.label} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">
+            <dt className="text-piedra">{r.label}</dt>
+            <dd>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={r.value ? "" : "italic text-piedra"}>{r.value ?? "Not published by the store"}</span>
+                {r.value && r.e && <ProvenanceBadge ev={{ provenance: r.e.provenance === "stated" ? "declarado" : "inferido", confidence: 1 }} />}
+              </div>
+              {r.hint && <p className="mt-0.5 text-xs text-piedra">{r.hint}</p>}
+              {r.value && r.e && <p className="mt-1 text-xs italic text-piedra">“{r.e.quote}”</p>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs text-piedra">
+        From {site}&rsquo;s{" "}
+        <a href={s.policyUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline">
+          shipping policy
+        </a>
+        {s.returnsUrl && (
+          <>
+            {" "}and{" "}
+            <a href={s.returnsUrl} target="_blank" rel="noopener noreferrer nofollow" className="underline">
+              returns policy
+            </a>
+          </>
+        )}
+        , checked {formatDate(`${s.checkedOn}T12:00:00Z`)}. Policies change: confirm at checkout.
+      </p>
+    </section>
   );
 }
 

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { parseQueryLocal } from "./parseQuery.ts";
 import { applyFilters, facetCounts } from "./filter.ts";
 import { PRODUCTS as MOCK } from "./products.ts";
-import { qualityFromMicron } from "./taxonomy.ts";
+import { officialClassFromMicron } from "./taxonomy.ts";
 import { bcrpDate, parseBcrp, toUsd, type FxRate } from "./fx.ts";
 import { stripNonComparable } from "./comparable.ts";
 
@@ -15,20 +15,21 @@ const withDemo = <T extends { filters: object }>(parsed: T) => ({
   filters: { ...parsed.filters, includeDemo: true, shipsToUS: false },
 });
 
-test("micron ranges follow NTP 231.301", () => {
-  assert.equal(qualityFromMicron(17.9), "ultrafina");
-  assert.equal(qualityFromMicron(18), "ultrafina");
-  assert.equal(qualityFromMicron(19.5), "super_baby");
-  assert.equal(qualityFromMicron(22.5), "baby");
-  assert.equal(qualityFromMicron(25), "fleece");
+test("micron ranges follow NTP 231.301:2022", () => {
+  assert.equal(officialClassFromMicron(17.9), "Ultrafina");
+  assert.equal(officialClassFromMicron(18), "Ultrafina");
+  assert.equal(officialClassFromMicron(19.5), "Superfina");
+  assert.equal(officialClassFromMicron(22.5), "Extrafina");
+  assert.equal(officialClassFromMicron(25), "Fina");
+  assert.equal(officialClassFromMicron(31.6), "Gruesa");
 });
 
 test("target query: brown sweater, 100% baby alpaca, size M, under $180", () => {
   const { filters, chips } = parseQueryLocal("Brown sweater, 100% baby alpaca, size M, under $180.", FX);
   assert.deepEqual(filters.types, ["chompa"]);
   assert.deepEqual(filters.colorFamilies, ["marron"]);
-  assert.equal(filters.composition, "100");
-  assert.deepEqual(filters.qualities, ["ultrafina", "super_baby", "baby"]);
+  assert.deepEqual(filters.alpacaRanges, ["100"]);
+  assert.deepEqual(filters.qualities, ["royal", "imperial", "super_baby", "baby"]);
   assert.deepEqual(filters.sizes, ["M"]);
   assert.equal(filters.priceMax, 180);
   assert.equal(filters.shipsToUS, true, "US shipping is on by default");
@@ -48,7 +49,7 @@ test("English phrasing: sizes, price words and accessories", () => {
   assert.equal(b.text, "");
   const c = parseQueryLocal("royal alpaca wrap in camel, one size", FX).filters;
   assert.deepEqual(c.types, ["chal"]);
-  assert.deepEqual(c.qualities, ["ultrafina"]);
+  assert.deepEqual(c.qualities, ["royal"]);
   assert.deepEqual(c.colorFamilies, ["camel"]);
   assert.deepEqual(c.sizes, ["Única"]);
 });
@@ -116,7 +117,7 @@ test("US shipping filter", () => {
 
 test("facet counts match applying the filter", () => {
   const base = withDemo(parseQueryLocal("sweater", FX)).filters;
-  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [] });
+  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [], alpacaRanges: [], shipsFrom: [] });
   for (const [key, value] of [["qualities", "baby"], ["colorFamilies", "beige"], ["sizes", "M"]] as const) {
     const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");
     assert.deepEqual(counts[key][value], { exact: r.exact.length, total: r.exact.length + r.partial.length }, key);
@@ -147,4 +148,15 @@ test("slugs are URL-safe and English", async () => {
   assert.equal(slugify("Langui Sweater — Gray Incalpaca"), "langui-sweater-gray-incalpaca");
   assert.equal(slugify("100% Alpaca Shawls & Wraps"), "100-percent-alpaca-shawls-and-wraps");
   assert.equal(slugify("Suéter Niño"), "sueter-nino");
+});
+
+test("cards: the grade carries the alpaca share, not 'of fiber'", async () => {
+  const { gradeWithShare } = await import("./format.ts");
+  const base = PRODUCTS[0];
+  const blend = { ...base, fiber: { ...base.fiber, quality: "super_baby" as const, alpacaPct: 50, compositionStatus: "stated" as const } };
+  assert.equal(gradeWithShare(blend), "Super baby alpaca · 50%");
+  const pure = { ...base, fiber: { ...base.fiber, quality: "baby" as const, alpacaPct: 100, compositionStatus: "stated" as const } };
+  assert.equal(gradeWithShare(pure), "Baby alpaca");
+  const noPct = { ...base, fiber: { ...base.fiber, quality: "royal" as const, alpacaPct: null, compositionStatus: "not_published" as const } };
+  assert.equal(gradeWithShare(noPct), "Royal alpaca · % not listed");
 });

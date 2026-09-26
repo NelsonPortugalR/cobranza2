@@ -1,3 +1,5 @@
+import { fiberFamily, SYNTHETIC, type CompositionStatus, type FiberFamily } from "../fiber.ts";
+import { shippingFromPolicy, type StorePolicy } from "../policies.ts";
 import type { Breed, ColorFamily, FieldEvidence, Gender, Product, ProductType, Quality } from "../types.ts";
 import { COLOR_SWATCH, SIZE_ORDER } from "../taxonomy.ts";
 import { FALLBACK_FX, toUsd, type FxRate } from "../fx.ts";
@@ -38,6 +40,10 @@ export interface ShopifySource {
   baseUrl: string;
   currency: "USD" | "PEN";
   shipping?: Product["shipping"];
+  /** Tiendas que etiquetan con "alpaca" productos que no lo son (venta cruzada): sus etiquetas no cuentan. */
+  ignoreAlpacaTags?: boolean;
+  /** Política curada (data/policies.json); si existe, manda sobre `shipping`. */
+  policy?: StorePolicy;
   retrievedAt: string;
   /** Tipo de cambio del día de la descarga (para convertir soles a USD). */
   fx?: FxRate;
@@ -90,7 +96,8 @@ const TYPE_RULES: [ProductType, RegExp][] = [
   ["bufanda", /\b(scarf|scarves|scarfs|bufandas?|chalinas?|pa[nñ]uelos?|cuelleras?|neck ?warmer|snood|cowl|tubo)\b/i],
   ["gorro", /\b(beanies?|hats?|chullos?|bucket|berets?|headbands?|gorros?|sombreros?|balaclava|vinchas?)\b/i],
   ["guantes", /\b(gloves?|mittens?|mitts|glittens?|guantes|mitones)\b/i],
-  ["medias", /\b(socks?|medias?|calcetines|legwarmers?|leg warmers?|calentadores)\b/i],
+  // "media" en singular no: "Media Luna" es un bolso o un llavero, no calcetines.
+  ["medias", /\b(socks?|medias|calcetines|legwarmers?|leg warmers?|calentadores)\b/i],
   ["fibra", /\b(ovillos?|hilos?|madejas?|yarns?|skeins?|roving)\b/i],
   ["home", /\b(throws?|blankets?|cushions?|pillows?|mantas?|plaids?|coj[ií]n(es)?|frazadas?)\b/i],
   ["chompa", /\b(sweaters?|pullovers?|jumpers?|turtlenecks?|crew ?necks?|chompas?|su[eé]ter(es)?|jerseys?|troyer|tops?|polos?|hoodies?)\b/i],
@@ -108,13 +115,17 @@ export function inferType(p: ShopifyProduct): ProductType | null {
 
 // --- Composición y calidad --------------------------------------------------
 
-const MATERIAL = String.raw`(royal\s+alpaca|imperial\s+alpaca|super\s+baby\s+alpaca|baby\s+suri(?:\s+alpaca)?|suri\s+alpaca|baby\s+alpaca|alpaca|pima\s+cotton|cotton|algod[oó]n|silk|seda|merino(?:\s+wool)?|extrafine\s+merino|wool|lana|nylon|polyamide|poliamida|polyester|poli[eé]ster|elastane|elastano|spandex|acrylic|acr[ií]lico|cashmere|linen|lino|viscose|mohair)`;
-const PCT_BEFORE = new RegExp(String.raw`(\d{1,3}(?:[.,]\d+)?)\s*%\s*(?:of\s+|de\s+)?` + MATERIAL, "gi");
+const MATERIAL = String.raw`(royal\s+alpaca|imperial\s+alpaca|super\s+baby\s+alpaca|suri\s+baby\s+alpaca|baby\s+suri(?:\s+alpaca)?|suri\s+alpaca|baby\s+alpaca|alpaca|pima\s+cotton|cotton|algod[oó]n|silk|seda|merino(?:\s+wool)?|extrafine\s+merino|wool|lana|nylon|polyamide|poliamida|polyester|poli[eé]ster|e?s?lastane|elastano|spandex|polyacrylic|poliacr[ií]lico|acrylic|acr[ií]lico|dralon|cashmere|linen|lino|viscose|mohair)`;
+// Calificativos entre el % y la fibra: "100% AIA-certified Baby Alpaca", "70% premium alpaca".
+const QUALIFIERS = String.raw`(?:(?:aia[- ]certified|certified|pure|premium|fine|finest|peruvian|natural|genuine|organic|soft|super\s*soft|recycled|traceable)\s+){0,3}`;
+const PCT_BEFORE = new RegExp(String.raw`(\d{1,3}(?:[.,]\d+)?)\s*%\s*(?:of\s+|de\s+)?` + QUALIFIERS + MATERIAL, "gi");
 const PCT_AFTER = new RegExp(MATERIAL + String.raw`\s*[:(]?\s*(\d{1,3}(?:[.,]\d+)?)\s*%`, "gi");
 // El forro no es la prenda: "Lining: 100% polyester" / "Forro: 100% poliéster".
 const LINING = /\b(lining|lined with|forro|forrad[oa])\b[^.\n]*/gi;
 
-const isAlpaca = (m: string) => /alpaca|suri/i.test(m);
+// Con límites de palabra: "ensuring" contiene "suri" y dejaba pasar bolsos y joyas.
+const ALPACA_WORD = /\balpacas?\b|\bsuri\b/i;
+const isAlpaca = (m: string) => ALPACA_WORD.test(m);
 
 function titleCase(s: string) {
   return s.toLowerCase().replace(/\s+/g, " ").replace(/(^|[\s(/-])(\S)/g, (_, sep: string, c: string) => sep + c.toUpperCase());
@@ -130,13 +141,16 @@ export function extractComposition(fullText: string): { composition: { material:
       const [pctStr, material] = re === PCT_BEFORE ? [m[1], m[2]] : [m[2], m[1]];
       const pct = parseFloat(pctStr.replace(",", "."));
       if (pct <= 0 || pct > 100) continue;
-      const key = titleCase(material.replace(/algod[oó]n/i, "cotton").replace(/^seda$/i, "silk").replace(/^lana$/i, "wool"));
+      const key = titleCase(
+        material.replace(/algod[oó]n/i, "cotton").replace(/^seda$/i, "silk").replace(/^lana$/i, "wool").replace(/^e?s?lastane$/i, "elastane"),
+      );
       if (!found.has(key)) found.set(key, pct);
       quote ??= m[0];
     }
     let composition = [...found].map(([material, pct]) => ({ material, pct }));
-    // Descarta combinaciones incoherentes (p. ej. dos frases "100% …" distintas).
-    if (composition.reduce((a, c) => a + c.pct, 0) > 101) composition = composition.slice(0, 1);
+    // Dos frases "100% …" distintas (la prenda y un accesorio): vale la primera. Si la suma pasa
+    // de 100 por otra razón, es un error de la tienda y se conserva tal cual (estado "inconsistent").
+    if (composition.reduce((a, c) => a + c.pct, 0) > 101 && composition.filter((c) => c.pct === 100).length > 0) composition = composition.slice(0, 1);
     return { composition, quote };
   });
   // Fichas que mezclan formatos ("30% silk" y "baby alpaca 70%"): se unen si suman ≤ 100.
@@ -165,7 +179,8 @@ const WORD_MATERIALS: [string, RegExp][] = [
   ["Algodón", /\b(algod[oó]n|cotton|pima)\b/i],
   ["Lino", /\b(lino|linen)\b/i],
   ["Nylon", /\b(nylon|poliamida|polyamide)\b/i],
-  ["Acrílico", /\b(acr[ií]lico|acrylic)\b/i],
+  ["Acrílico", /\b(acr[ií]lico|acrylic|polyacrylic|dralon|microfib(?:er|re|ra))\b/i],
+  ["Polyester", /\b(poli[eé]ster|polyester)\b/i],
   ["Cashmere", /\bcashmere\b/i],
 ];
 
@@ -201,7 +216,9 @@ export function extractMaterialsFromWords(text: string): { materials: string[]; 
 
 export function qualityFromMaterial(material: string): { quality: Quality | null; provenance: FieldEvidence["provenance"] } {
   const m = material.toLowerCase();
-  if (m.includes("royal")) return { quality: "ultrafina", provenance: "inferido" }; // término comercial, no NTP
+  // Royal e Imperial son nombres comerciales que la tienda declara; no son clases de la NTP.
+  if (m.includes("royal")) return { quality: "royal", provenance: "declarado" };
+  if (m.includes("imperial")) return { quality: "imperial", provenance: "declarado" };
   if (m.includes("super baby")) return { quality: "super_baby", provenance: "declarado" };
   if (m.includes("baby")) return { quality: "baby", provenance: "declarado" };
   return { quality: null, provenance: "desconocido" };
@@ -274,7 +291,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
   const body = htmlToText(p.body_html);
   const text = `${p.title}\n${body}`;
   // Solo alpaca: la vicuña es otra fibra (y otro rango de precio), no entra al catálogo.
-  if (src.alpacaOnly && !/alpaca|suri/i.test(`${text} ${p.tags.join(" ")}`)) return [];
+  if (src.alpacaOnly && !ALPACA_WORD.test(`${text} ${src.ignoreAlpacaTags ? "" : p.tags.join(" ")}`)) return [];
   if (/vicu[nñ]a/i.test(p.title) && !/alpaca/i.test(p.title)) return [];
   const { composition, quote: compQuote } = extractComposition(text);
   const words = composition.length ? null : extractMaterialsFromWords(text);
@@ -284,8 +301,11 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       ? 100
       : null;
   const mainAlpaca = composition.filter((c) => isAlpaca(c.material)).sort((a, b) => b.pct - a.pct)[0];
+  const fiberFacts = compositionFacts(composition, words);
+  const micron = extractMicron(body);
+  const seal = extractSeal(body);
   // Sin porcentaje, "made from baby alpaca" igual declara la calidad (no la composición).
-  const mentioned = mainAlpaca ? null : text.match(/\b(royal|super\s+baby|baby)\s+(alpaca|suri)\b/i);
+  const mentioned = mainAlpaca ? null : text.match(/\b(royal|imperial|super\s+baby|baby)\s+(alpaca|suri)\b/i);
   const compositionQuote = compQuote ?? words?.quote;
   const qualitySource = mainAlpaca?.material ?? mentioned?.[0];
   const q = qualitySource ? qualityFromMaterial(qualitySource) : { quality: null, provenance: "desconocido" as const };
@@ -351,11 +371,14 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       gender,
       fiber: {
         alpacaPct,
-        composition,
+        composition: composition.map((c) => ({ ...c, family: fiberFamily(c.material) })),
         materials: words?.materials,
+        ...fiberFacts,
         blend: composition.length ? composition.some((c) => !isAlpaca(c.material)) : words?.blend,
         quality: q.quality,
-        micron: null,
+        micron: micron?.micron ?? null,
+        ...(micron ? { micronKind: micron.kind } : {}),
+        ...(qualitySource ? { gradeName: titleCase(qualitySource) } : {}),
         breed,
       },
       color: {
@@ -375,16 +398,17 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
         amountUsd: toUsd(amount, src.currency, src.fx ?? FALLBACK_FX),
         compareAt,
       },
-      shipping: src.shipping,
+      shipping: src.policy ? shippingFromPolicy(src.policy, p.tags) : src.shipping,
       availability: {
         status: sizesAvailable.length === 0 ? "agotado" : sizesAvailable.length === 1 && sizes.length > 2 ? "pocas_unidades" : "en_stock",
         checkedAt: src.retrievedAt,
       },
+      ...(seal ? { seal: { issuer: "AIA" as const, ...seal, readOn: src.retrievedAt } } : {}),
       images: [...new Set(images)].slice(0, 4),
       rawDescription: body,
       evidence: {
         quality: q.quality ? { provenance: q.provenance, confidence: mainAlpaca ? 0.85 : 0.6, quote: qualityQuote } : { provenance: "desconocido", confidence: 0 },
-        micron: { provenance: "desconocido", confidence: 0 },
+        micron: micron ? { provenance: "declarado", confidence: 0.9, quote: micron.quote } : { provenance: "desconocido", confidence: 0 },
         breed: breed ? { provenance: "declarado", confidence: 0.9, quote: (suri ?? huacaya)![0] } : { provenance: "desconocido", confidence: 0 },
         natural: color.evidence,
         origin: { provenance: "desconocido", confidence: 0, quote: madeIn?.[0] },
@@ -397,6 +421,62 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       extraction: { ...ENGINE, confidence: Math.round(confidence * 100) / 100, warnings },
     } satisfies Product;
   });
+}
+
+/**
+ * Micras, solo cuando la tienda las afirma de la pieza: "Fineness: Under 19 microns",
+ * "does not exceed 23 microns", "measuring … 17 microns". Las explicaciones generales del
+ * grado ("up to 23 microns according to the AIA") no cuentan.
+ */
+export function extractMicron(text: string): { micron: number; kind: "max" | "exact"; quote: string } | null {
+  const UNIT = String.raw`\s*(?:µm|μm|microns?|micras?|micrones)`;
+  const NUM = String.raw`(\d{2}(?:[.,]\d)?)`;
+  const patterns: [RegExp, "max" | "exact" | "auto"][] = [
+    [new RegExp(String.raw`\b(?:fineness|finura|micronaje|micron(?:s|aje)?|fiber diameter|fibre diameter|di[aá]metro)\s*[:\-]\s*(under|less than|below|up to|max(?:imum)?\.?|menos de|hasta|<|≤)?\s*` + NUM + UNIT, "i"), "auto"],
+    [new RegExp(String.raw`\b(?:does not exceed|doesn't exceed|not exceeding|no thicker than|no supera|no excede)\s+` + NUM + UNIT, "i"), "max"],
+    [new RegExp(String.raw`\bmeasuring\s+(?:an?\s+)?(?:\w+\s+){0,2}?(less than|under|below)?\s*` + NUM + UNIT, "i"), "auto"],
+  ];
+  for (const [re, kind] of patterns) {
+    const m = text.match(re);
+    if (!m) continue;
+    const num = m[m.length - 1];
+    const qualifier = m.length > 2 ? m[1] : undefined;
+    const micron = parseFloat(num.replace(",", "."));
+    if (micron < 12 || micron > 40) continue;
+    return { micron, kind: kind === "auto" ? (qualifier ? "max" : "exact") : kind, quote: m[0].trim() };
+  }
+  return null;
+}
+
+/** Sello AIA / Alpaca Mark, solo si la tienda lo menciona en la ficha. */
+export function extractSeal(text: string): { type: "origin_gold" | "origin_silver" | "blend" | "unspecified"; quote: string } | null {
+  const m = text.match(/[^.\n]{0,60}\b(alpaca\s+(?:origin\s+|blend\s+)?mark|aia[- ]certified|certified by the international alpaca association|sello\s+(?:de\s+(?:la\s+)?)?aia|certificad[oa]\s+por\s+la\s+aia)\b[^.\n]{0,60}/i);
+  if (!m) return null;
+  const q = m[0];
+  const type = /blend\s+mark/i.test(q)
+    ? "blend"
+    : /origin\s+mark/i.test(q) && /gold|dorad/i.test(q)
+      ? "origin_gold"
+      : /origin\s+mark/i.test(q) && /silver|platead/i.test(q)
+        ? "origin_silver"
+        : "unspecified";
+  return { type, quote: q.trim() };
+}
+
+/** Estado de la composición, familias de fibra y si lleva sintéticos (acrílico o poliéster). */
+export function compositionFacts(
+  composition: { material: string; pct: number }[],
+  words: { materials: string[]; pure: boolean } | null,
+): { compositionStatus: CompositionStatus; hasSynthetics: boolean | null; families: FiberFamily[] } {
+  const families = [...new Set([...composition.map((c) => c.material), ...(words?.materials ?? [])].map(fiberFamily))];
+  const synthetic = families.some((f) => SYNTHETIC.includes(f));
+  if (composition.length) {
+    const total = composition.reduce((a, c) => a + c.pct, 0);
+    const status: CompositionStatus = total > 101 ? "inconsistent" : total < 99.5 ? "partial" : "stated";
+    return { compositionStatus: status, hasSynthetics: synthetic ? true : status === "partial" ? null : false, families };
+  }
+  if (words) return { compositionStatus: words.pure ? "inferred" : "stated_no_pct", hasSynthetics: synthetic ? true : null, families };
+  return { compositionStatus: "not_published", hasSynthetics: null, families };
 }
 
 /** Título para el portal (en inglés si la tienda lo publica en español) y el original como referencia. */

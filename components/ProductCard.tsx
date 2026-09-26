@@ -1,15 +1,18 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types.ts";
-import { AVAILABILITY_LABEL, QUALITY_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
-import { compositionLabel, formatPen, formatUsd, usdPrice } from "@/lib/format.ts";
+import { AVAILABILITY_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
+import { compositionLabel, formatPen, formatUsd, gradeWithShare, shippingLine, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "./ProductImage.tsx";
 
 export function ProductCard({
   product: p,
   unknownFields = [],
   priority = false,
+  onClick,
 }: {
   product: Product;
+  /** Registro anónimo del clic (solo en resultados de búsqueda). */
+  onClick?: () => void;
   unknownFields?: string[];
   /** Primeras tarjetas visibles: la imagen se carga de inmediato (mejor LCP). */
   priority?: boolean;
@@ -20,6 +23,7 @@ export function ProductCard({
   return (
     <Link
       href={`/products/${p.slug ?? p.id}`}
+      onClick={onClick}
       className="group flex flex-col overflow-hidden rounded-sm bg-white ring-1 ring-arena-oscura/60 transition hover:ring-tierra/40"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-arena">
@@ -55,7 +59,7 @@ export function ProductCard({
 
         <dl className="grid grid-cols-1 gap-y-1 text-[11px] leading-tight sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
           <Spec label="Fiber" value={compositionLabel(p)} />
-          <Spec label="Grade" value={p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null} />
+          <Spec label="Grade" value={gradeWithShare(p)} />
           <Spec
             label="Color"
             value={p.color.name.split(" (")[0]}
@@ -88,6 +92,8 @@ export function ProductCard({
             The store doesn&rsquo;t list {unknownFields.join(", ")}. Check before buying.
           </p>
         )}
+
+        <p className="text-[11px] text-piedra">{shippingLine(p)}</p>
 
         <div className="mt-auto flex flex-wrap items-baseline justify-between gap-x-2 border-t border-arena pt-3">
           <span className="flex items-baseline gap-1.5">
