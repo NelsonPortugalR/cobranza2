@@ -422,11 +422,10 @@ function ShippingSection({ s, site }: { s: NonNullable<Product["shipping"]>; sit
     },
     { label: "Free shipping", value: s.freeShippingOverUsd ? `On orders over $${s.freeShippingOverUsd}` : null, e: ev.freeShipping },
     { label: "Delivery to the US", value: s.deliveryDays ? `${s.deliveryDays.min}–${s.deliveryDays.max} business days` : null, e: ev.deliveryDays },
-    { label: "Returns", value: s.returnsDays ? `${s.returnsDays} days` : null, e: ev.returns },
   ];
   return (
     <section className="mt-10">
-      <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Shipping &amp; returns</h2>
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">Shipping</h2>
       <dl className="mt-3 divide-y divide-arena-oscura border-y border-arena-oscura">
         {rows.map((r) => (
           <div key={r.label} className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 py-3 text-sm">

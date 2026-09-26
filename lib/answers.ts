@@ -64,7 +64,16 @@ function fromStore(store: string, q: string): Answer {
       ? { label: p.feesOnDelivery.value === "none" ? "No fees on delivery" : "Import duties may apply on delivery", quote: p.feesOnDelivery.quote }
       : { label: "The store's policy doesn't say whether duties are included" };
   } else if (wants(/return|refund|exchange/)) {
-    fact = p.returns ? { label: `${p.returns.days}-day returns`, quote: p.returns.quote } : { label: "The store's policy doesn't state a return window" };
+    // Las devoluciones aún no se muestran en el sitio: enlazamos a la política de la tienda.
+    return {
+      title: `${store}: returns`,
+      text: "We haven't added return details to the site yet. Read the store's returns policy before buying.",
+      href: p.returnsUrl ?? p.policyUrl,
+      linkLabel: `${store}'s returns policy`,
+      store,
+      checkedOn: p.checkedOn,
+      external: true,
+    };
   } else if (wants(/how long|deliver|arrive|days|fast/)) {
     fact = p.deliveryDays
       ? { label: `${p.deliveryDays.min}–${p.deliveryDays.max} business days to the US`, quote: p.deliveryDays.quote }

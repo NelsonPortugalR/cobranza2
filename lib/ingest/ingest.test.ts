@@ -244,3 +244,22 @@ test("sello AIA: solo lo que la ficha declara, con su tipo si lo dice", async ()
   assert.equal(extractSeal("Awarded the gold Alpaca Origin Mark")?.type, "origin_gold");
   assert.equal(extractSeal("Soft baby alpaca, made in Peru."), null);
 });
+
+test("devoluciones: cada tienda tiene todos los campos, con cita, 'conflicting' o 'not_published'", async () => {
+  const { readFileSync } = await import("node:fs");
+  const stores = JSON.parse(readFileSync(new URL("../../data/policies.json", import.meta.url), "utf8")).stores;
+  const fields = ["window", "refundType", "returnShippingPaidBy", "returnTo", "saleFinal", "refundsOriginalShipping", "refundsDuties"];
+  for (const [name, s] of Object.entries(stores) as [string, { returnsDetail?: Record<string, unknown> }][]) {
+    const r = s.returnsDetail;
+    assert.ok(r, `${name}: sin returnsDetail`);
+    assert.match(String(r.policyUrl), /^https:\/\//, name);
+    assert.match(String(r.checkedOn), /^\d{4}-\d{2}-\d{2}$/, name);
+    for (const k of fields) {
+      const v = r[k] as unknown;
+      if (v === "not_published") continue;
+      const o = v as { value: unknown; quote?: string; quotes?: string[] };
+      if (o.value === "conflicting") assert.ok((o.quotes?.length ?? 0) >= 2, `${name}.${k}`);
+      else assert.ok(o.quote && o.quote.length > 10, `${name}.${k} sin cita`);
+    }
+  }
+});

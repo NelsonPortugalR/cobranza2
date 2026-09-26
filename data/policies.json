@@ -1,94 +1,436 @@
 {
-  "_about": "Store shipping and returns policies, curated by hand from each store's published policy page. Every value has its quote; provenance is 'stated' (the store says it) or 'inferred' (follows from what the store says, labeled as such). Absent = not published. Review when a policy page changes.",
+  "_about": "Store shipping and returns policies, curated by hand from each store's published policy page. Every value has its quote; provenance is 'stated' (the store says it) or 'inferred' (follows from what the store says, labeled as such). Absent = not published. Review when a policy page changes. returnsDetail: each field is {value, quote, note?}, {value: 'conflicting', quotes} when the store's own pages disagree, or 'not_published'.",
   "stores": {
     "Sol Alpaca": {
       "policyUrl": "https://www.solalpaca.com/policies/shipping-policy",
       "returnsUrl": "https://www.solalpaca.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "Peru", "provenance": "stated", "quote": "We ship worldwide from Peru using DHL Express as our primary carrier." },
-      "feesOnDelivery": { "value": "none", "provenance": "stated", "quote": "Sol Alpaca operates on a DDP (Delivered Duty Paid) basis. All applicable custom fees, import duties, and local taxes are calculated and collected at checkout." },
-      "deliveryDays": { "min": 3, "max": 6, "quote": "Estimated delivery times after dispatch are as follows: United States: 3 to 6 business days." },
-      "returns": { "days": 30, "quote": "Sol Alpaca has a 30-day return policy, which means you have 30 days after receiving your item to request a return." }
+      "shipsFrom": {
+        "value": "Peru",
+        "provenance": "stated",
+        "quote": "We ship worldwide from Peru using DHL Express as our primary carrier."
+      },
+      "feesOnDelivery": {
+        "value": "none",
+        "provenance": "stated",
+        "quote": "Sol Alpaca operates on a DDP (Delivered Duty Paid) basis. All applicable custom fees, import duties, and local taxes are calculated and collected at checkout."
+      },
+      "deliveryDays": {
+        "min": 3,
+        "max": 6,
+        "quote": "Estimated delivery times after dispatch are as follows: United States: 3 to 6 business days."
+      },
+      "returns": {
+        "days": 30,
+        "quote": "Sol Alpaca has a 30-day return policy, which means you have 30 days after receiving your item to request a return."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://www.solalpaca.com/policies/refund-policy",
+        "window": {
+          "value": 30,
+          "quote": "Sol Alpaca has a 30-day return policy, which means you have 30 days after receiving your item to request a return."
+        },
+        "refundType": {
+          "value": "refund_or_exchange",
+          "quote": "If approved, you’ll be automatically refunded on your original payment method."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "The customer is responsible for all shipping costs associated with the return of the merchandise."
+        },
+        "returnTo": {
+          "value": "Peru",
+          "quote": "This documentation is essential for Peruvian customs and to ensure your new item is processed correctly.",
+          "note": "Inferred: the exchange instructions mention Peruvian customs; the return address is sent after approval."
+        },
+        "saleFinal": {
+          "value": "clearance_only",
+          "quote": "The following items cannot be returned: … Socks, clearance items, or gift cards"
+        },
+        "refundsOriginalShipping": {
+          "value": false,
+          "quote": "Original shipping charges, as well as duties and taxes paid at checkout (DDP), are non-refundable."
+        },
+        "refundsDuties": {
+          "value": false,
+          "quote": "Original shipping charges, as well as duties and taxes paid at checkout (DDP), are non-refundable."
+        },
+        "checkedOn": "2026-09-26"
+      }
     },
     "Kuna USA": {
       "policyUrl": "https://us.kunastores.com/policies/shipping-policy",
       "returnsUrl": "https://us.kunastores.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "feesOnDelivery": { "value": "none", "provenance": "stated", "quote": "For shipments to the United States, all taxes and additional fees are assumed by the KUNA USA online store." },
-      "deliveryDays": { "min": 10, "max": 15, "quote": "For items without the “Express Shipping” tag, the estimated delivery time is 10 to 15 business days, as these are shipped directly from our main warehouse." },
-      "returns": { "days": 30, "quote": "within 30 days from the date of delivery to the KUNA return address" },
+      "feesOnDelivery": {
+        "value": "none",
+        "provenance": "stated",
+        "quote": "For shipments to the United States, all taxes and additional fees are assumed by the KUNA USA online store."
+      },
+      "deliveryDays": {
+        "min": 10,
+        "max": 15,
+        "quote": "For items without the “Express Shipping” tag, the estimated delivery time is 10 to 15 business days, as these are shipped directly from our main warehouse."
+      },
+      "returns": {
+        "days": 30,
+        "quote": "Items must be returned in accordance with the requirements outlined below, within 30 days from the date of delivery to the KUNA return address."
+      },
       "byTag": {
         "express_shipping": {
-          "shipsFrom": { "value": "US", "provenance": "inferred", "quote": "Garments marked with the “Express Shipping” tag on the product photo have an estimated delivery time of 2 to 5 business days, depending on the destination ZIP code. Express shipping is subject to size availability in our local warehouse." },
-          "deliveryDays": { "min": 2, "max": 5, "quote": "Garments marked with the “Express Shipping” tag on the product photo have an estimated delivery time of 2 to 5 business days, depending on the destination ZIP code." }
+          "shipsFrom": {
+            "value": "US",
+            "provenance": "inferred",
+            "quote": "Garments marked with the “Express Shipping” tag on the product photo have an estimated delivery time of 2 to 5 business days, depending on the destination ZIP code. Express shipping is subject to size availability in our local warehouse."
+          },
+          "deliveryDays": {
+            "min": 2,
+            "max": 5,
+            "quote": "Garments marked with the “Express Shipping” tag on the product photo have an estimated delivery time of 2 to 5 business days, depending on the destination ZIP code."
+          }
         }
+      },
+      "returnsDetail": {
+        "policyUrl": "https://us.kunastores.com/policies/refund-policy",
+        "window": {
+          "value": 30,
+          "quote": "Items must be returned in accordance with the requirements outlined below, within 30 days from the date of delivery to the KUNA return address."
+        },
+        "refundType": {
+          "value": "refund",
+          "quote": "Once received in the warehouse, returns will be processed within approximately 10 to 15 business days and credited back to the original form of payment.",
+          "note": "KUNA cannot offer exchanges for returned merchandise."
+        },
+        "returnShippingPaidBy": {
+          "value": "store",
+          "quote": "Attach the return label in the original packaging and schedule a pick up with FedEx, or bring the return to a FedEx location. Shipping costs are complimentary."
+        },
+        "returnTo": "not_published",
+        "saleFinal": {
+          "value": "yes",
+          "quote": "Products listed under the SALE category are limited units and cannot be returned or exchanged."
+        },
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
       }
     },
     "Incalpaca": {
       "policyUrl": "https://incalpacastores.com/policies/shipping-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "Peru", "provenance": "inferred", "quote": "Los envíos internacionales contemplan los siguientes países: … Estados Unidos … Despacho vía Courier" },
-      "deliveryDays": { "min": 15, "max": 20, "quote": "El tiempo de entrega es de 15 a 20 días hábiles aproximadamente." }
+      "shipsFrom": {
+        "value": "Peru",
+        "provenance": "inferred",
+        "quote": "Los envíos internacionales contemplan los siguientes países: … Estados Unidos … Despacho vía Courier"
+      },
+      "deliveryDays": {
+        "min": 15,
+        "max": 20,
+        "quote": "El tiempo de entrega es de 15 a 20 días hábiles aproximadamente."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://incalpacastores.com/policies/refund-policy",
+        "window": "not_published",
+        "refundType": {
+          "value": "refund",
+          "quote": "Para las compras realizadas con envíos internacionales, no se realizarán cambios. El cliente puede solicitar una devolución de dinero siempre y cuando: …",
+          "note": "International orders: refund only, no exchanges."
+        },
+        "returnShippingPaidBy": "not_published",
+        "returnTo": {
+          "value": "Peru",
+          "quote": "Una vez que la solucitud haya sido aprobada, el cliente necesariamente deberá devolver el (los) producto(s) en perfecto estado a nuestra dirección en Arequipa"
+        },
+        "saleFinal": "not_published",
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "Alpaca Collections": {
       "policyUrl": "https://www.alpacacollections.com/policies/shipping-policy",
       "returnsUrl": "https://www.alpacacollections.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "US", "provenance": "inferred", "quote": "Please note that we do not cover any import taxes, duties, and fees for orders outside the United States." },
-      "feesOnDelivery": { "value": "none", "provenance": "inferred", "quote": "Please note that we do not cover any import taxes, duties, and fees for orders outside the United States." },
-      "returns": { "days": 30, "quote": "returns or exchanges of unworn and unwashed merchandise within 30 days of receiving your order" }
+      "shipsFrom": {
+        "value": "US",
+        "provenance": "stated",
+        "quote": "these pieces are specially requested from Peru rather than stocked in our U.S. warehouse."
+      },
+      "feesOnDelivery": {
+        "value": "none",
+        "provenance": "inferred",
+        "quote": "Please note that we do not cover any import taxes, duties, and fees for orders outside the United States."
+      },
+      "returns": {
+        "days": 30,
+        "quote": "we’ll gladly accept returns or exchanges of unworn and unwashed merchandise within 30 days of receiving your order."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://www.alpacacollections.com/policies/refund-policy",
+        "window": {
+          "value": 30,
+          "quote": "we’ll gladly accept returns or exchanges of unworn and unwashed merchandise within 30 days of receiving your order."
+        },
+        "refundType": {
+          "value": "refund_or_exchange",
+          "quote": "we’ll gladly exchange it for any item you choose from our website or issue a refund to your original payment method."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "Please note that we do not provide a return label, and shipping costs are non-refundable unless the return is due to a product defect or damage."
+        },
+        "returnTo": {
+          "value": "US",
+          "quote": "Alpaca Collections Returns Department 302 S. Byrne Road, Building 401 Toledo, OH 43615"
+        },
+        "saleFinal": {
+          "value": "exchange_or_credit_only",
+          "quote": "For items purchased on special promotion with a discount of 40% or more from the original retail price, we only offer exchanges or store credit.",
+          "note": "Applies to discounts of 40% or more."
+        },
+        "refundsOriginalShipping": {
+          "value": false,
+          "quote": "shipping costs are non-refundable unless the return is due to a product defect or damage."
+        },
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "PAKA": {
       "policyUrl": "https://www.pakaapparel.com/policies/shipping-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "freeShippingOverUsd": { "value": 150, "quote": "Free Shipping Over $150+ No codes, no hassle. Just add your items to cart and the discount will apply (AK & HI Excluded)." },
-      "returns": { "days": 30, "quote": "Free Returns & Exchanges Shop risk-free with our no questions asked 30-day policy (US only)." }
+      "freeShippingOverUsd": {
+        "value": 150,
+        "quote": "Free Shipping Over $150+ No codes, no hassle. Just add your items to cart and the discount will apply (AK & HI Excluded)."
+      },
+      "returns": {
+        "days": 30,
+        "quote": "Our return and exchange policy lasts 30 days."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://www.pakaapparel.com/policies/refund-policy",
+        "window": {
+          "value": 30,
+          "quote": "Our return and exchange policy lasts 30 days."
+        },
+        "refundType": {
+          "value": "refund_or_exchange",
+          "quote": "If you are approved, then your refund will be processed, and a credit will automatically be applied to your credit card or original method of payment within a certain amount of days."
+        },
+        "returnShippingPaidBy": {
+          "value": "conflicting",
+          "quotes": [
+            "If your return is approved, we hold you accountable for all shipping costs. (refund policy)",
+            "Free Returns & Exchanges Shop risk-free with our no questions asked 30-day policy (US only). (shipping policy page)"
+          ]
+        },
+        "returnTo": "not_published",
+        "saleFinal": "not_published",
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "Peruvian Connection": {
       "policyUrl": "https://www.peruvianconnection.com/policies/shipping-policy",
       "returnsUrl": "https://www.peruvianconnection.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "US", "provenance": "inferred", "quote": "SALES TAX: Sales tax will be applied as part of the order total for orders shipped to the following states" },
-      "feesOnDelivery": { "value": "none", "provenance": "inferred", "quote": "STANDARD SHIPPING FOR ORDERS TO UNITED STATES ZIP CODES: Arrives within 7–10 business days." },
-      "freeShippingOverUsd": { "value": 350, "quote": "$350 & over* Complimentary" },
-      "deliveryDays": { "min": 7, "max": 10, "quote": "STANDARD SHIPPING FOR ORDERS TO UNITED STATES ZIP CODES: Arrives within 7–10 business days." },
-      "returns": { "days": 30, "quote": "when items are returned within 30 days (with tags attached)" }
+      "shipsFrom": {
+        "value": "US",
+        "provenance": "inferred",
+        "quote": "SALES TAX: Sales tax will be applied as part of the order total for orders shipped to the following states"
+      },
+      "feesOnDelivery": {
+        "value": "none",
+        "provenance": "inferred",
+        "quote": "STANDARD SHIPPING FOR ORDERS TO UNITED STATES ZIP CODES: Arrives within 7–10 business days."
+      },
+      "freeShippingOverUsd": {
+        "value": 350,
+        "quote": "$350 & over* Complimentary"
+      },
+      "deliveryDays": {
+        "min": 7,
+        "max": 10,
+        "quote": "STANDARD SHIPPING FOR ORDERS TO UNITED STATES ZIP CODES: Arrives within 7–10 business days."
+      },
+      "returns": {
+        "days": 30,
+        "quote": "Peruvian Connection will gladly accept unworn, unwashed, or defective merchandise for refund or exchange when items are returned within 30 days (with tags attached)"
+      },
+      "returnsDetail": {
+        "policyUrl": "https://www.peruvianconnection.com/policies/refund-policy",
+        "window": {
+          "value": 30,
+          "quote": "Peruvian Connection will gladly accept unworn, unwashed, or defective merchandise for refund or exchange when items are returned within 30 days (with tags attached)",
+          "note": "Returns after 30 and within 90 days get merchandise credit."
+        },
+        "refundType": {
+          "value": "refund_or_exchange",
+          "quote": "Your refund for the returned merchandise will be credited back to the original order payment method."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "Return shipping is the responsibility of the customer."
+        },
+        "returnTo": "not_published",
+        "saleFinal": "not_published",
+        "refundsOriginalShipping": {
+          "value": false,
+          "quote": "Please note that original shipping charges are not refundable."
+        },
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "Krimson Klover": {
       "policyUrl": "https://krimsonklover.com/policies/shipping-policy",
       "returnsUrl": "https://krimsonklover.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "US", "provenance": "inferred", "quote": "Free domestic shipping on orders over $99" },
-      "feesOnDelivery": { "value": "none", "provenance": "inferred", "quote": "Free domestic shipping on orders over $99" },
-      "freeShippingOverUsd": { "value": 99, "quote": "Free domestic shipping on orders over $99" },
-      "returns": { "days": 14, "quote": "All returns must be made within 14 days of purchase." }
+      "shipsFrom": {
+        "value": "US",
+        "provenance": "inferred",
+        "quote": "Free domestic shipping on orders over $99"
+      },
+      "feesOnDelivery": {
+        "value": "none",
+        "provenance": "inferred",
+        "quote": "Free domestic shipping on orders over $99"
+      },
+      "freeShippingOverUsd": {
+        "value": 99,
+        "quote": "Free domestic shipping on orders over $99"
+      },
+      "returns": {
+        "days": 14,
+        "quote": "All returns must be made within 14 days of purchase."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://krimsonklover.com/policies/refund-policy",
+        "window": {
+          "value": 14,
+          "quote": "All returns must be made within 14 days of purchase."
+        },
+        "refundType": {
+          "value": "refund",
+          "quote": "For returns, your refund will be credited back to the original form of payment."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "Please note that shipping costs are deducted from your return."
+        },
+        "returnTo": "not_published",
+        "saleFinal": "not_published",
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "Peruvian Link": {
       "policyUrl": "https://peruvianlink.com/policies/shipping-policy",
       "returnsUrl": "https://peruvianlink.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "US", "provenance": "inferred", "quote": "All products are shipped via USPS, UPS, or FedEx … Our Continental USA shipping model" },
-      "feesOnDelivery": { "value": "none", "provenance": "inferred", "quote": "Our Continental USA shipping model … flat rate system based on order subtotal" },
-      "freeShippingOverUsd": { "value": 199.99, "quote": "$199.99 and above Free Shipping" },
-      "deliveryDays": { "min": 2, "max": 8, "quote": "services that can take from 2-8 days for delivery" },
-      "returns": { "days": 30, "quote": "We have a 30-day return policy, which means you have 30 days after receiving your item to request a return." }
+      "shipsFrom": {
+        "value": "US",
+        "provenance": "inferred",
+        "quote": "All products are shipped via USPS, UPS, or FedEx … Our Continental USA shipping model"
+      },
+      "feesOnDelivery": {
+        "value": "none",
+        "provenance": "inferred",
+        "quote": "Our Continental USA shipping model … flat rate system based on order subtotal"
+      },
+      "freeShippingOverUsd": {
+        "value": 199.99,
+        "quote": "$199.99 and above Free Shipping"
+      },
+      "deliveryDays": {
+        "min": 2,
+        "max": 8,
+        "quote": "services that can take from 2-8 days for delivery"
+      },
+      "returns": {
+        "days": 30,
+        "quote": "We have a 30-day return policy, which means you have 30 days after receiving your item to request a return."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://peruvianlink.com/policies/refund-policy",
+        "window": {
+          "value": 30,
+          "quote": "We have a 30-day return policy, which means you have 30 days after receiving your item to request a return."
+        },
+        "refundType": {
+          "value": "conflicting",
+          "quotes": [
+            "If approved, you’ll be automatically refunded on your original payment method within 10 business days.",
+            "you may return it within 30 days of receipt for an exchange or full refund in the form of a store credit."
+          ]
+        },
+        "returnShippingPaidBy": "not_published",
+        "returnTo": {
+          "value": "US",
+          "quote": "Please note that returns will need to be sent to the following address: 589 Airline Rd, Amherst Maine 04605"
+        },
+        "saleFinal": {
+          "value": "yes",
+          "quote": "Please note: all discounted merchandise is final sale."
+        },
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "Etno Alpaca": {
       "policyUrl": "https://etnoalpaca.com/policies/shipping-policy",
       "returnsUrl": "https://etnoalpaca.com/policies/refund-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "Peru", "provenance": "stated", "quote": "All Shipments, both national and international, are made through the services of Serpost Peru in the EMS International 2nd Class mode." },
-      "feesOnDelivery": { "value": "may_apply", "provenance": "stated", "quote": "International Buyers: Import duties are not included in the item price or shipping cost. These charges are the buyer's responsibility." },
-      "returns": { "days": 30, "quote": "The product exchange request must be made within 30 days after the customer receives the merchandise." }
+      "shipsFrom": {
+        "value": "Peru",
+        "provenance": "stated",
+        "quote": "All Shipments, both national and international, are made through the services of Serpost Peru in the EMS International 2nd Class mode."
+      },
+      "feesOnDelivery": {
+        "value": "may_apply",
+        "provenance": "stated",
+        "quote": "International Buyers: Import duties are not included in the item price or shipping cost. These charges are the buyer's responsibility."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://etnoalpaca.com/policies/refund-policy",
+        "window": {
+          "value": "conflicting",
+          "quotes": [
+            "The customer to obtain a full refund or a replacement must make the request for exchange of products within 72 hours after receiving the merchandise.",
+            "Return within 30 business days of receiving the package to be eligible for a refund.",
+            "The product exchange request must be made within 30 days after the customer receives the merchandise."
+          ]
+        },
+        "refundType": {
+          "value": "refund_or_exchange",
+          "quote": "The customer to obtain a full refund or a replacement must make the request for exchange of products within 72 hours after receiving the merchandise."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "All expenses derived from said exchange will be in the name of the client.",
+          "note": "Stated for exchanges; not stated for refunds."
+        },
+        "returnTo": {
+          "value": "Peru",
+          "quote": "Return address: Etno Alpaca San Agustin 204, Cusco Perú"
+        },
+        "saleFinal": "not_published",
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "Qinti": {
       "policyUrl": "https://www.qintiperu.com/policies/shipping-policy",
@@ -96,15 +438,88 @@
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
       "shipsToUSQuote": "Free shipping over $200 (store locations in Denver and Beaver Creek, Colorado, and Blue Ridge, Georgia)",
-      "freeShippingOverUsd": { "value": 200, "quote": "Free shipping over $200" },
-      "returns": { "days": 15, "quote": "Our policy lasts 15 days." }
+      "freeShippingOverUsd": {
+        "value": 200,
+        "quote": "Free shipping over $200"
+      },
+      "returns": {
+        "days": 15,
+        "quote": "Our policy lasts 15 days. If 15 days have gone by since your purchase, unfortunately we can’t offer you a refund or exchange."
+      },
+      "returnsDetail": {
+        "policyUrl": "https://www.qintiperu.com/policies/refund-policy",
+        "window": {
+          "value": 15,
+          "quote": "Our policy lasts 15 days. If 15 days have gone by since your purchase, unfortunately we can’t offer you a refund or exchange."
+        },
+        "refundType": {
+          "value": "refund",
+          "quote": "If you are approved, then your refund will be processed, and a credit will automatically be applied to your credit card or original method of payment",
+          "note": "Exchanges only for defective or damaged items."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "You will be responsible for paying for your own shipping costs for returning your item."
+        },
+        "returnTo": {
+          "value": "US",
+          "quote": "To return your product, you should mail your product to: Artisan Silver & Gifts, 531 E Main Street. Blue Ridge, GA 30513.",
+          "note": "The policy names a different business (Artisan Silver & Gifts) as the return address."
+        },
+        "saleFinal": {
+          "value": "yes",
+          "quote": "Only regular priced items may be refunded, unfortunately sale items cannot be refunded."
+        },
+        "refundsOriginalShipping": {
+          "value": false,
+          "quote": "Shipping costs are non-refundable. If you receive a refund, the cost of return shipping will be deducted from your refund."
+        },
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      }
     },
     "All Alpaca": {
       "policyUrl": "https://allalpaca.com.pe/policies/shipping-policy",
       "checkedOn": "2026-09-26",
       "shipsToUS": true,
-      "shipsFrom": { "value": "Peru", "provenance": "stated", "quote": "Los productos son enviados desde Perú vía Serpost que opera con los Servicios Postales nacionales de cada país." },
-      "freeShippingOverUsd": { "value": 150, "quote": "Envío GRATIS a todo el Perú desde S/. 150 PEN y a todo el mundo desde US$ 150" }
+      "shipsFrom": {
+        "value": "Peru",
+        "provenance": "stated",
+        "quote": "Los productos son enviados desde Perú vía Serpost que opera con los Servicios Postales nacionales de cada país."
+      },
+      "freeShippingOverUsd": {
+        "value": 150,
+        "quote": "Envío GRATIS a todo el Perú desde S/. 150 PEN y a todo el mundo desde US$ 150"
+      },
+      "returnsDetail": {
+        "policyUrl": "https://allalpaca.com.pe/policies/refund-policy",
+        "window": {
+          "value": 15,
+          "quote": "Tendrá un plazo de 15 días calendario, contados a partir de la fecha de recepción del pedido, para presentar una solicitud formal",
+          "note": "For exchanges; money refunds only within 2 days of purchase (cancellation)."
+        },
+        "refundType": {
+          "value": "exchange_or_credit",
+          "quote": "No se aceptan devoluciones de dinero después del plazo de 2 días calendario post compra, que se le otorgan al cliente."
+        },
+        "returnShippingPaidBy": {
+          "value": "customer",
+          "quote": "Usted será responsable de pagar los costos de envío para devolver su artículo y recibirlo de vuelta."
+        },
+        "returnTo": {
+          "value": "Peru",
+          "quote": "El cliente será responsable de los costos de devolución del producto a nuestras instalaciones en Lima, Perú.",
+          "note": "Inferred: stated in the EU section; the general section doesn't name an address."
+        },
+        "saleFinal": "not_published",
+        "refundsOriginalShipping": "not_published",
+        "refundsDuties": "not_published",
+        "checkedOn": "2026-09-26"
+      },
+      "returns": {
+        "days": 15,
+        "quote": "Tendrá un plazo de 15 días calendario, contados a partir de la fecha de recepción del pedido, para presentar una solicitud formal"
+      }
     }
   }
 }

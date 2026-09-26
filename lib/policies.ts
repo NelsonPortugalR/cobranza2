@@ -23,6 +23,23 @@ export interface StorePolicy {
   deliveryDays?: { min: number; max: number; quote: string };
   returns?: { days: number; quote: string };
   byTag?: Record<string, Partial<Pick<StorePolicy, "shipsFrom" | "feesOnDelivery" | "deliveryDays">>>;
+  /** Devoluciones en detalle (solo datos; todavía no se muestran). */
+  returnsDetail?: ReturnsDetail;
+}
+
+/** Un dato de devoluciones: con cita, "conflicting" si las páginas de la tienda se contradicen, o no publicado. */
+export type ReturnFact<T> = { value: T; quote: string; note?: string } | { value: "conflicting"; quotes: string[] } | "not_published";
+
+export interface ReturnsDetail {
+  policyUrl: string;
+  checkedOn: string;
+  window: ReturnFact<number>;
+  refundType: ReturnFact<"refund" | "refund_or_exchange" | "exchange_or_credit">;
+  returnShippingPaidBy: ReturnFact<"customer" | "store">;
+  returnTo: ReturnFact<"US" | "Peru">;
+  saleFinal: ReturnFact<"yes" | "clearance_only" | "exchange_or_credit_only">;
+  refundsOriginalShipping: ReturnFact<boolean>;
+  refundsDuties: ReturnFact<boolean>;
 }
 
 export type ProductShipping = NonNullable<Product["shipping"]>;
