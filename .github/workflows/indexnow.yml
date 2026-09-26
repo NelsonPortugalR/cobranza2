@@ -10,7 +10,7 @@ on:
     types: [completed]
   push:
     branches: [claude/alpaca-catalog-agent-rhyuwz]
-    paths: ["data/catalog.json", ".github/workflows/indexnow.yml"]
+    paths: ["data/catalog.json", "scripts/indexnow.ts", ".github/workflows/indexnow.yml"]
   workflow_dispatch:
     inputs:
       all:
