@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Product } from "@/lib/types.ts";
-import { AVAILABILITY_LABEL, QUALITY_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
-import { compositionLabel, formatPen, formatUsd, usdPrice } from "@/lib/format.ts";
+import { AVAILABILITY_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
+import { compositionLabel, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "./ProductImage.tsx";
 
 export function ProductCard({
@@ -55,7 +55,7 @@ export function ProductCard({
 
         <dl className="grid grid-cols-1 gap-y-1 text-[11px] leading-tight sm:grid-cols-2 sm:gap-x-3 sm:gap-y-1.5 sm:text-xs">
           <Spec label="Fiber" value={compositionLabel(p)} />
-          <Spec label="Grade" value={p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null} />
+          <Spec label="Grade" value={gradeWithShare(p)} />
           <Spec
             label="Color"
             value={p.color.name.split(" (")[0]}

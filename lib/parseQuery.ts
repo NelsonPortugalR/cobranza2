@@ -214,11 +214,11 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
   const pure = rest.match(/\b(100 ?%|100 percent|100 por ciento|pure|pura|puro)\s*(baby\s+)?(alpaca)?\b/);
   const blend = rest.match(/\b(blend|blended|mix|mixed|mezcla|mixto)\b/);
   if (pure) {
-    f.composition = "100";
-    chips.push({ field: "composition", label: "100% alpaca", from: consume(pure) });
+    f.alpacaRanges = ["100"];
+    chips.push({ field: "alpacaRanges", label: "100% alpaca", from: consume(pure) });
   } else if (blend) {
-    f.composition = "mezcla";
-    chips.push({ field: "composition", label: "Alpaca blend", from: consume(blend) });
+    f.alpacaRanges = ["70-99", "50-69", "lt50"];
+    chips.push({ field: "alpacaRanges", label: "Alpaca blend", from: consume(blend) });
   }
 
   const stock = rest.match(/\b(in stock|available|ready to ship|en stock|disponibles?)\b/);

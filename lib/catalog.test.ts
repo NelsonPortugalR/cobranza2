@@ -27,7 +27,7 @@ test("target query: brown sweater, 100% baby alpaca, size M, under $180", () => 
   const { filters, chips } = parseQueryLocal("Brown sweater, 100% baby alpaca, size M, under $180.", FX);
   assert.deepEqual(filters.types, ["chompa"]);
   assert.deepEqual(filters.colorFamilies, ["marron"]);
-  assert.equal(filters.composition, "100");
+  assert.deepEqual(filters.alpacaRanges, ["100"]);
   assert.deepEqual(filters.qualities, ["ultrafina", "super_baby", "baby"]);
   assert.deepEqual(filters.sizes, ["M"]);
   assert.equal(filters.priceMax, 180);
@@ -116,7 +116,7 @@ test("US shipping filter", () => {
 
 test("facet counts match applying the filter", () => {
   const base = withDemo(parseQueryLocal("sweater", FX)).filters;
-  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [] });
+  const counts = facetCounts(PRODUCTS, base, { types: [], qualities: ["baby"], colorFamilies: ["beige"], sizes: ["M"], sources: [], genders: [], alpacaRanges: [] });
   for (const [key, value] of [["qualities", "baby"], ["colorFamilies", "beige"], ["sizes", "M"]] as const) {
     const r = applyFilters(PRODUCTS, { ...base, [key]: [value] }, "relevancia");
     assert.deepEqual(counts[key][value], { exact: r.exact.length, total: r.exact.length + r.partial.length }, key);

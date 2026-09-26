@@ -202,7 +202,7 @@ function build(): Collection[] {
       slug: c.slug.replace("alpaca-", "100-percent-alpaca-"),
       name: `100% Alpaca ${c.noun}`,
       phrase: `100% ${phrase}`,
-      filters: { ...base, composition: "100" },
+      filters: { ...base, alpacaRanges: ["100"] },
       parent: c.slug,
       kind: "composition",
       type: c.type,

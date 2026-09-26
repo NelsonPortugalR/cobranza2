@@ -1,5 +1,6 @@
 import type { Filters, Product, SortKey } from "./types.ts";
 import { QUALITY_RANGES } from "./taxonomy.ts";
+import { alpacaRangeVerdict, noSyntheticsVerdict, type AlpacaRange } from "./fiber.ts";
 
 type Verdict = "pass" | "fail" | "unknown";
 
@@ -62,20 +63,8 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
             ? "pass"
             : "fail",
     ],
-    [
-      "fiber content",
-      f.composition === "cualquiera"
-        ? "pass"
-        : p.fiber.alpacaPct != null
-          ? (p.fiber.alpacaPct === 100) === (f.composition === "100")
-            ? "pass"
-            : "fail"
-          : p.fiber.blend
-            ? f.composition === "mezcla"
-              ? "pass"
-              : "fail"
-            : "unknown",
-    ],
+    ["fiber content", anyOf(f.alpacaRanges.map((r) => alpacaRangeVerdict(p, r)))],
+    ["synthetics", f.noSynthetics ? noSyntheticsVerdict(p) : "pass"],
     ["price", (f.priceMax == null || p.price.amountUsd <= f.priceMax) && (f.priceMin == null || p.price.amountUsd >= f.priceMin) ? "pass" : "fail"],
     [
       "stock",
@@ -93,6 +82,13 @@ export function evaluate(p: Product, f: Filters): { verdict: Verdict; unknown: s
   if (checks.some(([, v]) => v === "fail")) return { verdict: "fail", unknown: [] };
   const unknown = checks.filter(([, v]) => v === "unknown").map(([k]) => k);
   return { verdict: unknown.length ? "unknown" : "pass", unknown };
+}
+
+/** Varias opciones de una faceta se combinan con "o": basta una que cumpla. */
+function anyOf(verdicts: Verdict[]): Verdict {
+  if (verdicts.length === 0) return "pass";
+  if (verdicts.includes("pass")) return "pass";
+  return verdicts.includes("unknown") ? "unknown" : "fail";
 }
 
 function textMatch(p: Product, text: string): Verdict {
@@ -170,7 +166,8 @@ export function activeFilterCount(f: Filters): number {
     f.origins.length +
     f.sources.length +
     (f.dye !== "cualquiera" ? 1 : 0) +
-    (f.composition !== "cualquiera" ? 1 : 0) +
+    (f.alpacaRanges.length ? 1 : 0) +
+    (f.noSynthetics ? 1 : 0) +
     (f.priceMin != null ? 1 : 0) +
     (f.priceMax != null ? 1 : 0) +
     (f.inStockOnly ? 1 : 0) +
@@ -193,7 +190,7 @@ export function countMatches(products: Product[], f: Filters): { exact: number; 
   return { exact, total };
 }
 
-export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources" | "genders";
+export type FacetKey = "types" | "qualities" | "colorFamilies" | "sizes" | "sources" | "genders" | "alpacaRanges";
 export type FacetCounts = Record<FacetKey, Record<string, { exact: number; total: number }>>;
 
 /** Verdicto de un producto para una sola opción de una faceta. */
@@ -211,6 +208,8 @@ function optionVerdict(p: Product, key: FacetKey, option: string): Verdict {
       return sizeCheck(p, [option]);
     case "genders":
       return genderCheck(p, [option as "women" | "men"]);
+    case "alpacaRanges":
+      return alpacaRangeVerdict(p, option as AlpacaRange);
   }
 }
 

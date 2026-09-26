@@ -7,6 +7,7 @@
   "required": ["id", "title", "source", "seller", "productType", "fiber", "color", "origin", "price", "availability", "images", "rawDescription", "evidence", "extraction"],
   "additionalProperties": false,
   "$defs": {
+    "fiberFamily": { "enum": ["alpaca", "wool", "silk", "cotton", "nylon", "acrylic", "polyester", "elastane", "other"] },
     "quality": { "enum": ["ultrafina", "super_baby", "baby", "fleece", "medium_fleece", "huarizo", "gruesa"] },
     "region": { "enum": ["puno", "cusco", "arequipa", "huancavelica", "junin", "ayacucho", "apurimac"] },
     "evidence": {
@@ -53,9 +54,18 @@
             "type": "object",
             "required": ["material", "pct"],
             "additionalProperties": false,
-            "properties": { "material": { "type": "string" }, "pct": { "type": "number" } }
+            "properties": {
+              "material": { "type": "string", "description": "As published by the store" },
+              "pct": { "type": "number" },
+              "family": { "$ref": "#/$defs/fiberFamily" }
+            }
           }
         },
+        "materials": { "type": "array", "items": { "type": "string" }, "description": "Fibers named without percentages" },
+        "blend": { "type": "boolean" },
+        "compositionStatus": { "enum": ["stated", "partial", "inconsistent", "stated_no_pct", "inferred", "not_published"] },
+        "hasSynthetics": { "type": ["boolean", "null"], "description": "Acrylic or polyester; null = unknown" },
+        "families": { "type": "array", "items": { "$ref": "#/$defs/fiberFamily" } },
         "quality": { "oneOf": [{ "$ref": "#/$defs/quality" }, { "type": "null" }] },
         "micron": { "type": ["number", "null"], "minimum": 10, "maximum": 40 },
         "breed": { "enum": ["huacaya", "suri", null] }

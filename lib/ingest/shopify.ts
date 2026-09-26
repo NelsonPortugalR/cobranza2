@@ -1,3 +1,4 @@
+import { fiberFamily, SYNTHETIC, type CompositionStatus, type FiberFamily } from "../fiber.ts";
 import type { Breed, ColorFamily, FieldEvidence, Gender, Product, ProductType, Quality } from "../types.ts";
 import { COLOR_SWATCH, SIZE_ORDER } from "../taxonomy.ts";
 import { FALLBACK_FX, toUsd, type FxRate } from "../fx.ts";
@@ -108,8 +109,10 @@ export function inferType(p: ShopifyProduct): ProductType | null {
 
 // --- Composición y calidad --------------------------------------------------
 
-const MATERIAL = String.raw`(royal\s+alpaca|imperial\s+alpaca|super\s+baby\s+alpaca|baby\s+suri(?:\s+alpaca)?|suri\s+alpaca|baby\s+alpaca|alpaca|pima\s+cotton|cotton|algod[oó]n|silk|seda|merino(?:\s+wool)?|extrafine\s+merino|wool|lana|nylon|polyamide|poliamida|polyester|poli[eé]ster|elastane|elastano|spandex|acrylic|acr[ií]lico|cashmere|linen|lino|viscose|mohair)`;
-const PCT_BEFORE = new RegExp(String.raw`(\d{1,3}(?:[.,]\d+)?)\s*%\s*(?:of\s+|de\s+)?` + MATERIAL, "gi");
+const MATERIAL = String.raw`(royal\s+alpaca|imperial\s+alpaca|super\s+baby\s+alpaca|suri\s+baby\s+alpaca|baby\s+suri(?:\s+alpaca)?|suri\s+alpaca|baby\s+alpaca|alpaca|pima\s+cotton|cotton|algod[oó]n|silk|seda|merino(?:\s+wool)?|extrafine\s+merino|wool|lana|nylon|polyamide|poliamida|polyester|poli[eé]ster|e?s?lastane|elastano|spandex|polyacrylic|poliacr[ií]lico|acrylic|acr[ií]lico|dralon|cashmere|linen|lino|viscose|mohair)`;
+// Calificativos entre el % y la fibra: "100% AIA-certified Baby Alpaca", "70% premium alpaca".
+const QUALIFIERS = String.raw`(?:(?:aia[- ]certified|certified|pure|premium|fine|finest|peruvian|natural|genuine|organic|soft|super\s*soft|recycled|traceable)\s+){0,3}`;
+const PCT_BEFORE = new RegExp(String.raw`(\d{1,3}(?:[.,]\d+)?)\s*%\s*(?:of\s+|de\s+)?` + QUALIFIERS + MATERIAL, "gi");
 const PCT_AFTER = new RegExp(MATERIAL + String.raw`\s*[:(]?\s*(\d{1,3}(?:[.,]\d+)?)\s*%`, "gi");
 // El forro no es la prenda: "Lining: 100% polyester" / "Forro: 100% poliéster".
 const LINING = /\b(lining|lined with|forro|forrad[oa])\b[^.\n]*/gi;
@@ -130,13 +133,16 @@ export function extractComposition(fullText: string): { composition: { material:
       const [pctStr, material] = re === PCT_BEFORE ? [m[1], m[2]] : [m[2], m[1]];
       const pct = parseFloat(pctStr.replace(",", "."));
       if (pct <= 0 || pct > 100) continue;
-      const key = titleCase(material.replace(/algod[oó]n/i, "cotton").replace(/^seda$/i, "silk").replace(/^lana$/i, "wool"));
+      const key = titleCase(
+        material.replace(/algod[oó]n/i, "cotton").replace(/^seda$/i, "silk").replace(/^lana$/i, "wool").replace(/^e?s?lastane$/i, "elastane"),
+      );
       if (!found.has(key)) found.set(key, pct);
       quote ??= m[0];
     }
     let composition = [...found].map(([material, pct]) => ({ material, pct }));
-    // Descarta combinaciones incoherentes (p. ej. dos frases "100% …" distintas).
-    if (composition.reduce((a, c) => a + c.pct, 0) > 101) composition = composition.slice(0, 1);
+    // Dos frases "100% …" distintas (la prenda y un accesorio): vale la primera. Si la suma pasa
+    // de 100 por otra razón, es un error de la tienda y se conserva tal cual (estado "inconsistent").
+    if (composition.reduce((a, c) => a + c.pct, 0) > 101 && composition.filter((c) => c.pct === 100).length > 0) composition = composition.slice(0, 1);
     return { composition, quote };
   });
   // Fichas que mezclan formatos ("30% silk" y "baby alpaca 70%"): se unen si suman ≤ 100.
@@ -165,7 +171,8 @@ const WORD_MATERIALS: [string, RegExp][] = [
   ["Algodón", /\b(algod[oó]n|cotton|pima)\b/i],
   ["Lino", /\b(lino|linen)\b/i],
   ["Nylon", /\b(nylon|poliamida|polyamide)\b/i],
-  ["Acrílico", /\b(acr[ií]lico|acrylic)\b/i],
+  ["Acrílico", /\b(acr[ií]lico|acrylic|polyacrylic|dralon|microfib(?:er|re|ra))\b/i],
+  ["Polyester", /\b(poli[eé]ster|polyester)\b/i],
   ["Cashmere", /\bcashmere\b/i],
 ];
 
@@ -284,6 +291,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       ? 100
       : null;
   const mainAlpaca = composition.filter((c) => isAlpaca(c.material)).sort((a, b) => b.pct - a.pct)[0];
+  const fiberFacts = compositionFacts(composition, words);
   // Sin porcentaje, "made from baby alpaca" igual declara la calidad (no la composición).
   const mentioned = mainAlpaca ? null : text.match(/\b(royal|super\s+baby|baby)\s+(alpaca|suri)\b/i);
   const compositionQuote = compQuote ?? words?.quote;
@@ -351,8 +359,9 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       gender,
       fiber: {
         alpacaPct,
-        composition,
+        composition: composition.map((c) => ({ ...c, family: fiberFamily(c.material) })),
         materials: words?.materials,
+        ...fiberFacts,
         blend: composition.length ? composition.some((c) => !isAlpaca(c.material)) : words?.blend,
         quality: q.quality,
         micron: null,
@@ -397,6 +406,22 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       extraction: { ...ENGINE, confidence: Math.round(confidence * 100) / 100, warnings },
     } satisfies Product;
   });
+}
+
+/** Estado de la composición, familias de fibra y si lleva sintéticos (acrílico o poliéster). */
+export function compositionFacts(
+  composition: { material: string; pct: number }[],
+  words: { materials: string[]; pure: boolean } | null,
+): { compositionStatus: CompositionStatus; hasSynthetics: boolean | null; families: FiberFamily[] } {
+  const families = [...new Set([...composition.map((c) => c.material), ...(words?.materials ?? [])].map(fiberFamily))];
+  const synthetic = families.some((f) => SYNTHETIC.includes(f));
+  if (composition.length) {
+    const total = composition.reduce((a, c) => a + c.pct, 0);
+    const status: CompositionStatus = total > 101 ? "inconsistent" : total < 99.5 ? "partial" : "stated";
+    return { compositionStatus: status, hasSynthetics: synthetic ? true : status === "partial" ? null : false, families };
+  }
+  if (words) return { compositionStatus: words.pure ? "inferred" : "stated_no_pct", hasSynthetics: synthetic ? true : null, families };
+  return { compositionStatus: "not_published", hasSynthetics: null, families };
 }
 
 /** Título para el portal (en inglés si la tienda lo publica en español) y el original como referencia. */

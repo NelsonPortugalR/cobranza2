@@ -1,6 +1,7 @@
 import { ALL_PRODUCTS, SOURCES } from "./catalog.ts";
 import { applyFilters, facetCounts, type FacetCounts } from "./filter.ts";
 import { COLOR_FAMILIES, PRODUCT_TYPES, QUALITIES, SIZE_ORDER } from "./taxonomy.ts";
+import { ALPACA_RANGES } from "./fiber.ts";
 import type { Filters, Product, SortKey } from "./types.ts";
 
 export interface SearchHit {
@@ -23,6 +24,7 @@ const FACET_OPTIONS = {
   sizes: [...SIZE_ORDER.slice(1, 7), "Única"],
   sources: SOURCES,
   genders: ["women", "men"],
+  alpacaRanges: ALPACA_RANGES,
 };
 
 /** Lo mínimo que necesita una tarjeta: el catálogo completo nunca viaja al celular. */

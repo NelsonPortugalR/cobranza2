@@ -1,3 +1,4 @@
+import type { AlpacaRange, CompositionStatus, FiberFamily } from "./fiber.ts";
 // Modelo de datos normalizado. Ver schema/product.schema.json para la versión JSON Schema.
 
 export type ProductType =
@@ -89,7 +90,14 @@ export interface Product {
   fiber: {
     /** % de alpaca en la composición total (0–100). */
     alpacaPct: number | null;
-    composition: { material: string; pct: number }[];
+    /** Composición con porcentajes tal como la publica la tienda; family = vocabulario controlado. */
+    composition: { material: string; pct: number; family?: FiberFamily }[];
+    /** Cómo publica la tienda la composición (ver lib/fiber.ts). */
+    compositionStatus?: CompositionStatus;
+    /** true = lleva acrílico o poliéster; false = composición completa sin ellos; null = no se sabe. */
+    hasSynthetics?: boolean | null;
+    /** Familias de fibra mencionadas (con o sin porcentaje). */
+    families?: FiberFamily[];
     /** Materiales nombrados sin porcentaje ("baby alpaca y seda"). */
     materials?: string[];
     /** true = la tienda dice que es mezcla aunque no dé porcentajes. */
@@ -146,7 +154,10 @@ export interface Filters {
   colorFamilies: ColorFamily[];
   dye: "cualquiera" | "natural" | "tenido";
   origins: Region[];
-  composition: "cualquiera" | "100" | "mezcla";
+  /** Rangos de % de alpaca (vacío = cualquiera). */
+  alpacaRanges: AlpacaRange[];
+  /** Sin acrílico ni poliéster. */
+  noSynthetics: boolean;
   /** Tallas pedidas (S, M, L…). Se exige stock en esa talla. */
   sizes: string[];
   /** Mujer / hombre. "unisex" cumple ambos. */
@@ -184,7 +195,8 @@ export const EMPTY_FILTERS: Filters = {
   colorFamilies: [],
   dye: "cualquiera",
   origins: [],
-  composition: "cualquiera",
+  alpacaRanges: [],
+  noSynthetics: false,
   sizes: [],
   genders: [],
   priceMin: null,

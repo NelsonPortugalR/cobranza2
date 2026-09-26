@@ -9,7 +9,7 @@ import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs.tsx";
 import { JsonLd } from "@/components/JsonLd.tsx";
 import type { FieldEvidence, Product } from "@/lib/types.ts";
 import { AVAILABILITY_LABEL, BREED_LABEL, QUALITY_LABEL, TYPE_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
-import { compositionLabel, formatDate, formatPen, formatUsd, usdPrice } from "@/lib/format.ts";
+import { compositionLabel, compositionNote, formatDate, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
 
@@ -110,10 +110,20 @@ export default async function ProductPage({ params }: Params) {
   const text = summary(p);
 
   const rows: { label: string; value: string | null; ev?: FieldEvidence; hint?: string; optional?: boolean }[] = [
-    { label: "Fiber content", value: compositionLabel(p), ev: p.evidence.alpacaPct },
+    { label: "Fiber content", value: compositionLabel(p), ev: p.evidence.alpacaPct, hint: compositionNote(p) },
+    {
+      label: "Synthetics",
+      value:
+        p.fiber.hasSynthetics === true
+          ? `Contains ${(p.fiber.families ?? []).filter((f) => f === "acrylic" || f === "polyester").join(" and ")}`
+          : p.fiber.hasSynthetics === false
+            ? "No acrylic or polyester in the published fiber content"
+            : null,
+      optional: true,
+    },
     {
       label: "Fiber grade",
-      value: p.fiber.quality ? QUALITY_LABEL[p.fiber.quality] : null,
+      value: gradeWithShare(p),
       ev: p.evidence.quality,
       hint: p.fiber.quality && p.fiber.micron == null ? "As named by the store." : undefined,
     },

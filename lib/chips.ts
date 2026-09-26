@@ -1,4 +1,5 @@
 import type { Filters, SortKey } from "./types.ts";
+import { ALPACA_RANGE_LABEL } from "./fiber.ts";
 import { BREED_LABEL, COLOR_LABEL, QUALITY_LABEL, QUALITY_RANGES, REGION_LABEL, TYPE_LABEL, qualitiesAtLeast } from "./taxonomy.ts";
 
 export interface ActiveChip {
@@ -31,8 +32,9 @@ export function chipsFromFilters(f: Filters): ActiveChip[] {
   if (f.dye !== "cualquiera") chips.push({ key: "dye", label: f.dye === "natural" ? "Natural, undyed" : "Dyed", remove: { dye: "cualquiera" } });
   for (const r of f.origins)
     chips.push({ key: `o-${r}`, label: `Origin: ${REGION_LABEL[r]}`, remove: { origins: f.origins.filter((x) => x !== r) } });
-  if (f.composition !== "cualquiera")
-    chips.push({ key: "comp", label: f.composition === "100" ? "100% alpaca" : "Alpaca blend", remove: { composition: "cualquiera" } });
+  for (const r of f.alpacaRanges)
+    chips.push({ key: `a-${r}`, label: ALPACA_RANGE_LABEL[r], remove: { alpacaRanges: f.alpacaRanges.filter((x) => x !== r) } });
+  if (f.noSynthetics) chips.push({ key: "nosyn", label: "No synthetics", remove: { noSynthetics: false } });
   if (f.sizes.length) chips.push({ key: "sizes", label: `Size ${f.sizes.map((x) => (x === "Única" ? "one size" : x)).join(", ")}`, remove: { sizes: [] } });
   if (f.priceMin != null) chips.push({ key: "pmin", label: `Over $${f.priceMin}`, remove: { priceMin: null } });
   if (f.priceMax != null) chips.push({ key: "pmax", label: `Under $${f.priceMax}`, remove: { priceMax: null } });

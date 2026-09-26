@@ -12,8 +12,9 @@ import {
 } from "@/lib/taxonomy.ts";
 
 import type { FacetCounts, FacetKey } from "@/lib/filter.ts";
+import { ALPACA_RANGES, ALPACA_RANGE_LABEL } from "@/lib/fiber.ts";
 
-type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders";
+type ArrayKey = "types" | "qualities" | "breeds" | "colorFamilies" | "origins" | "sources" | "sizes" | "genders" | "alpacaRanges";
 
 const SIZES = [...SIZE_ORDER.slice(1, 7), "Única"];
 
@@ -135,15 +136,29 @@ export function FilterPanel({
       </Section>
 
       <Section title="Fiber content">
-        <Segmented
-          value={filters.composition}
-          options={[
-            ["cualquiera", "Any"],
-            ["100", "100% alpaca"],
-            ["mezcla", "Blend"],
-          ]}
-          onChange={(composition) => onChange({ composition })}
-        />
+        <ul className="space-y-0.5">
+          {ALPACA_RANGES.map((r) => (
+            <CheckRow
+              key={r}
+              checked={filters.alpacaRanges.includes(r)}
+              onChange={() => toggle("alpacaRanges", r)}
+              label={ALPACA_RANGE_LABEL[r]}
+              n={optionCount("alpacaRanges", r)}
+            />
+          ))}
+        </ul>
+        <label className="mt-3 flex cursor-pointer items-center justify-between gap-3 border-t border-arena-oscura/60 pt-3">
+          <span>
+            No synthetics
+            <span className="block text-xs text-piedra">No acrylic or polyester in the published fiber content</span>
+          </span>
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-tierra"
+            checked={filters.noSynthetics}
+            onChange={(e) => onChange({ noSynthetics: e.target.checked })}
+          />
+        </label>
       </Section>
 
       <Section title="Price (USD)">
@@ -240,32 +255,6 @@ function CheckRow({
         </span>
       </label>
     </li>
-  );
-}
-
-function Segmented<T extends string>({
-  value,
-  options,
-  onChange,
-}: {
-  value: T;
-  options: [T, string][];
-  onChange: (v: T) => void;
-}) {
-  return (
-    <div className="grid auto-cols-fr grid-flow-col rounded-full bg-arena p-0.5 text-xs">
-      {options.map(([v, label]) => (
-        <button
-          key={v}
-          type="button"
-          aria-pressed={value === v}
-          onClick={() => onChange(v)}
-          className={`rounded-full px-2 py-1.5 transition ${value === v ? "bg-white text-carbon shadow-sm" : "text-piedra"}`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
   );
 }
 

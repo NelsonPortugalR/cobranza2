@@ -136,3 +136,79 @@ test("Spanish store titles become English", () => {
   assert.equal(englishTitle("Estola Jee De Royal Alpaca Color Rojo"), "Jee Royal Alpaca Wrap — Red");
   assert.equal(englishTitle("Links Sweater - Rainy Day"), null, "English titles are left alone");
 });
+
+// --- Composición normalizada (fixtures reales del catálogo) ---------------------------
+import { compositionFacts } from "./shopify.ts";
+import { alpacaRangeVerdict, fiberFamily, noSyntheticsVerdict } from "../fiber.ts";
+
+function facts(text: string) {
+  const { composition } = extractComposition(text);
+  const words = composition.length ? null : extractMaterialsFromWords(text);
+  const alpacaPct = composition.length
+    ? composition.filter((c) => /alpaca|suri/i.test(c.material)).reduce((a, c) => a + c.pct, 0)
+    : words?.pure
+      ? 100
+      : null;
+  return { composition, alpacaPct, ...compositionFacts(composition, words) };
+}
+
+test("composición: 37% baby alpaca con acrílico y nylon", () => {
+  const f = facts("37% baby alpaca, 28% acrylic, 35% nylon");
+  assert.equal(f.alpacaPct, 37);
+  assert.equal(f.hasSynthetics, true);
+  assert.equal(f.compositionStatus, "stated");
+});
+
+test("composición: materiales sin porcentajes (Krimson Klover)", () => {
+  const f = facts("Crafted from an alpaca-merino blend that's relaxed. A luxurious blend of alpaca, merino wool, and more.");
+  assert.equal(f.compositionStatus, "stated_no_pct");
+  assert.equal(f.alpacaPct, null);
+  assert.equal(f.hasSynthetics, null);
+});
+
+test("composición: solo 65% royal alpaca publicado (PAKA) = partial", () => {
+  const f = facts("Our best-selling crewneck sweater is powered by 65% Royal Alpaca - a natural fiber known for warmth.");
+  assert.equal(f.compositionStatus, "partial");
+  assert.equal(f.alpacaPct, 65);
+  assert.equal(f.hasSynthetics, null, "no sabemos qué es el 35% restante");
+});
+
+test("composición: 100% AIA-certified Baby Alpaca (Etno Alpaca) es declarado", () => {
+  const f = facts("Material: 100% AIA-certified Baby Alpaca\nFineness: does not exceed 23 microns");
+  assert.deepEqual(f.composition, [{ material: "Baby Alpaca", pct: 100 }]);
+  assert.equal(f.compositionStatus, "stated");
+  assert.equal(f.hasSynthetics, false);
+});
+
+test("composición: dralon (microfibra acrílica) sin porcentajes", () => {
+  const f = facts("Made with alpaca fiber and dralon yarn (acrylic microfiber).");
+  assert.equal(f.compositionStatus, "stated_no_pct");
+  assert.equal(f.hasSynthetics, true);
+  assert.equal(fiberFamily("Dralon"), "acrylic");
+  assert.equal(fiberFamily("Polyamide"), "nylon");
+  assert.equal(fiberFamily("Elastano"), "elastane");
+});
+
+test("composición: suri baby alpaca y errata 'eslastane'", () => {
+  const coat = facts("an exquisite blend of materials including 51% Suri baby alpaca, 26% merino wool, 14% baby alpaca, 6% mohair, 2% nylon, and 1% spandex");
+  assert.equal(coat.alpacaPct, 65);
+  assert.equal(coat.compositionStatus, "stated");
+  const socks = facts("Made from 58% baby alpaca, 40% nylon, and 2% eslastane.");
+  assert.equal(socks.compositionStatus, "stated");
+  assert.deepEqual(socks.composition.at(-1), { material: "Elastane", pct: 2 });
+});
+
+test("composición: porcentajes que suman más de 100 se conservan como 'inconsistent'", () => {
+  const f = facts("Composition: 67% Baby Alpaca, 40% Wool");
+  assert.equal(f.compositionStatus, "inconsistent");
+  assert.equal(f.alpacaPct, 67);
+});
+
+test("filtro de % de alpaca: declarado vs inferido", () => {
+  const base = { fiber: { alpacaPct: 100, composition: [], compositionStatus: "inferred", hasSynthetics: null } } as never;
+  assert.equal(alpacaRangeVerdict(base, "100"), "unknown", "100% deducido de una frase queda por confirmar");
+  assert.equal(alpacaRangeVerdict(base, "unpublished"), "pass");
+  const stated = { fiber: { alpacaPct: 100, composition: [{ material: "Baby Alpaca", pct: 100 }], compositionStatus: "stated", hasSynthetics: false } } as never;
+  assert.equal(alpacaRangeVerdict(stated, "100"), "pass");
+  assert.equal(noSyntheticsVerdict(stated), "pass");
+});
