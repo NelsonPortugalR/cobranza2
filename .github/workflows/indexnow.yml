@@ -1,12 +1,16 @@
 # Avisa a Bing (IndexNow) de las páginas nuevas o cambiadas.
 # - Tras cada actualización diaria del catálogo: portada, colecciones, marcas y guías.
-# - A mano (Run workflow) con "all": todas las URLs del sitemap, incluidas las fichas.
+# - En cada push a la rama de producción que cambie el catálogo o este archivo, y a mano
+#   (Run workflow) con "all": todas las URLs del sitemap, incluidas las fichas.
 name: IndexNow
 
 on:
   workflow_run:
     workflows: ["Refresh catalog"]
     types: [completed]
+  push:
+    branches: [claude/alpaca-catalog-agent-rhyuwz]
+    paths: ["data/catalog.json", ".github/workflows/indexnow.yml"]
   workflow_dispatch:
     inputs:
       all:
@@ -16,7 +20,7 @@ on:
 
 jobs:
   submit:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -25,6 +29,6 @@ jobs:
         with:
           node-version: 22
       - name: Wait for the Netlify deploy
-        if: github.event_name == 'workflow_run'
+        if: github.event_name != 'workflow_dispatch'
         run: sleep 240
-      - run: node --experimental-strip-types --no-warnings scripts/indexnow.ts ${{ (github.event_name == 'workflow_dispatch' && inputs.all) && '--all' || '' }}
+      - run: node --experimental-strip-types --no-warnings scripts/indexnow.ts ${{ (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.all)) && '--all' || '' }}
