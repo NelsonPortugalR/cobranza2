@@ -161,10 +161,18 @@ export default async function ProductPage({ params }: Params) {
     },
     {
       label: "Store and the AIA",
-      value: AIA.stores[p.source.site] ? `${p.source.site} is listed as an AIA member (${AIA.stores[p.source.site].list})` : null,
+      // Si la ficha dice "AIA-certified" y la tienda no figura en la lista, lo decimos sin sugerir
+      // que la afirmación sea falsa: el sello puede ser del fabricante de la prenda.
+      value: AIA.stores[p.source.site]
+        ? `${p.source.site} is listed as an AIA member (${AIA.stores[p.source.site].list})`
+        : p.seal
+          ? `${p.source.site}: not found on AIA's public list as of ${AIA.checkedOn}`
+          : null,
       hint: AIA.stores[p.source.site]
         ? `Checked ${AIA.checkedOn} on the AIA's public list. Membership doesn't mean every piece carries a seal.`
-        : undefined,
+        : p.seal
+          ? "The seal may belong to the maker of the garment rather than the store."
+          : undefined,
       optional: true,
     },
     { label: "Breed", value: p.fiber.breed ? BREED_LABEL[p.fiber.breed] : null, ev: p.evidence.breed, optional: true },

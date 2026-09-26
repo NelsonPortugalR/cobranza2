@@ -149,3 +149,14 @@ test("slugs are URL-safe and English", async () => {
   assert.equal(slugify("100% Alpaca Shawls & Wraps"), "100-percent-alpaca-shawls-and-wraps");
   assert.equal(slugify("Suéter Niño"), "sueter-nino");
 });
+
+test("cards: the grade carries the alpaca share, not 'of fiber'", async () => {
+  const { gradeWithShare } = await import("./format.ts");
+  const base = PRODUCTS[0];
+  const blend = { ...base, fiber: { ...base.fiber, quality: "super_baby" as const, alpacaPct: 50, compositionStatus: "stated" as const } };
+  assert.equal(gradeWithShare(blend), "Super baby alpaca · 50%");
+  const pure = { ...base, fiber: { ...base.fiber, quality: "baby" as const, alpacaPct: 100, compositionStatus: "stated" as const } };
+  assert.equal(gradeWithShare(pure), "Baby alpaca");
+  const noPct = { ...base, fiber: { ...base.fiber, quality: "royal" as const, alpacaPct: null, compositionStatus: "not_published" as const } };
+  assert.equal(gradeWithShare(noPct), "Royal alpaca · % not listed");
+});

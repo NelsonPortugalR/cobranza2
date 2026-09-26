@@ -67,10 +67,11 @@ export function compositionNote(p: Product): string | undefined {
 /** Grado + % de alpaca, para que "Baby" en una pieza con 37% de alpaca no parezca más fina de lo que es. */
 export function gradeWithShare(p: Product): string | null {
   if (!p.fiber.quality) return null;
-  const grade = QUALITY_LABEL[p.fiber.quality];
+  // "Super baby alpaca · 50%": el porcentaje es claramente la parte de alpaca.
+  const grade = `${QUALITY_LABEL[p.fiber.quality]} alpaca`;
   const s = p.fiber.compositionStatus;
   if (p.fiber.alpacaPct != null && p.fiber.alpacaPct < 100 && (s === "stated" || s === "partial" || s === "inconsistent"))
-    return `${grade} · ${p.fiber.alpacaPct}% of fiber`;
+    return `${grade} · ${p.fiber.alpacaPct}%`;
   if (s === "stated_no_pct" || s === "not_published") return `${grade} · % not listed`;
   return grade;
 }
