@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingIncludes: {
     "/**": ["./data/catalog.json", "./data/coverage.json", "./data/fx.json"],
+    // El registro de búsquedas importa @netlify/blobs de forma dinámica: hay que incluirlo a mano.
+    "/api/log": ["./node_modules/@netlify/blobs/**"],
+    "/api/admin/search-report": ["./node_modules/@netlify/blobs/**"],
   },
 };
 

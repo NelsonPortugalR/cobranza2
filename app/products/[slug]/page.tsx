@@ -12,6 +12,7 @@ import { AVAILABILITY_LABEL, BREED_LABEL, NTP_CLASSES, QUALITY_LABEL, QUALITY_RA
 import { compositionLabel, compositionNote, formatDate, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
+import { OutboundLink } from "@/components/OutboundLink.tsx";
 import aiaMembers from "@/data/aia-members.json";
 
 type Params = { params: Promise<{ slug: string }> };
@@ -253,14 +254,14 @@ export default async function ProductPage({ params }: Params) {
             </p>
           )}
 
-          <a
+          <OutboundLink
             href={p.source.url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
+            productId={p.id}
+            store={p.source.site}
             className="mt-6 hidden w-full items-center justify-center gap-2 rounded-full bg-carbon py-3.5 text-sm font-medium text-lana transition hover:bg-tierra lg:flex"
           >
             Shop at {p.source.site} ↗
-          </a>
+          </OutboundLink>
 
           <section className="mt-10">
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">At a glance</h2>
@@ -385,14 +386,14 @@ export default async function ProductPage({ params }: Params) {
               {TYPE_SINGULAR[p.productType]} · {AVAILABILITY_LABEL[p.availability.status]}
             </p>
           </div>
-          <a
+          <OutboundLink
             href={p.source.url}
-            target="_blank"
-            rel="noopener noreferrer nofollow"
+            productId={p.id}
+            store={p.source.site}
             className="ml-auto shrink-0 rounded-full bg-carbon px-5 py-3 text-sm font-medium text-lana"
           >
             Shop at {p.source.site} ↗
-          </a>
+          </OutboundLink>
         </div>
       </div>
     </div>

@@ -8,8 +8,11 @@ export function ProductCard({
   product: p,
   unknownFields = [],
   priority = false,
+  onClick,
 }: {
   product: Product;
+  /** Registro anónimo del clic (solo en resultados de búsqueda). */
+  onClick?: () => void;
   unknownFields?: string[];
   /** Primeras tarjetas visibles: la imagen se carga de inmediato (mejor LCP). */
   priority?: boolean;
@@ -20,6 +23,7 @@ export function ProductCard({
   return (
     <Link
       href={`/products/${p.slug ?? p.id}`}
+      onClick={onClick}
       className="group flex flex-col overflow-hidden rounded-sm bg-white ring-1 ring-arena-oscura/60 transition hover:ring-tierra/40"
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-arena">

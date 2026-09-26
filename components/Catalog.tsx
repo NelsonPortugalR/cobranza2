@@ -11,11 +11,25 @@ import { DEFAULT_FILTERS } from "@/lib/types.ts";
 import type { FxRate } from "@/lib/fx.ts";
 import type { Filters, ParsedQuery, SortKey } from "@/lib/types.ts";
 import type { Answer } from "@/lib/answers.ts";
+import { initTestFlag, logClick, logSearch, newQueryId } from "@/lib/searchLog/client.ts";
+import type { Engine, Intent } from "@/lib/searchLog/events.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
 import { FilterPanel } from "./FilterPanel.tsx";
 import { ProductCard } from "./ProductCard.tsx";
 
 const PAGE = 24;
+
+/** Solo los filtros que difieren del estado inicial: es lo que interpretamos de la búsqueda. */
+function activeFilters(f: Filters): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(f)) {
+    if (k === "text") continue;
+    if (JSON.stringify(v) !== JSON.stringify(DEFAULT_FILTERS[k as keyof Filters])) out[k] = v;
+  }
+  return out;
+}
+
+type PendingSearch = { qid: string; query: string; engine: Engine; intent: Intent; filters: Record<string, unknown>; leftover: string };
 
 async function fetchResults(filters: Filters, sort: SortKey, offset: number, signal?: AbortSignal): Promise<SearchResponse> {
   const res = await fetch("/api/search", {
@@ -68,6 +82,10 @@ export function Catalog({
   );
   const resultsRef = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
+  // Registro anónimo: la búsqueda se anota cuando llegan sus resultados; los clics llevan su posición.
+  const pendingLog = useRef<PendingSearch | null>(null);
+  const [qid, setQid] = useState<string | null>(null);
+  useEffect(() => initTestFlag(), []);
 
   const runQuery = useCallback(async (q: string, scroll = true) => {
     const id = ++requestId.current;
@@ -75,6 +93,16 @@ export function Catalog({
     // 1) Respuesta instantánea con el parser local.
     const local = parseQueryLocal(q, fx);
     const cleanLocal = stripNonComparable(local.filters);
+    const searchId = newQueryId();
+    setQid(searchId);
+    pendingLog.current = {
+      qid: searchId,
+      query: q,
+      engine: "rules",
+      intent: local.intent ?? "product_search",
+      filters: activeFilters(cleanLocal.filters),
+      leftover: local.filters.text,
+    };
     setIgnored(cleanLocal.ignored);
     setFilters(cleanLocal.filters);
     setSort(local.sort);
@@ -100,6 +128,14 @@ export function Catalog({
       if (id !== requestId.current) return;
       setAnswer(parsed.answer ?? null);
       if (parsed.engine !== "claude") return;
+      pendingLog.current = {
+        qid: searchId,
+        query: q,
+        engine: "ai",
+        intent: parsed.intent ?? "product_search",
+        filters: activeFilters({ ...DEFAULT_FILTERS, ...parsed.filters }),
+        leftover: parsed.filters.text ?? "",
+      };
       setInterpreted(new Set(parsed.chips.filter((c) => c.interpreted).map((c) => c.field as string)));
       const clean = stripNonComparable({ ...DEFAULT_FILTERS, ...parsed.filters });
       setIgnored(clean.ignored);
@@ -132,6 +168,11 @@ export function Catalog({
         const r = await fetchResults(filters, sort, 0, ctrl.signal);
         setResults(r);
         setHits(r.hits);
+        const pending = pendingLog.current;
+        if (pending) {
+          pendingLog.current = null;
+          logSearch({ ...pending, exact: r.exactTotal, partial: r.partialTotal, topIds: r.hits.slice(0, 10).map((h) => h.product.id) });
+        }
       } catch {
         // abortada o sin red: se mantienen los resultados anteriores
       } finally {
@@ -163,6 +204,8 @@ export function Catalog({
     setAnswer(null);
     setNote(undefined);
     setInterpreted(new Set());
+    setQid(null);
+    pendingLog.current = null;
     setLoading(false);
     window.history.replaceState(null, "", window.location.pathname);
   };
@@ -332,7 +375,12 @@ export function Catalog({
 
             <Grid>
               {visibleExact.map((m, i) => (
-                <ProductCard key={m.product.id} product={m.product} priority={i < 4} />
+                <ProductCard
+                  key={m.product.id}
+                  product={m.product}
+                  priority={i < 4}
+                  onClick={qid ? () => logClick(qid, m.product.id, i + 1) : undefined}
+                />
               ))}
             </Grid>
 
@@ -346,8 +394,13 @@ export function Catalog({
                   </p>
                 </div>
                 <Grid>
-                  {visiblePartial.map((m) => (
-                    <ProductCard key={m.product.id} product={m.product} unknownFields={m.unknownFields} />
+                  {visiblePartial.map((m, i) => (
+                    <ProductCard
+                      key={m.product.id}
+                      product={m.product}
+                      unknownFields={m.unknownFields}
+                      onClick={qid ? () => logClick(qid, m.product.id, visibleExact.length + i + 1) : undefined}
+                    />
                   ))}
                 </Grid>
               </section>
