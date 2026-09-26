@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-26T03:32:54.859Z",
+  "generatedAt": "2026-09-26T03:37:40.540Z",
   "items": 6772,
   "sources": [
     {
@@ -73,13 +73,13 @@
     {
       "key": "quality",
       "label": "Fiber grade (baby, super baby…)",
-      "count": 4624,
-      "pct": 68
+      "count": 4662,
+      "pct": 69
     },
     {
       "key": "micron",
       "label": "Micron count",
-      "count": 0,
+      "count": 8,
       "pct": 0
     },
     {

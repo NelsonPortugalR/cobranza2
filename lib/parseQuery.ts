@@ -155,7 +155,8 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
 
   // Calidad: de la más específica a la más general. "Baby alpaca" = baby o superior.
   const qualityRules: [Quality, RegExp, boolean][] = [
-    ["ultrafina", /\b(royal|ultra ?fin[aoe]s?)\b/, true],
+    ["royal", /\b(royal|ultra ?fin[aoe]s?)\b/, true],
+    ["imperial", /\bimperial\b/, true],
     ["super_baby", /\bsuper ?baby\b/, true],
     ["baby", /\bbaby\b/, true],
     ["fleece", /\bfleece\b/, true],
@@ -166,7 +167,7 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
       f.qualities = andFiner ? qualitiesAtLeast(quality) : [quality];
       chips.push({
         field: "qualities",
-        label: andFiner && quality !== "ultrafina" ? `${QUALITY_LABEL[quality]} or finer` : QUALITY_LABEL[quality],
+        label: andFiner && quality !== "royal" && quality !== "imperial" ? `${QUALITY_LABEL[quality]} or finer` : QUALITY_LABEL[quality],
         from: consume(m),
       });
       break;
@@ -242,7 +243,8 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
 
 function qualitiesUpTo(maxMicron: number): Quality[] {
   const ranges: [Quality, number][] = [
-    ["ultrafina", 0],
+    ["royal", 0],
+    ["imperial", 0],
     ["super_baby", 18.1],
     ["baby", 20.1],
     ["fleece", 23.1],

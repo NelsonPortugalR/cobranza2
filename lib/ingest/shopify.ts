@@ -208,7 +208,9 @@ export function extractMaterialsFromWords(text: string): { materials: string[]; 
 
 export function qualityFromMaterial(material: string): { quality: Quality | null; provenance: FieldEvidence["provenance"] } {
   const m = material.toLowerCase();
-  if (m.includes("royal")) return { quality: "ultrafina", provenance: "inferido" }; // término comercial, no NTP
+  // Royal e Imperial son nombres comerciales que la tienda declara; no son clases de la NTP.
+  if (m.includes("royal")) return { quality: "royal", provenance: "declarado" };
+  if (m.includes("imperial")) return { quality: "imperial", provenance: "declarado" };
   if (m.includes("super baby")) return { quality: "super_baby", provenance: "declarado" };
   if (m.includes("baby")) return { quality: "baby", provenance: "declarado" };
   return { quality: null, provenance: "desconocido" };
@@ -292,8 +294,9 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       : null;
   const mainAlpaca = composition.filter((c) => isAlpaca(c.material)).sort((a, b) => b.pct - a.pct)[0];
   const fiberFacts = compositionFacts(composition, words);
+  const micron = extractMicron(body);
   // Sin porcentaje, "made from baby alpaca" igual declara la calidad (no la composición).
-  const mentioned = mainAlpaca ? null : text.match(/\b(royal|super\s+baby|baby)\s+(alpaca|suri)\b/i);
+  const mentioned = mainAlpaca ? null : text.match(/\b(royal|imperial|super\s+baby|baby)\s+(alpaca|suri)\b/i);
   const compositionQuote = compQuote ?? words?.quote;
   const qualitySource = mainAlpaca?.material ?? mentioned?.[0];
   const q = qualitySource ? qualityFromMaterial(qualitySource) : { quality: null, provenance: "desconocido" as const };
@@ -364,7 +367,9 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
         ...fiberFacts,
         blend: composition.length ? composition.some((c) => !isAlpaca(c.material)) : words?.blend,
         quality: q.quality,
-        micron: null,
+        micron: micron?.micron ?? null,
+        ...(micron ? { micronKind: micron.kind } : {}),
+        ...(qualitySource ? { gradeName: titleCase(qualitySource) } : {}),
         breed,
       },
       color: {
@@ -393,7 +398,7 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       rawDescription: body,
       evidence: {
         quality: q.quality ? { provenance: q.provenance, confidence: mainAlpaca ? 0.85 : 0.6, quote: qualityQuote } : { provenance: "desconocido", confidence: 0 },
-        micron: { provenance: "desconocido", confidence: 0 },
+        micron: micron ? { provenance: "declarado", confidence: 0.9, quote: micron.quote } : { provenance: "desconocido", confidence: 0 },
         breed: breed ? { provenance: "declarado", confidence: 0.9, quote: (suri ?? huacaya)![0] } : { provenance: "desconocido", confidence: 0 },
         natural: color.evidence,
         origin: { provenance: "desconocido", confidence: 0, quote: madeIn?.[0] },
@@ -406,6 +411,31 @@ export function normalizeShopifyProduct(p: ShopifyProduct, src: ShopifySource): 
       extraction: { ...ENGINE, confidence: Math.round(confidence * 100) / 100, warnings },
     } satisfies Product;
   });
+}
+
+/**
+ * Micras, solo cuando la tienda las afirma de la pieza: "Fineness: Under 19 microns",
+ * "does not exceed 23 microns", "measuring … 17 microns". Las explicaciones generales del
+ * grado ("up to 23 microns according to the AIA") no cuentan.
+ */
+export function extractMicron(text: string): { micron: number; kind: "max" | "exact"; quote: string } | null {
+  const UNIT = String.raw`\s*(?:µm|μm|microns?|micras?|micrones)`;
+  const NUM = String.raw`(\d{2}(?:[.,]\d)?)`;
+  const patterns: [RegExp, "max" | "exact" | "auto"][] = [
+    [new RegExp(String.raw`\b(?:fineness|finura|micronaje|micron(?:s|aje)?|fiber diameter|fibre diameter|di[aá]metro)\s*[:\-]\s*(under|less than|below|up to|max(?:imum)?\.?|menos de|hasta|<|≤)?\s*` + NUM + UNIT, "i"), "auto"],
+    [new RegExp(String.raw`\b(?:does not exceed|doesn't exceed|not exceeding|no thicker than|no supera|no excede)\s+` + NUM + UNIT, "i"), "max"],
+    [new RegExp(String.raw`\bmeasuring\s+(?:an?\s+)?(?:\w+\s+){0,2}?(less than|under|below)?\s*` + NUM + UNIT, "i"), "auto"],
+  ];
+  for (const [re, kind] of patterns) {
+    const m = text.match(re);
+    if (!m) continue;
+    const num = m[m.length - 1];
+    const qualifier = m.length > 2 ? m[1] : undefined;
+    const micron = parseFloat(num.replace(",", "."));
+    if (micron < 12 || micron > 40) continue;
+    return { micron, kind: kind === "auto" ? (qualifier ? "max" : "exact") : kind, quote: m[0].trim() };
+  }
+  return null;
 }
 
 /** Estado de la composición, familias de fibra y si lleva sintéticos (acrílico o poliéster). */

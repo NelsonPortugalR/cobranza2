@@ -16,9 +16,13 @@ export type ProductType =
   | "home"
   | "otro";
 
-/** Categorías de finura según NTP 231.301 (rangos en micras). */
+/**
+ * Grado de fibra tal como lo nombra la tienda. "royal" e "imperial" son nombres comerciales
+ * (no son clases de la NTP); super baby y baby coinciden con las clases de la NTP 231.301:2014.
+ */
 export type Quality =
-  | "ultrafina"
+  | "royal"
+  | "imperial"
   | "super_baby"
   | "baby"
   | "fleece"
@@ -103,8 +107,12 @@ export interface Product {
     /** true = la tienda dice que es mezcla aunque no dé porcentajes. */
     blend?: boolean;
     quality: Quality | null;
-    /** Diámetro medio de fibra en micras, si se declara o puede inferirse. */
+    /** Diámetro de fibra en micras, solo si la tienda lo declara (cita en evidence.micron). */
     micron: number | null;
+    /** "max" = la tienda da un tope ("under 19 microns"); "exact" = un valor. */
+    micronKind?: "max" | "exact";
+    /** Nombre del grado tal como lo escribe la tienda ("Royal Alpaca", "Imperial Alpaca"). */
+    gradeName?: string;
     breed: Breed | null;
   };
   color: {

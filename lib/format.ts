@@ -1,5 +1,5 @@
 import type { Product } from "./types.ts";
-import { QUALITY_LABEL, micronRangeLabel } from "./taxonomy.ts";
+import { QUALITY_LABEL } from "./taxonomy.ts";
 
 const usdInt = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 const usdDec = new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -19,14 +19,6 @@ export function usdPrice(p: Product): { now: number; was: number | null } {
 }
 export const formatDate = (iso: string) => date.format(new Date(iso));
 
-/** "Ultrafina · 18 µm", "Baby · 20.1–23 µm", o null si no hay dato. */
-export function finenessLabel(p: Product): string | null {
-  const { quality, micron } = p.fiber;
-  if (!quality && micron == null) return null;
-  const name = quality ? QUALITY_LABEL[quality] : "";
-  const mic = micron != null ? `${micron} µm` : quality ? micronRangeLabel(quality) : "";
-  return [name, mic].filter(Boolean).join(" · ");
-}
 
 export function compositionLabel(p: Product): string | null {
   const status = p.fiber.compositionStatus;

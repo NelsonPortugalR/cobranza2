@@ -212,3 +212,12 @@ test("filtro de % de alpaca: declarado vs inferido", () => {
   assert.equal(alpacaRangeVerdict(stated, "100"), "pass");
   assert.equal(noSyntheticsVerdict(stated), "pass");
 });
+
+test("micras: solo cuando la tienda las afirma de la pieza", async () => {
+  const { extractMicron } = await import("./shopify.ts");
+  assert.deepEqual(extractMicron("Material: 100% Royal Alpaca\nFineness: Under 19 microns"), { micron: 19, kind: "max", quote: "Fineness: Under 19 microns" });
+  assert.equal(extractMicron("the fiber does not exceed 23 microns. That translates")?.micron, 23);
+  assert.equal(extractMicron("meticulously dehaired, and measuring an extraordinarily fine 17 microns in diameter")?.kind, "exact");
+  assert.equal(extractMicron("a grade separated by fineness when the fleece is sorted, up to 23 microns according to the AIA"), null);
+  assert.equal(extractMicron("ordinary wool usually runs from 27 to 45 microns"), null);
+});

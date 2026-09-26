@@ -43,10 +43,10 @@ Shoppers are mostly in the United States and write in English (sometimes Spanish
 Product types (use these ids): ${PRODUCT_TYPES.map((t) => `${t} = ${TYPE_LABEL[t]}`).join("; ")}.
 
 Fiber grades, finest first (use these ids):
-${QUALITY_RANGES.map((q) => `- ${q.id} (${q.label}): ${q.min === 0 ? "≤" + q.max : q.min + "–" + q.max} µm`).join("\n")}
+${QUALITY_RANGES.map((q) => `- ${q.id} (${q.label})${q.official ? `: official class ${q.official}` : ": commercial name"}`).join("\n")}
 
 Rules:
-- "baby alpaca" means baby or finer: qualities = ["ultrafina","super_baby","baby"]. "royal alpaca" = ["ultrafina"].
+- "baby alpaca" means baby or finer: qualities = ["royal","imperial","super_baby","baby"]. "royal alpaca" = ["royal"]; "imperial" = ["royal","imperial"].
 - "finest/softest possible" → sort = "micras_asc" (does not restrict grades by itself).
 - Map fashion color names to families: oatmeal/sand/ecru → beige; fawn/tan/cognac → camel; mocha/chocolate → marron; ivory → blanco; charcoal/heather → gris; navy/indigo → azul; burgundy/rust/orange → rojo; lilac/plum → rosa; mustard → amarillo.
 - Prices are always in USD. If the shopper gives soles ("S/", "soles", "PEN"), divide by ${FX.penPerUsd}.

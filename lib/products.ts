@@ -17,7 +17,7 @@ export const PRODUCTS: Product[] = [
     fiber: {
       alpacaPct: 100,
       composition: [{ material: "Royal alpaca", pct: 100 }],
-      quality: "ultrafina",
+      quality: "royal",
       micron: 18,
       breed: "huacaya",
     },

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { parseQueryLocal } from "./parseQuery.ts";
 import { applyFilters, facetCounts } from "./filter.ts";
 import { PRODUCTS as MOCK } from "./products.ts";
-import { qualityFromMicron } from "./taxonomy.ts";
+import { officialClassFromMicron } from "./taxonomy.ts";
 import { bcrpDate, parseBcrp, toUsd, type FxRate } from "./fx.ts";
 import { stripNonComparable } from "./comparable.ts";
 
@@ -15,12 +15,13 @@ const withDemo = <T extends { filters: object }>(parsed: T) => ({
   filters: { ...parsed.filters, includeDemo: true, shipsToUS: false },
 });
 
-test("micron ranges follow NTP 231.301", () => {
-  assert.equal(qualityFromMicron(17.9), "ultrafina");
-  assert.equal(qualityFromMicron(18), "ultrafina");
-  assert.equal(qualityFromMicron(19.5), "super_baby");
-  assert.equal(qualityFromMicron(22.5), "baby");
-  assert.equal(qualityFromMicron(25), "fleece");
+test("micron ranges follow NTP 231.301:2022", () => {
+  assert.equal(officialClassFromMicron(17.9), "Ultrafina");
+  assert.equal(officialClassFromMicron(18), "Ultrafina");
+  assert.equal(officialClassFromMicron(19.5), "Superfina");
+  assert.equal(officialClassFromMicron(22.5), "Extrafina");
+  assert.equal(officialClassFromMicron(25), "Fina");
+  assert.equal(officialClassFromMicron(31.6), "Gruesa");
 });
 
 test("target query: brown sweater, 100% baby alpaca, size M, under $180", () => {
@@ -28,7 +29,7 @@ test("target query: brown sweater, 100% baby alpaca, size M, under $180", () => 
   assert.deepEqual(filters.types, ["chompa"]);
   assert.deepEqual(filters.colorFamilies, ["marron"]);
   assert.deepEqual(filters.alpacaRanges, ["100"]);
-  assert.deepEqual(filters.qualities, ["ultrafina", "super_baby", "baby"]);
+  assert.deepEqual(filters.qualities, ["royal", "imperial", "super_baby", "baby"]);
   assert.deepEqual(filters.sizes, ["M"]);
   assert.equal(filters.priceMax, 180);
   assert.equal(filters.shipsToUS, true, "US shipping is on by default");
@@ -48,7 +49,7 @@ test("English phrasing: sizes, price words and accessories", () => {
   assert.equal(b.text, "");
   const c = parseQueryLocal("royal alpaca wrap in camel, one size", FX).filters;
   assert.deepEqual(c.types, ["chal"]);
-  assert.deepEqual(c.qualities, ["ultrafina"]);
+  assert.deepEqual(c.qualities, ["royal"]);
   assert.deepEqual(c.colorFamilies, ["camel"]);
   assert.deepEqual(c.sizes, ["Única"]);
 });

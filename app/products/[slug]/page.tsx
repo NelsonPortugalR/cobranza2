@@ -8,7 +8,7 @@ import { absoluteUrl, clampDescription, fitTitle, OG_IMAGE, SITE } from "@/lib/s
 import { Breadcrumbs, type Crumb } from "@/components/Breadcrumbs.tsx";
 import { JsonLd } from "@/components/JsonLd.tsx";
 import type { FieldEvidence, Product } from "@/lib/types.ts";
-import { AVAILABILITY_LABEL, BREED_LABEL, QUALITY_LABEL, TYPE_LABEL, TYPE_SINGULAR } from "@/lib/taxonomy.ts";
+import { AVAILABILITY_LABEL, BREED_LABEL, NTP_CLASSES, QUALITY_LABEL, QUALITY_RANGES, TYPE_LABEL, TYPE_SINGULAR, officialClassFromMicron } from "@/lib/taxonomy.ts";
 import { compositionLabel, compositionNote, formatDate, formatPen, formatUsd, gradeWithShare, usdPrice } from "@/lib/format.ts";
 import { ProductImage } from "@/components/ProductImage.tsx";
 import { ProductCard } from "@/components/ProductCard.tsx";
@@ -23,7 +23,7 @@ export function generateStaticParams() {
 }
 
 const fiberWords = (p: Product) =>
-  p.fiber.quality === "ultrafina" ? "royal alpaca" : p.fiber.quality === "super_baby" ? "super baby alpaca" : p.fiber.quality === "baby" ? "baby alpaca" : "alpaca";
+  p.fiber.quality === "royal" ? "royal alpaca" : p.fiber.quality === "imperial" ? "imperial alpaca" : p.fiber.quality === "super_baby" ? "super baby alpaca" : p.fiber.quality === "baby" ? "baby alpaca" : "alpaca";
 
 /** Resumen propio en prosa (contenido único por ficha, útil para Google y para respuestas de IA). */
 function summary(p: Product): string {
@@ -70,6 +70,16 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
     },
     twitter: { card: "summary_large_image", title: title.absolute, description, images: [p.images[0] ?? OG_IMAGE.url] },
   };
+}
+
+/** Qué significa el grado declarado según la norma peruana (o que es un nombre comercial). */
+function gradeHint(p: Product): string | undefined {
+  const g = QUALITY_RANGES.find((q) => q.id === p.fiber.quality);
+  if (!g) return undefined;
+  const named = p.fiber.gradeName ? `Named by the store as “${p.fiber.gradeName}”. ` : "";
+  if (!g.official) return `${named}A brand name for the store's finest fiber, not an official class; its fineness depends on the store.`;
+  const c = NTP_CLASSES.find((x) => x.name2022 === g.official);
+  return `${named}Equivalent official class: ${g.official}, ${c?.microns} µm (NTP 231.301:2022).`;
 }
 
 const METHOD_LABEL: Record<Product["source"]["method"], string> = {
@@ -125,9 +135,18 @@ export default async function ProductPage({ params }: Params) {
       label: "Fiber grade",
       value: gradeWithShare(p),
       ev: p.evidence.quality,
-      hint: p.fiber.quality && p.fiber.micron == null ? "As named by the store." : undefined,
+      hint: gradeHint(p),
     },
-    { label: "Micron count", value: p.fiber.micron != null ? `${p.fiber.micron} µm` : null, ev: p.evidence.micron, optional: true },
+    {
+      label: "Fiber diameter",
+      value: p.fiber.micron != null ? `${p.fiber.micronKind === "max" ? "≤ " : ""}${p.fiber.micron} µm` : null,
+      ev: p.evidence.micron,
+      hint:
+        p.fiber.micron != null && p.fiber.micronKind === "exact"
+          ? `Official class for this diameter: ${officialClassFromMicron(p.fiber.micron)} (NTP 231.301:2022).`
+          : undefined,
+      optional: true,
+    },
     { label: "Breed", value: p.fiber.breed ? BREED_LABEL[p.fiber.breed] : null, ev: p.evidence.breed, optional: true },
     { label: "Color", value: p.color.name },
     { label: "Construction", value: p.construction ? CONSTRUCTION_LABEL[p.construction] : null, optional: true },

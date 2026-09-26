@@ -6,6 +6,8 @@ import {
   COLOR_LABEL,
   COLOR_SWATCH,
   PRODUCT_TYPES,
+  NTP_CLASSES,
+  NTP_SOURCE,
   QUALITY_RANGES,
   SIZE_ORDER,
   TYPE_LABEL,
@@ -96,18 +98,20 @@ export function FilterPanel({
         </div>
       </Section>
 
-      <Section title="Fiber grade" hint="As stated by the store, finest first.">
+      <Section title="Fiber grade" hint="The name each store uses, finest first.">
         <ul className="space-y-1">
-          {QUALITY_RANGES.slice(0, 4).map((q) => (
+          {QUALITY_RANGES.filter((q) => filters.qualities.includes(q.id) || optionCount("qualities", q.id).total > 0).map((q) => (
             <CheckRow
               key={q.id}
               checked={filters.qualities.includes(q.id)}
               onChange={() => toggle("qualities", q.id)}
               label={q.label}
+              detail={q.official ? undefined : "brand name"}
               n={optionCount("qualities", q.id)}
             />
           ))}
         </ul>
+        <GradeHelp />
       </Section>
 
       <Section title="Color">
@@ -183,6 +187,45 @@ export function FilterPanel({
         </ul>
       </Section>
     </div>
+  );
+}
+
+/** Equivalencias oficiales (NTP 231.301:2022) para quien nunca oyó hablar de micras. */
+function GradeHelp() {
+  return (
+    <details className="mt-3 text-xs text-piedra">
+      <summary className="cursor-pointer text-tierra underline decoration-tierra/30 underline-offset-2">What do these grades mean?</summary>
+      <p className="mt-2 leading-relaxed">
+        Grades describe how fine the fiber is, measured in microns (thousandths of a millimeter). Finer fiber feels softer and
+        itches less. Peru&rsquo;s standard sets these classes:
+      </p>
+      <table className="mt-2 w-full text-left">
+        <thead>
+          <tr className="text-[10px] uppercase tracking-wide">
+            <th className="py-1 font-medium">Official class</th>
+            <th className="py-1 font-medium">Microns</th>
+            <th className="py-1 font-medium">Old name</th>
+          </tr>
+        </thead>
+        <tbody>
+          {NTP_CLASSES.slice(0, 4).map((c) => (
+            <tr key={c.name2022} className="border-t border-arena-oscura/60">
+              <td className="py-1">{c.name2022}</td>
+              <td className="py-1 tabular-nums">{c.microns}</td>
+              <td className="py-1">{c.name2014 ?? "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="mt-2 leading-relaxed">
+        &ldquo;Royal&rdquo; and &ldquo;Imperial&rdquo; are brand names for a store&rsquo;s finest lots, not official classes.
+        Source:{" "}
+        <a href={NTP_SOURCE.url} target="_blank" rel="noopener noreferrer" className="underline">
+          NTP 231.301:2022
+        </a>
+        . <a href="/guides/alpaca-fiber-grades-explained" className="underline">Full guide</a>
+      </p>
+    </details>
   );
 }
 

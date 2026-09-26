@@ -1,33 +1,57 @@
 import type { Availability, Breed, ColorFamily, ProductType, Quality, Region } from "./types.ts";
 
-/** Rangos de finura (µm) usados para clasificar. Orden: de más fino a más grueso. */
-export const QUALITY_RANGES: { id: Quality; label: string; min: number; max: number }[] = [
-  { id: "ultrafina", label: "Royal / ultrafine", min: 0, max: 18 },
-  { id: "super_baby", label: "Super baby", min: 18.1, max: 20 },
-  { id: "baby", label: "Baby", min: 20.1, max: 23 },
-  { id: "fleece", label: "Fleece", min: 23.1, max: 26.5 },
-  { id: "medium_fleece", label: "Medium fleece", min: 26.6, max: 29 },
-  { id: "huarizo", label: "Huarizo", min: 29.1, max: 31.5 },
-  { id: "gruesa", label: "Coarse", min: 31.6, max: 99 },
+/**
+ * Grados tal como los nombran las tiendas, de más fino a más grueso. sortMicron solo sirve para
+ * ordenar "finest first": no se muestra ni se atribuye a ningún producto.
+ * official = clase equivalente de la NTP 231.301:2022 (null si es un nombre comercial).
+ */
+export const QUALITY_RANGES: { id: Quality; label: string; sortMicron: number; official: string | null }[] = [
+  { id: "royal", label: "Royal", sortMicron: 18.5, official: null },
+  { id: "imperial", label: "Imperial", sortMicron: 18.5, official: null },
+  { id: "super_baby", label: "Super baby", sortMicron: 19, official: "Superfina" },
+  { id: "baby", label: "Baby", sortMicron: 21.5, official: "Extrafina" },
+  { id: "fleece", label: "Fleece", sortMicron: 25, official: "Fina" },
+  { id: "medium_fleece", label: "Medium fleece", sortMicron: 28, official: "Semifina" },
+  { id: "huarizo", label: "Huarizo", sortMicron: 30, official: "Semigruesa" },
+  { id: "gruesa", label: "Coarse", sortMicron: 33, official: "Gruesa" },
 ];
+
+/**
+ * Clases oficiales de fibra de alpaca clasificada, NTP 231.301:2022, con su equivalente de la
+ * versión 2014. Fuente: INACAL, CTN 055 (presentación de dic. 2024), verificada el 2026-09-26.
+ */
+export const NTP_SOURCE = {
+  name: "NTP 231.301:2022 (INACAL, CTN 055)",
+  url: "https://reglamentostecnicos.mincetur.gob.pe/informacion_general/eventos/diciembre_2024/06_Requisitos_calidad_fibra_alpaca.pdf",
+  checkedOn: "2026-09-26",
+};
+export const NTP_CLASSES: { name2022: string; microns: string; name2014: string | null }[] = [
+  { name2022: "Ultrafina", microns: "≤ 18", name2014: null },
+  { name2022: "Superfina", microns: "18.1–20", name2014: "Super Baby" },
+  { name2022: "Extrafina", microns: "20.1–23", name2014: "Baby" },
+  { name2022: "Fina", microns: "23.1–26.5", name2014: "Fleece" },
+  { name2022: "Semifina", microns: "26.6–29", name2014: "Medium Fleece" },
+  { name2022: "Semigruesa", microns: "29.1–31.5", name2014: "Huarizo" },
+  { name2022: "Gruesa", microns: "> 31.5", name2014: "Gruesa" },
+];
+
+/** Clase oficial 2022 para un diámetro medio declarado. */
+export function officialClassFromMicron(micron: number): string {
+  const m = Math.round(micron * 10) / 10;
+  if (m <= 18) return "Ultrafina";
+  if (m <= 20) return "Superfina";
+  if (m <= 23) return "Extrafina";
+  if (m <= 26.5) return "Fina";
+  if (m <= 29) return "Semifina";
+  if (m <= 31.5) return "Semigruesa";
+  return "Gruesa";
+}
 
 export const QUALITY_LABEL = Object.fromEntries(
   QUALITY_RANGES.map((q) => [q.id, q.label]),
 ) as Record<Quality, string>;
 
-export function qualityFromMicron(micron: number): Quality {
-  const rounded = Math.round(micron * 10) / 10;
-  return (QUALITY_RANGES.find((q) => rounded <= q.max) ?? QUALITY_RANGES.at(-1)!).id;
-}
-
-export function micronRangeLabel(q: Quality): string {
-  const r = QUALITY_RANGES.find((x) => x.id === q)!;
-  if (r.min === 0) return `≤ ${r.max} µm`;
-  if (r.max === 99) return `> ${r.min - 0.1} µm`;
-  return `${r.min}–${r.max} µm`;
-}
-
-/** Calidades iguales o más finas que la dada ("baby" ⇒ baby, super baby, ultrafina). */
+/** Grados iguales o más finos que el dado ("baby" ⇒ baby, super baby, imperial, royal). */
 export function qualitiesAtLeast(q: Quality): Quality[] {
   const idx = QUALITY_RANGES.findIndex((x) => x.id === q);
   return QUALITY_RANGES.slice(0, idx + 1).map((x) => x.id);

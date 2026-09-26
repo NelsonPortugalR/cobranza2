@@ -139,7 +139,7 @@ function build(): Collection[] {
     slug: "royal-alpaca",
     name: "Royal Alpaca",
     phrase: "royal alpaca pieces",
-    filters: { qualities: ["ultrafina"] },
+    filters: { qualities: ["royal"] },
     kind: "grade",
     blurb: "Royal alpaca is the name brands use for their finest, rarest alpaca fiber, with a hand often compared to cashmere.",
   });
@@ -192,7 +192,7 @@ function build(): Collection[] {
       slug: `royal-${c.slug}`,
       name: `Royal Alpaca ${c.noun}`,
       phrase: `royal ${phrase}`,
-      filters: { ...base, qualities: ["ultrafina"] },
+      filters: { ...base, qualities: ["royal"] },
       parent: c.slug,
       kind: "grade",
       type: c.type,

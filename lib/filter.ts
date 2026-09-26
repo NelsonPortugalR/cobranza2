@@ -101,11 +101,10 @@ function textMatch(p: Product, text: string): Verdict {
   return hits / words.length >= 0.5 ? "pass" : "fail";
 }
 
-/** Micras usadas para ordenar: la declarada o, si falta, el punto medio de la categoría. */
+/** Micras usadas solo para ordenar: la declarada o, si falta, una referencia del grado. */
 export function effectiveMicron(p: Product): number {
   if (p.fiber.micron != null) return p.fiber.micron;
-  const r = QUALITY_RANGES.find((q) => q.id === p.fiber.quality);
-  return r ? (Math.max(r.min, 16) + Math.min(r.max, 34)) / 2 : 99;
+  return QUALITY_RANGES.find((q) => q.id === p.fiber.quality)?.sortMicron ?? 99;
 }
 
 export function applyFilters(products: Product[], f: Filters, sort: SortKey): FilterResult {
