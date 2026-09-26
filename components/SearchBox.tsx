@@ -5,9 +5,10 @@ import { useEffect, useState } from "react";
 export const EXAMPLE_QUERIES = [
   "Brown sweater, 100% baby alpaca, size M, under $180",
   "Gray baby alpaca cardigan, size S",
-  "Scarf under $80",
   "Royal alpaca wrap in camel",
-  "Alpaca beanie and gloves under $60",
+  "Cardigan that ships from the US, no synthetics",
+  "Scarf under $80, no customs fees",
+  "Is alpaca itchy?",
 ];
 
 /** Consulta en lenguaje natural. El agente la convierte en filtros; no es un chat. */

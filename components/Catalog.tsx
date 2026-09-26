@@ -10,6 +10,7 @@ import { stripNonComparable } from "@/lib/comparable.ts";
 import { DEFAULT_FILTERS } from "@/lib/types.ts";
 import type { FxRate } from "@/lib/fx.ts";
 import type { Filters, ParsedQuery, SortKey } from "@/lib/types.ts";
+import type { Answer } from "@/lib/answers.ts";
 import { EXAMPLE_QUERIES, SearchBox } from "./SearchBox.tsx";
 import { FilterPanel } from "./FilterPanel.tsx";
 import { ProductCard } from "./ProductCard.tsx";
@@ -34,8 +35,11 @@ export function Catalog({
   sources: SOURCES,
   usStoreCount,
   fx,
+  initialAnswer = null,
 }: {
   initialQuery: string;
+  /** Respuesta con fuente para preguntas ("is alpaca itchy"), calculada en el servidor. */
+  initialAnswer?: Answer | null;
   /** Resultados ya calculados en el servidor para la primera pintada. */
   initialResults: SearchResponse;
   realCount: number;
@@ -56,6 +60,12 @@ export function Catalog({
   const [fetching, setFetching] = useState(false);
   const firstRender = useRef(true);
   const [ignored, setIgnored] = useState<string[]>(() => (initial ? stripNonComparable(initial.filters).ignored : []));
+  const [answer, setAnswer] = useState<Answer | null>(initialAnswer);
+  const [note, setNote] = useState<string | undefined>(initial?.note);
+  // Filtros que son interpretación nuestra (p. ej. "won't itch" → baby o más fino).
+  const [interpreted, setInterpreted] = useState<Set<string>>(
+    () => new Set(initial?.chips.filter((c) => c.interpreted).map((c) => c.field as string) ?? []),
+  );
   const resultsRef = useRef<HTMLDivElement>(null);
   const requestId = useRef(0);
 
@@ -69,6 +79,9 @@ export function Catalog({
     setFilters(cleanLocal.filters);
     setSort(local.sort);
     setEngine("local");
+    setNote(local.note);
+    setInterpreted(new Set(local.chips.filter((c) => c.interpreted).map((c) => c.field as string)));
+    if (local.intent !== "question" && local.intent !== "store") setAnswer(null);
     const url = new URL(window.location.href);
     url.searchParams.set("q", q);
     window.history.replaceState(null, "", url);
@@ -83,8 +96,11 @@ export function Catalog({
         body: JSON.stringify({ query: q }),
       });
       if (!res.ok) return;
-      const parsed = (await res.json()) as ParsedQuery;
-      if (id !== requestId.current || parsed.engine !== "claude") return;
+      const parsed = (await res.json()) as ParsedQuery & { answer?: Answer | null };
+      if (id !== requestId.current) return;
+      setAnswer(parsed.answer ?? null);
+      if (parsed.engine !== "claude") return;
+      setInterpreted(new Set(parsed.chips.filter((c) => c.interpreted).map((c) => c.field as string)));
       const clean = stripNonComparable({ ...DEFAULT_FILTERS, ...parsed.filters });
       setIgnored(clean.ignored);
       setFilters(clean.filters);
@@ -144,6 +160,9 @@ export function Catalog({
     setQuery("");
     setIgnored([]);
     setEngine(null);
+    setAnswer(null);
+    setNote(undefined);
+    setInterpreted(new Set());
     setLoading(false);
     window.history.replaceState(null, "", window.location.pathname);
   };
@@ -222,24 +241,29 @@ export function Catalog({
 
           {(chips.length > 0 || engine || ignored.length > 0) && (
             <div className="mt-3 flex items-center gap-2 lg:mt-0">
-              <span className="hidden shrink-0 text-xs text-piedra sm:inline">
-                {engine === "claude" ? "Our agent read:" : "We read:"}
-              </span>
+              <span className="hidden shrink-0 text-xs text-piedra sm:inline">We understood:</span>
               <div className="no-scrollbar flex min-w-0 flex-1 gap-1.5 overflow-x-auto">
-                {chips.map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    onClick={() => patch(c.remove)}
-                    className="group flex min-h-9 shrink-0 items-center gap-1.5 rounded-full bg-tierra py-1.5 pl-3 pr-2 text-xs text-lana sm:min-h-0 sm:py-1"
-                    aria-label={`Remove filter ${c.label}`}
-                  >
-                    {c.label}
-                    <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full text-sm text-lana/70 group-hover:bg-lana/15 group-hover:text-lana">
-                      ×
-                    </span>
-                  </button>
-                ))}
+                {chips.map((c) => {
+                  const guess = Object.keys(c.remove).some((k) => interpreted.has(k));
+                  return (
+                    <button
+                      key={c.key}
+                      type="button"
+                      onClick={() => patch(c.remove)}
+                      title={guess ? "Our interpretation of your words. Tap × to remove it." : undefined}
+                      className={`group flex min-h-9 shrink-0 items-center gap-1.5 rounded-full py-1.5 pl-3 pr-2 text-xs sm:min-h-0 sm:py-1 ${
+                        guess ? "border border-dashed border-tierra bg-lana text-tierra" : "bg-tierra text-lana"
+                      }`}
+                      aria-label={`Remove filter ${c.label}${guess ? " (our interpretation)" : ""}`}
+                    >
+                      {guess && <span aria-hidden>≈</span>}
+                      {c.label}
+                      <span aria-hidden className="grid h-5 w-5 place-items-center rounded-full text-sm opacity-70 group-hover:opacity-100">
+                        ×
+                      </span>
+                    </button>
+                  );
+                })}
                 {sort !== "relevancia" && (
                   <span className="shrink-0 rounded-full border border-tierra/40 px-3 py-1 text-xs text-tierra">
                     {SORT_LABEL[sort]}
@@ -251,6 +275,7 @@ export function Catalog({
               </button>
             </div>
           )}
+          {note && <p className="mt-2 text-xs text-tierra">{note}</p>}
           {ignored.length > 0 && (
             <p className="mt-2 text-xs text-piedra">
               We don&rsquo;t filter by {ignored.join(", ")}: stores don&rsquo;t publish it.
@@ -266,6 +291,7 @@ export function Catalog({
           </aside>
 
           <main className={`pt-4 transition-opacity lg:pt-0 ${fetching ? "opacity-60" : ""}`} aria-busy={fetching}>
+            {answer && <AnswerCard answer={answer} />}
             <div className="mb-4 flex items-end justify-between gap-4">
               <p className="text-sm text-piedra">
                 <span className="font-serif text-2xl text-carbon">{exact.length.toLocaleString("en-US")}</span>{" "}
@@ -385,6 +411,29 @@ const CATEGORIES: [string, string][] = [
   ["alpaca-hats-and-beanies", "Hats & beanies"],
   ["alpaca-gloves-and-mittens", "Gloves"],
 ];
+
+/** Respuesta a una pregunta, citada de nuestras guías o de la política de la tienda. */
+function AnswerCard({ answer }: { answer: Answer }) {
+  return (
+    <section aria-label="Answer" className="mb-8 rounded-sm border border-arena-oscura bg-white p-5">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-tierra">{answer.store ? "From the store's policy" : "From our guides"}</p>
+      <h2 className="mt-2 font-serif text-xl text-carbon">{answer.title}</h2>
+      <p className="mt-2 text-sm leading-relaxed text-carbon/80">{answer.text}</p>
+      <p className="mt-3 text-xs text-piedra">
+        <a
+          href={answer.href}
+          {...(answer.external ? { target: "_blank", rel: "noopener noreferrer nofollow" } : {})}
+          className="text-tierra underline underline-offset-2"
+        >
+          {answer.linkLabel}
+          {answer.external ? " ↗" : ""}
+        </a>
+        {answer.checkedOn && ` · checked ${answer.checkedOn}`}
+      </p>
+      <p className="mt-4 border-t border-arena pt-3 text-xs text-piedra">Related pieces below.</p>
+    </section>
+  );
+}
 
 function Grid({ children }: { children: React.ReactNode }) {
   return <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3">{children}</div>;

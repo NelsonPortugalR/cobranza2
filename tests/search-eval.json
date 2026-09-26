@@ -15,7 +15,7 @@
     { "id": 8, "query": "alpaca throw blanket", "expect": { "types": ["home"] } },
     { "id": 9, "query": "peruvian alpaca sweater", "expect": { "types": ["chompa"] } },
     { "id": 10, "query": "kuna alpaca", "expect": { "sources": ["Kuna USA"] } },
-    { "id": 11, "query": "alpaca 111", "expect": { "sources": ["Kuna USA"] } },
+    { "id": 11, "query": "alpaca 111", "expect": { "sources": ["Incalpaca"] }, "_note": "The prompt mapped Alpaca 111 to Kuna; on 2026-09-26 incalpacastores.com redirects (301) to alpaca111.com, whose site is Incalpaca's store. Data wins." },
     { "id": 12, "query": "sol alpaca scarf", "expect": { "sources": ["Sol Alpaca"], "types": ["bufanda"] } },
     { "id": 13, "query": "chompa de alpaca para mujer", "expect": { "types": ["chompa"], "genders": ["women"] } },
     { "id": 14, "query": "alpaca chullo", "expect": { "types": ["gorro"] } },

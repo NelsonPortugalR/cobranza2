@@ -3,6 +3,7 @@ import { ALL_PRODUCTS, FX, SOURCES, US_SOURCES } from "@/lib/catalog.ts";
 import { stripNonComparable } from "@/lib/comparable.ts";
 import { formatDate } from "@/lib/format.ts";
 import { parseQueryLocal } from "@/lib/parseQuery.ts";
+import { answerFor } from "@/lib/answers.ts";
 import { search } from "@/lib/search.ts";
 import { DEFAULT_FILTERS } from "@/lib/types.ts";
 import type { Metadata } from "next";
@@ -27,6 +28,7 @@ export default async function Home({ searchParams }: Search) {
   const query = typeof q === "string" ? q.slice(0, 500) : "";
   // Primera pintada con la interpretación local; el cliente luego la refina.
   const parsed = query ? parseQueryLocal(query, FX) : null;
+  const initialAnswer = parsed && query ? answerFor(query, parsed) : null;
   const initialResults = parsed
     ? search(stripNonComparable(parsed.filters).filters, parsed.sort)
     : search(DEFAULT_FILTERS, "relevancia");
@@ -40,6 +42,7 @@ export default async function Home({ searchParams }: Search) {
         sources={SOURCES}
         usStoreCount={US_SOURCES.length}
         fx={FX}
+        initialAnswer={initialAnswer}
       />
       <PopularCollections />
       <HowItWorks />

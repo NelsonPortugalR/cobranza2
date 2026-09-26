@@ -14,18 +14,36 @@ const norm = (s: string) =>
 
 const TYPE_SYNONYMS: [ProductType, RegExp][] = [
   ["cardigan", /\b(cardigans?|saco|sacos|chaqueta tejida)\b/],
-  ["chompa", /\b(sweaters?|jumpers?|pull ?overs?|crew ?necks?|turtlenecks?|jerseys?|chompas?|sueter|sueteres)\b/],
+  ["chompa", /\b(sweaters?|jumpers?|pull ?overs?|crew ?necks?|turtlenecks?|jerseys?|hoodies?|chompas?|sueter|sueteres)\b/],
   ["abrigo", /\b(coats?|jackets?|overcoats?|abrigos?|casacas?|chaquetas?)\b/],
   ["chaleco", /\b(vests?|gilets?|chalecos?)\b/],
   ["medias", /\b(socks?|medias|calcetines)\b/],
-  ["chal", /\b(shawls?|wraps?|stoles?|pashminas?|chal|chales|estolas?)\b/],
-  ["poncho", /\b(ponchos?|capes?|ruanas?|capas?)\b/],
+  ["chal", /\b(shawls?|wraps?|stoles?|pashminas?|ruanas?|chal|chales|chalinas?|estolas?)\b/],
+  ["poncho", /\b(ponchos?|capes?|capelets?|capas?)\b/],
   ["gorro", /\b(hats?|beanies?|toques?|berets?|gorros?|chullos?)\b/],
-  ["bufanda", /\b(scarf|scarves|scarfs|neck ?warmers?|snoods?|bufandas?|chalinas?)\b/],
+  ["bufanda", /\b(scarf|scarves|scarfs|neck ?warmers?|snoods?|bufandas?)\b/],
   ["guantes", /\b(gloves?|mittens?|mitts|guantes|mitones)\b/],
   ["fibra", /\b(yarn|skeins?|roving|fiber|fibre|hilos?|ovillos?|madejas?)\b/],
   ["home", /\b(throws?|blankets?|pillows?|cushions?|mantas?|frazadas?|cojines?)\b/],
 ];
+
+/** Nombres de tienda tal como los escribe la gente. "Alpaca 111" es hoy la tienda online de Incalpaca. */
+const STORE_SYNONYMS: [string, RegExp][] = [
+  ["Kuna USA", /\bkuna( usa| stores?)?\b/],
+  ["Incalpaca", /\b(incalpaca|alpaca ?111)\b/],
+  ["Sol Alpaca", /\bsol alpaca\b/],
+  ["PAKA", /\bpaka\b/],
+  ["Peruvian Connection", /\bperuvian connection\b/],
+  ["Krimson Klover", /\bkrimson klover\b/],
+  ["Peruvian Link", /\bperuvian link\b/],
+  ["Etno Alpaca", /\betno( alpaca)?\b/],
+  ["Qinti", /\bqinti\b/],
+  ["Alpaca Collections", /\balpaca collections\b/],
+  ["All Alpaca", /\ballalpaca\b/],
+];
+
+/** Pregunta en vez de búsqueda: "is alpaca itchy", "how to wash…", "alpaca vs cashmere". */
+const QUESTION = /^(is|are|does|do|did|can|could|how|what|whats|why|which|will|would|should|where|when|who)\b|\?\s*$|\b(vs\.?|versus|difference between|compared to)\b/;
 
 const COLOR_SYNONYMS: [ColorFamily, RegExp][] = [
   ["beige", /\b(beige|oatmeal|oat|sand|ecru|taupe|cream|nude|arena|avena|hueso)\b/],
@@ -70,7 +88,7 @@ const SIZE_WORDS: Record<string, string> = {
 };
 
 const STOPWORDS =
-  /\b(a|an|the|of|for|in|with|and|or|made|from|pure|alpaca|alpacas|wool|knit|knitted|peruvian|peru|possible|please|i|want|looking|need|some|something|de|del|la|el|los|las|en|con|y|para|un|una|que|lo|posible|color|colour|muy|quiero|busco|algo)\b/g;
+  /\b(a|an|the|of|for|in|with|and|or|made|from|pure|alpaca|alpacas|wool|knit|knitted|peruvian|peru|possible|please|i|want|looking|need|some|something|de|del|la|el|los|las|en|con|y|para|un|una|que|lo|posible|color|colour|muy|quiero|busco|algo|that|which|it|its|me|my|show|find|get|buy|nice|good|great|best|gift|all|on|any)\b/g;
 
 /** @param fx tipo de cambio para convertir montos en soles ("S/ 600") a USD. */
 export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): ParsedQuery {
@@ -79,10 +97,55 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
   const chips: InterpretationChip[] = [];
   let sort: SortKey = "relevancia";
   let rest = q;
+  const keepText: string[] = [];
+  let note: string | undefined;
   const consume = (m: RegExpMatchArray | null) => {
     if (m) rest = rest.replace(m[0], " ");
     return m?.[0] ?? "";
   };
+  const isQuestion = QUESTION.test(q.trim());
+
+  // Tiendas primero: "sol alpaca" o "alpaca 111" contienen palabras que si no se leerían como otra cosa.
+  for (const [store, re] of STORE_SYNONYMS) {
+    const m = rest.match(re);
+    if (m && !f.sources.includes(store)) {
+      f.sources.push(store);
+      chips.push({ field: "sources", label: store, from: consume(m) });
+    }
+  }
+
+  // Llama no es alpaca: mostramos piezas de alpaca y lo decimos.
+  const llama = rest.match(/\bllamas?\b/);
+  if (llama) {
+    consume(llama);
+    note = "We list alpaca, not llama. Here are alpaca pieces instead.";
+  }
+
+  // Envío: desde dónde sale el paquete y si hay aranceles al recibir.
+  const fromUs = rest.match(/\b(ships?|shipped|shipping|sent)? ?from (the )?(us|usa|u\.s\.?|united states|america)\b|\bus[- ]based\b|\bdomestic shipping\b/);
+  if (fromUs) {
+    f.shipsFrom = ["US"];
+    chips.push({ field: "shipsFrom", label: "Ships from the US", from: consume(fromUs) });
+  }
+  const fromPeru = rest.match(/\b(ships?|shipped|shipping|sent) from peru\b/);
+  if (fromPeru) {
+    f.shipsFrom = [...f.shipsFrom, "Peru"];
+    chips.push({ field: "shipsFrom", label: "Ships from Peru", from: consume(fromPeru) });
+  }
+  const noFees = rest.match(
+    /\b(no|without|zero|free of) (customs|import|duty|duties|tariffs?)( fees| charges| taxes)?\b|\bno fees on delivery\b|\bduty[- ]free\b|\bduties (included|paid)\b|\bddp\b|\b(customs|duties|duty|tariffs?|aranceles|aduanas?)\b/,
+  );
+  if (noFees) {
+    f.noFeesOnDelivery = true;
+    chips.push({ field: "noFeesOnDelivery", label: "No fees on delivery", from: consume(noFees), interpreted: !/^(no|without|zero|free)|duty[- ]free|included|paid|ddp|on delivery/.test(noFees[0]) });
+  }
+
+  // Sintéticos.
+  const noSyn = rest.match(/\b(no|without|free of|sin)( any)? (synthetics?|acrylic|polyester|polyacrylic|dralon|microfib(er|re)|plastic|sinteticos?|acrilico|poliester)\b|\b(acrylic|polyester|synthetic)[- ]free\b|\b(all|100%?|only) natural fib(er|re)s?\b/);
+  if (noSyn) {
+    f.noSynthetics = true;
+    chips.push({ field: "noSynthetics", label: "No synthetics", from: consume(noSyn) });
+  }
 
   // Tallas y precios primero: "size M" o "S/ 300" no deben leerse como otra cosa.
   const size = rest.match(
@@ -125,7 +188,11 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
       chips.push({ field: "priceMin", label: `Over ${money(+min[2], pen)}`, from: consume(min) });
     }
   }
-  if (/\b(cheap|cheapest|affordable|budget|barat[ao]s?|economic[ao]s?)\b/.test(rest)) sort = "precio_asc";
+  const cheap = rest.match(/\b(cheap|cheapest|affordable|budget|inexpensive|barat[ao]s?|economic[ao]s?)\b/);
+  if (cheap) {
+    sort = "precio_asc";
+    chips.push({ field: "sort", label: "Lowest price first", from: consume(cheap) });
+  }
 
   const micronMax = rest.match(/(?:under|below|less than|menos de|hasta|max(?:imo)?|<=?|bajo)\s*(\d{2}(?:[.,]\d)?)\s*(?:microns?|micras|micrones|mic|µm|um|µ)\b/);
   if (micronMax) {
@@ -150,6 +217,10 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
     if (m && !f.types.includes(type)) {
       f.types.push(type);
       chips.push({ field: "types", label: TYPE_LABEL[type], from: consume(m) });
+      // "throw blanket": el segundo sinónimo del mismo tipo no queda como texto.
+      rest = rest.replace(new RegExp(re.source, "g"), " ");
+      // "Hoodie": no hay faceta de capucha, así que se busca también como texto.
+      if (/hood/.test(m[0])) keepText.push("hood");
     }
   }
 
@@ -161,6 +232,14 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
     ["baby", /\bbaby\b/, true],
     ["fleece", /\bfleece\b/, true],
   ];
+  // "Que no pique": lo traducimos a baby o más fino y lo marcamos como interpretación.
+  const itch = rest.match(/\b(won'?t|wont|doesn'?t|does not|will not|not|non|no)[- ]?(itch(y|ing)?|scratch(y)?|prickly)\b|\bitch[- ]?free\b|\bsensitive skin\b|\bque no pique\b/);
+  if (itch && !qualityRules.some(([, re]) => re.test(rest))) {
+    f.qualities = qualitiesAtLeast("baby");
+    chips.push({ field: "qualities", label: "Baby or finer (less itch)", from: consume(itch), interpreted: true });
+  } else if (itch) consume(itch);
+  consume(rest.match(/\b(soft|softer|cozy|warm|comfortable|suave|abrigador[ao]?)\b/));
+
   for (const [quality, re, andFiner] of qualityRules) {
     const m = rest.match(re);
     if (m) {
@@ -231,14 +310,17 @@ export function parseQueryLocal(query: string, fx: FxRate = FALLBACK_FX): Parsed
   // "ships to the US" ya es el filtro por defecto; lo consumimos para que no quede como texto.
   consume(rest.match(/\b(ships?|shipping|delivery|delivered)( to| within)?( the)? (us|usa|united states|america)\b|\bfree shipping\b/));
 
-  // Lo que queda (sin palabras vacías) se usa como búsqueda de texto libre.
-  f.text = rest
+  // Lo que queda (sin palabras vacías) se usa como búsqueda de texto libre. En una pregunta no:
+  // debajo de la respuesta mostramos productos relacionados, no coincidencias de palabras.
+  const leftover = rest
     .replace(STOPWORDS, " ")
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+  f.text = [...keepText, ...(isQuestion ? [] : [leftover])].filter(Boolean).join(" ");
 
-  return { filters: f, sort, chips, engine: "local" };
+  const intent: ParsedQuery["intent"] = isQuestion ? (f.sources.length ? "store" : "question") : "product_search";
+  return { filters: f, sort, chips, engine: "local", intent, ...(note ? { note } : {}) };
 }
 
 function qualitiesUpTo(maxMicron: number): Quality[] {
