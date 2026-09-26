@@ -47,8 +47,8 @@ Las cifras son sobre los **4.738 productos visibles**: tiendas que envían a EE.
 | Grado | baby 2.596 · royal 324 · super baby 88 · imperial 20 · sin grado 1.710 | |
 | Micras declaradas | 8 | por eso no hay filtro de micras |
 | Sello AIA en la ficha | 77 (todos de Etno Alpaca, tipo no especificado) | |
-| Desde dónde sale | EE. UU. 2.484 · Perú 1.455 · no publicado 799 | |
-| Aranceles al recibir | ninguno 3.614 · pueden aplicar 89 · no publicado 1.035 | |
+| Desde dónde sale | EE. UU. 2.319 · Perú 1.455 · no publicado 757 | recontado sobre 4.531 tras quitar lo que no es alpaca |
+| Aranceles al recibir | ninguno 2.273 · pueden aplicar 89 · no publicado 2.169 | recontado sobre 4.531; ver regla abajo |
 | Plazo de entrega | 2.964 | |
 | Envío gratis desde | 1.885 | |
 | Devoluciones (días) | 4.296 | |
@@ -63,9 +63,9 @@ Las cifras son sobre los **4.738 productos visibles**: tiendas que envían a EE.
 | < 50% | 142 | 2.001 |
 | Percentages not published | 2.132 | 0 |
 | No synthetics | 2.338 | 2.189 |
-| Ships from the US | 2.484 | 799 |
-| Ships from Peru | 1.455 | 799 |
-| No fees on delivery | 3.614 | 1.035 |
+| Ships from the US | 2.319 | 757 |
+| Ships from Peru | 1.455 | 757 |
+| No fees on delivery | 2.273 | 2.169 |
 | Grado royal / imperial / super baby / baby | 324 / 20 / 88 / 2.596 | 1.710 cada uno |
 
 "Posibles" son piezas que no contradicen el filtro, pero cuya tienda no publica ese dato.
@@ -107,7 +107,7 @@ Las cifras son sobre los **4.738 productos visibles**: tiendas que envían a EE.
 1. **Las políticas cambian.** `data/policies.json` es manual. Propongo un workflow mensual que compare el texto de cada página de política y abra un aviso si cambió.
 2. **Kuna USA:** no publica dónde está su "main warehouse"; 206 productos quedan con origen "not published".
 3. **PAKA y Qinti:** no publican origen ni aranceles, así que sus productos aparecen como coincidencias posibles en esos filtros.
-4. **"Inferred" en envío:** que Alpaca Collections, Peruvian Connection, Krimson Klover y Peruvian Link envían desde EE. UU. sale de su texto ("domestic", impuesto de ventas por estado, USPS), pero no lo dicen literalmente. Se rotula como "Inferred".
+4. **"No fees on delivery" (regla acordada):** cuenta solo si la tienda declara que los aranceles están incluidos (Sol Alpaca, Kuna USA) o declara que envía desde EE. UU. (Alpaca Collections: "stocked in our U.S. warehouse"). Peruvian Connection, Krimson Klover y Peruvian Link se sacaron del filtro, porque su origen en EE. UU. era solo inferido. Tarjeta y ficha muestran el motivo.
 5. **Actualización diaria:** el workflow usa el código de la rama de producción. Estas mejoras solo se aplicarán en la actualización diaria después de fusionarlas allí.
 6. **Email de contacto:** sigue pendiente. La página About promete responder "en 48 horas", pero no hay dirección.
 
